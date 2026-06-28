@@ -1,0 +1,32 @@
+# Environments
+.env
+.env.local
+.env.production
+.env.development
+.env.staging
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database
+db.sqlite3
+db.sqlite3-journal
+
+# Media / Uploaded files
+media/
+media_root/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
