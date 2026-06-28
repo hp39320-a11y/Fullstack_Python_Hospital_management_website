@@ -1,0 +1,207 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Create Lab Order - Asha Hospital{% endblock %}
+
+{% block content %}
+<!-- Google Font Outfit -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<div class="container py-5" style="font-family: 'Outfit', sans-serif;">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <!-- Back Button -->
+            <div class="mb-4">
+                <button onclick="window.history.back();" class="btn btn-link text-decoration-none text-muted p-0 hover-translate-x">
+                    <i class="fas fa-arrow-left me-2"></i>Back
+                </button>
+            </div>
+
+            <!-- Main Order Form Card -->
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-white">
+                <!-- Header with premium blue gradient -->
+                <div class="card-header p-4 border-0 d-flex align-items-center" style="background: linear-gradient(135deg, #0f59a4 0%, #1e3a8a 100%);">
+                    <div class="bg-white bg-opacity-10 p-3 rounded-circle me-3">
+                        <i class="fas fa-flask text-white fa-2x"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold text-white mb-0">Laboratory Prescription</h3>
+                        <p class="text-white-50 mb-0 small">Create and dispatch a new laboratory investigation request</p>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <!-- Patient Summary Banner -->
+                    <div class="p-3 mb-4 rounded-3 border-start border-4 border-primary d-flex align-items-center justify-content-between" style="background-color: #f0f7ff;">
+                        <div>
+                            <span class="text-muted small uppercase fw-bold d-block">PRESCRIBING FOR PATIENT</span>
+                            <h5 class="fw-bold text-primary mb-0 mt-1">{{ patient.name }}</h5>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-primary rounded-pill px-3 py-2 small fw-normal">ID: #{{ patient.patient_id }}</span>
+                        </div>
+                    </div>
+
+                    <form method="POST" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Tests Multiple Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-dark mb-3 fs-5">
+                                <i class="fas fa-check-double text-primary me-2"></i>Select Required Tests
+                            </label>
+                            
+                            <div class="tests-checkbox-container">
+                                {{ form.tests }}
+                            </div>
+                            
+                            {% if form.tests.errors %}
+                            <div class="text-danger small mt-2">
+                                <i class="fas fa-exclamation-circle me-1"></i>Please select at least one test.
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Clinical Notes -->
+                        <div class="mb-4">
+                            <label for="id_clinical_notes" class="form-label fw-bold text-dark fs-5 mb-2">
+                                <i class="fas fa-file-medical-alt text-primary me-2"></i>Clinical Notes & Indications
+                            </label>
+                            <textarea name="clinical_notes" id="id_clinical_notes" class="form-control rounded-3 p-3 shadow-sm border-light-subtle" rows="4" placeholder="Enter patient clinical history, relevant symptoms, or specific instruction for the technician..."></textarea>
+                            <div class="form-text text-muted">Provide any clinical indications to assist the lab technician in processing.</div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex gap-3 justify-content-end mt-5">
+                            <button type="button" onclick="window.history.back();" class="btn btn-light border rounded-pill px-4 py-2fw-semibold text-muted">
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-semibold btn-premium shadow-sm">
+                                <i class="fas fa-paper-plane me-2"></i>Dispatch Order
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Premium styling for checkbox lists rendered by Django forms */
+.tests-checkbox-container ul {
+    list-style-type: none;
+    padding-left: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .tests-checkbox-container ul {
+        grid-template-columns: 1fr;
+    }
+}
+
+.tests-checkbox-container li {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 18px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.tests-checkbox-container li:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+}
+
+.tests-checkbox-container label {
+    cursor: pointer;
+    font-weight: 500;
+    color: #334155;
+    margin-bottom: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    user-select: none;
+}
+
+.tests-checkbox-container input[type="checkbox"] {
+    appearance: none;
+    background-color: #ffffff;
+    margin-right: 12px;
+    font: inherit;
+    color: #0f59a4;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e1;
+    border-radius: 6px;
+    transform: translateY(-1px);
+    display: grid;
+    place-content: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.tests-checkbox-container input[type="checkbox"]::before {
+    content: "\f00c";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    font-size: 11px;
+    transform: scale(0);
+    transition: 0.15s transform ease-in-out;
+    color: white;
+}
+
+.tests-checkbox-container input[type="checkbox"]:checked {
+    background-color: #0f59a4;
+    border-color: #0f59a4;
+}
+
+.tests-checkbox-container input[type="checkbox"]:checked::before {
+    transform: scale(1);
+}
+
+.tests-checkbox-container li:has(input[type="checkbox"]:checked) {
+    background-color: #f0f7ff;
+    border-color: #93c5fd;
+    box-shadow: 0 4px 6px -1px rgba(15, 89, 164, 0.05);
+}
+
+/* Form inputs */
+.form-control:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+/* Animations */
+.hover-translate-x {
+    transition: transform 0.2s ease;
+}
+.hover-translate-x:hover {
+    transform: translateX(-4px);
+}
+
+.btn-premium {
+    background: linear-gradient(135deg, #0f59a4 0%, #1e3a8a 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 89, 164, 0.25) !important;
+    background: linear-gradient(135deg, #1e3a8a 0%, #0f59a4 100%);
+}
+
+.uppercase {
+    letter-spacing: 0.08em;
+}
+</style>
+{% endblock %}

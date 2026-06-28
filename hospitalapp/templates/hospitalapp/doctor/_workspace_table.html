@@ -1,0 +1,168 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light text-secondary text-uppercase fs-7">
+            <tr>
+                <th>Patient</th>
+                <th>Bed No</th>
+                <th>Objective Vitals</th>
+                <th>Triage Vitals Notes</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for case in cases %}
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-circle-sm bg-light text-secondary fw-bold me-2">
+                            {{ case.patient.name|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold text-dark">{{ case.patient.name }}</h6>
+                            <span class="text-muted small">Age/Gen: {{ case.patient.age }} yrs / {{ case.patient.gender }}</span>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    {% if case.assigned_bed %}
+                        <span class="badge bg-light text-primary border border-primary px-3 py-2 fw-bold rounded-pill">
+                            <i class="fas fa-bed me-1"></i>{{ case.assigned_bed.bed_number }}
+                        </span>
+                    {% else %}
+                        <span class="badge bg-light text-danger border border-danger px-3 py-2 fw-bold rounded-pill">
+                            <i class="fas fa-hourglass-half me-1"></i>Waiting List
+                        </span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if case.triage %}
+                    <div class="small">
+                        <strong>BP:</strong> {{ case.triage.bp_systolic }}/{{ case.triage.bp_diastolic }} mmHg |
+                        <strong>SpO2:</strong> {{ case.triage.oxygen_level }}% | 
+                        <strong>HR:</strong> {{ case.triage.heart_rate }} bpm<br>
+                        <strong>Temp:</strong> {{ case.triage.temperature }}°F | 
+                        <strong>GCS:</strong> {{ case.triage.gcs_score }} | 
+                        <strong>Pain:</strong> <span class="text-danger fw-bold">{{ case.triage.pain_score }}/10</span>
+                    </div>
+                    {% else %}
+                    <span class="text-muted small">No vitals logged</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="small text-truncate" style="max-width: 180px;" title="{{ case.triage.notes }}">
+                        {{ case.triage.notes|default:"-" }}
+                    </div>
+                </td>
+                <td>
+                    <span class="badge bg-info-subtle text-info border border-info px-2 py-1 rounded-3 small">
+                        {{ case.status }}
+                    </span>
+                </td>
+                <td class="text-end">
+                    <div class="dropdown d-inline-block">
+                        <button class="btn btn-outline-primary btn-sm rounded-pill px-3 dropdown-toggle fw-semibold" type="button" data-bs-toggle="dropdown">
+                            Clinical Action
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 p-2 mt-2">
+                            <li><a class="dropdown-item py-2 rounded-3" href="{% url 'emergency_doctor_evaluate' case.id %}"><i class="fas fa-stethoscope me-2 text-info"></i>Write Clinical Notes</a></li>
+                            <li><a class="dropdown-item py-2 rounded-3" href="{% url 'emergency_create_lab_order' case.id %}"><i class="fas fa-vial me-2 text-warning"></i>Order STAT Labs</a></li>
+                            <li><a class="dropdown-item py-2 rounded-3" href="{% url 'emergency_create_radiology_order' case.id %}"><i class="fas fa-x-ray me-2 text-danger"></i>Order STAT Radiology</a></li>
+                            <li><a class="dropdown-item py-2 rounded-3" href="{% url 'doctor_add_prescription_casuality' case.id %}"><i class="fas fa-pills me-2 text-danger"></i>Prescribe Medicine</a></li>
+                            <li><a class="dropdown-item py-2 rounded-3" href="#" data-bs-toggle="modal" data-bs-target="#referModal{{ case.id }}"><i class="fas fa-share-square me-2 text-warning"></i>Refer to Specialist</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header small text-muted">Disposition & Transfer</h6></li>
+                            <li><a class="dropdown-item py-2 rounded-3" href="{% url 'emergency_disposition' case.id 'icu' %}" onclick="return confirm('Transfer patient to ICU?')"><i class="fas fa-heartbeat me-2 text-danger"></i>ICU Transfer</a></li>
+                            <li><a class="dropdown-item py-2 rounded-3" href="{% url 'emergency_disposition' case.id 'ot' %}" onclick="return confirm('Transfer patient to Operating Theatre?')"><i class="fas fa-procedures me-2 text-warning"></i>OT Transfer</a></li>
+                            <li><a class="dropdown-item py-2 rounded-3" href="{% url 'emergency_disposition' case.id 'admission' %}" onclick="return confirm('Admit patient to General Ward?')"><i class="fas fa-bed me-2 text-primary"></i>Ward Admission</a></li>
+                            <li><a class="dropdown-item py-2 rounded-3" href="{% url 'emergency_disposition' case.id 'discharge' %}" onclick="return confirm('Discharge patient?')"><i class="fas fa-sign-out-alt me-2 text-success"></i>Discharge</a></li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+
+            <!-- Specialist Referral Modal -->
+            <div class="modal fade" id="referModal{{ case.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg text-start" style="border-radius: 12px; overflow: hidden;">
+                        <div class="modal-header bg-gradient bg-warning border-0 px-4 py-3">
+                            <h5 class="modal-title fw-bold text-dark mb-0">
+                                <i class="fas fa-share-square me-2"></i>Refer to Specialist
+                            </h5>
+                            <button type="button" class="btn-close text-dark" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="POST" action="{% url 'doctor_refer_specialist' case.id %}">
+                            {% csrf_token %}
+                            <div class="modal-body px-4 py-4">
+                                <div class="d-flex align-items-center mb-4 p-3 rounded" style="background-color: #fff9e6; border-left: 4px solid #ffc107;">
+                                    <div class="me-3">
+                                        <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px; font-size: 1.2rem;">
+                                            {{ case.patient.name|slice:":1"|upper }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold text-dark">{{ case.patient.name }}</h6>
+                                        <span class="text-muted small">Token: <span class="fw-bold text-dark">CAS-{{ case.id }}</span></span>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold text-dark mb-2">
+                                        <i class="fas fa-user-md me-1 text-warning"></i> Select Specialists
+                                    </label>
+                                    <div class="border rounded p-2" style="max-height: 240px; overflow-y: auto; background-color: #f8f9fa;">
+                                        {% for spec in specialist_doctors %}
+                                        <label class="form-check custom-checkbox-card p-2 rounded bg-white border d-flex align-items-center mb-2" style="cursor:pointer; transition: all 0.2s ease;">
+                                            <input class="form-check-input ms-1 me-3" type="checkbox" name="specialist_ids" value="{{ spec.doctor_id }}" style="transform: scale(1.2);">
+                                            <div class="d-flex flex-column w-100">
+                                                <span class="fw-bold text-dark mb-1">{{ spec.name }}</span>
+                                                <span class="text-muted small"><i class="fas fa-stethoscope me-1"></i>{{ spec.specialization }}</span>
+                                            </div>
+                                        </label>
+                                        {% empty %}
+                                        <div class="text-center py-4 text-muted small">
+                                            <i class="fas fa-exclamation-circle mb-2" style="font-size:1.5rem;"></i><br>
+                                            No specialists available
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-dark mb-2">
+                                        <i class="fas fa-comment-medical me-1 text-warning"></i> Referral Notes
+                                    </label>
+                                    <textarea name="referral_notes" class="form-control bg-light" rows="3" placeholder="Provide clinical context for the specialist..." style="resize: none; border-radius: 8px;" required></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer bg-light border-0 px-4 py-3" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                                <button type="button" class="btn btn-outline-secondary px-4 fw-bold" data-bs-dismiss="modal" style="border-radius: 6px;">Cancel</button>
+                                <button type="submit" class="btn btn-warning px-4 fw-bold text-dark shadow-sm" style="border-radius: 6px;">
+                                    <i class="fas fa-paper-plane me-1"></i> Send Referral
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center py-4 text-muted">
+                    <i class="fas fa-check-circle fa-2x mb-2 text-success opacity-50"></i>
+                    <p class="mb-0 small fw-semibold text-secondary">No active patients in this zone.</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .avatar-circle-sm {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+    }
+</style>

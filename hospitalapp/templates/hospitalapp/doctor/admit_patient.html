@@ -1,0 +1,112 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Request Admission - Doctor Workspace{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0"><i class="fas fa-hospital me-2"></i>Request Inpatient Admission</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info border-0 rounded-3 small">
+                        <h6 class="fw-bold"><i class="fas fa-info-circle me-1"></i>Admission Protocol</h6>
+                        Admission requests are sent to the Receptionist dashboard for bed allocation and registration. Once approved, the patient's inpatient bill tracker will start automatically.
+                    </div>
+
+                    <!-- Patient Details Summary Card -->
+                    <div class="p-3 bg-light rounded-3 mb-4">
+                        <div class="row">
+                            <div class="col-6 mb-2">
+                                <span class="text-muted small d-block">PATIENT ID</span>
+                                <span class="fw-bold">PAT-{{ patient.patient_id }}</span>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <span class="text-muted small d-block">NAME</span>
+                                <span class="fw-bold">{{ patient.name }}</span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted small d-block">AGE / GENDER</span>
+                                <span class="fw-semibold">{{ patient.age }} / {{ patient.gender }}</span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted small d-block">CONTACT</span>
+                                <span class="fw-semibold">{{ patient.phone }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Requested Ward Type</label>
+                            <select name="ward_type" class="form-select" required>
+                                <option value="General Ward">General Ward (Rs. 500 / day)</option>
+                                <option value="Semi Private">Semi Private (Rs. 1000 / day)</option>
+                                <option value="Private Room">Private Room (Rs. 2000 / day)</option>
+                                <option value="ICU">ICU (Rs. 5000 / day)</option>
+                                <option value="Casuality Ward">Casuality Ward (Rs. 1500 / day)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+    <label class="form-label fw-bold small text-secondary">
+        Consulting Specialists
+    </label>
+
+    {% if referrals %}
+        <div class="border rounded p-3 bg-light">
+
+            {% for referral in referrals %}
+                {% if referral.status == 'Accepted' %}
+                <div class="form-check">
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        checked
+                        disabled
+                    >
+
+                    <label class="form-check-label">
+                        {{ referral.referred_doctor.name }}
+                        ({{ referral.referred_doctor.specialization }})
+                    </label>
+                </div>
+                {% endif %}
+            {% endfor %}
+
+        </div>
+
+        <small class="text-success">
+            Accepted specialists will automatically become consultants after admission.
+        </small>
+
+    {% else %}
+        <div class="alert alert-warning mb-0">
+            No accepted referrals found.
+        </div>
+    {% endif %}
+</div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Clinical Reason for Admission</label>
+                            <textarea name="reason" class="form-control" rows="4" placeholder="Clinical indications, diagnosis, or post-surgery care instructions..." required></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% if from_casuality %}{% url 'doctor_emergency_dashboard' %}{% else %}{% url 'doctor_dashboard' %}{% endif %}" class="btn btn-light px-4">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-paper-plane me-2"></i>Send Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

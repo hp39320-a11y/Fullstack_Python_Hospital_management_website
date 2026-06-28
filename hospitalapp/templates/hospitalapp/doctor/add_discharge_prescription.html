@@ -1,0 +1,228 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Add Take-Home Prescription — CarePlus HMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 850px;">
+
+    <!-- BACK LINK & HEADER -->
+    <div class="mb-4">
+        <a href="{% url 'patient_details' admission.admission_id %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 shadow-sm mb-2">
+            <i class="fas fa-arrow-left me-1"></i> Back to Care Workspace
+        </a>
+        <h2 class="fw-bold text-primary mt-2">
+            <i class="fas fa-prescription-bottle-alt me-2 text-danger"></i>Take-Home / Discharge Prescription
+        </h2>
+        <p class="text-muted">Prescribe outpatient medications for the patient to collect from the pharmacy.</p>
+    </div>
+
+    <!-- MAIN FORM CARD -->
+    <div class="card border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+        <div class="card-header text-white py-3 fw-bold fs-5" style="background: linear-gradient(135deg, #4f46e5, #06b6d4);">
+            <i class="fas fa-file-prescription me-2"></i>Prescription Details
+        </div>
+        
+        <div class="card-body p-4">
+
+            <!-- PATIENT SUMMARY INFO STRIP -->
+            <div class="row g-3 mb-4 bg-light p-3 rounded-4 border">
+                <div class="col-sm-4">
+                    <small class="text-muted d-block uppercase font-monospace">Patient Name</small>
+                    <strong class="text-dark fs-5">{{ admission.patient.name }}</strong>
+                </div>
+                <div class="col-sm-4">
+                    <small class="text-muted d-block uppercase font-monospace">Admission ID</small>
+                    <span class="badge bg-secondary">ADM-{{ admission.admission_id }}</span>
+                </div>
+                <div class="col-sm-4">
+                    <small class="text-muted d-block uppercase font-monospace">Current status</small>
+                    {% if admission.status == 'Discharged' %}
+                    <span class="badge bg-danger">Discharged</span>
+                    {% elif admission.status == 'Ready For Discharge' %}
+                    <span class="badge bg-warning text-dark">Ready For Discharge</span>
+                    {% else %}
+                    <span class="badge bg-info text-dark">{{ admission.status }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- MESSAGES -->
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <!-- FORM -->
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-secondary" for="diagnosis">Diagnosis</label>
+                    <textarea id="diagnosis" name="diagnosis" rows="3" class="form-control rounded-3" placeholder="Enter clinical diagnosis or discharge notes..." required></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-secondary" for="notes">Doctor's Instructions & Notes</label>
+                    <textarea id="notes" name="notes" rows="3" class="form-control rounded-3" placeholder="Dietary restrictions, review date, follow-up instructions, etc..." required></textarea>
+                </div>
+
+                <hr class="my-4 text-muted">
+
+                <!-- MEDICINES SECTION -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-pills text-primary me-2"></i>Select Medicines
+                    </h5>
+                    <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold" onclick="addMore()">
+                        <i class="fas fa-plus me-1"></i> Add Medicine
+                    </button>
+                </div>
+
+                <div id="medicine-box">
+                    <!-- FIRST MEDICINE ROW (REQUIRED) -->
+                    <div class="row g-3 mb-3 medicine-row align-items-end p-3 bg-light rounded-3 border position-relative">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold text-secondary small">Medicine Name</label>
+                            <div class="input-group input-group-sm mb-1">
+                                <span class="input-group-text bg-white text-muted border-end-0"><i class="fas fa-search"></i></span>
+                                <input type="text" class="form-control medicine-filter-input border-start-0 ps-1" placeholder="Type to filter..." oninput="filterRowOptions(this)">
+                            </div>
+                            <select name="medicine_id" class="form-select medicine-select rounded-3" required>
+                                <option value="" disabled selected>-- Select Medicine --</option>
+                                {% for m in medicines %}
+                                    <option value="{{ m.medicine_id }}" data-name="{{ m.name|lower }}">
+                                        {{ m.name }} &mdash; Rs. {{ m.price }} (Stock: {{ m.stock }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold text-secondary small">Quantity</label>
+                            <input type="number" name="quantity" class="form-control rounded-3" placeholder="Qty" min="1" required>
+                        </div>
+
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-outline-danger w-100 rounded-3 delete-row-btn" onclick="removeRow(this)">
+                                <i class="fas fa-trash-alt me-1"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBMIT / CANCEL BUTTONS -->
+                <div class="d-flex justify-content-end gap-3 mt-4 pt-3 border-top">
+                    <a href="{% url 'patient_details' admission.admission_id %}" class="btn btn-light border px-4 rounded-pill fw-semibold">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-success px-4 rounded-pill fw-bold shadow-sm">
+                        <i class="fas fa-check-circle me-1"></i> Save & Send to Pharmacy
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script>
+function filterRowOptions(inputEl) {
+    const filterText = inputEl.value.toLowerCase().trim();
+    const row = inputEl.closest('.medicine-row');
+    const select = row.querySelector('.medicine-select');
+    const options = select.querySelectorAll('option');
+
+    options.forEach(opt => {
+        if (opt.value === "") return; // Skip placeholder
+        
+        const name = opt.getAttribute('data-name');
+        if (name.includes(filterText)) {
+            opt.style.display = '';
+            opt.disabled = false;
+        } else {
+            opt.style.display = 'none';
+            opt.disabled = true;
+        }
+    });
+
+    // Reset value if selected option is now hidden
+    const selectedOpt = select.options[select.selectedIndex];
+    if (selectedOpt && selectedOpt.disabled && selectedOpt.value !== "") {
+        select.value = "";
+    }
+}
+
+function removeRow(btnEl) {
+    const row = btnEl.closest('.medicine-row');
+    const box = document.getElementById("medicine-box");
+    const rows = box.querySelectorAll('.medicine-row');
+    
+    if (rows.length > 1) {
+        row.remove();
+    } else {
+        // Clear instead of removing last row
+        row.querySelector('.medicine-filter-input').value = '';
+        row.querySelector('.medicine-select').value = '';
+        row.querySelector('input[name="quantity"]').value = '';
+        filterRowOptions(row.querySelector('.medicine-filter-input'));
+        alert("You must include at least one medicine. Cleared the values.");
+    }
+}
+
+function addMore() {
+    let box = document.getElementById("medicine-box");
+    box.insertAdjacentHTML('beforeend', `
+        <div class="row g-3 mb-3 medicine-row align-items-end p-3 bg-light rounded-3 border position-relative mt-3">
+            <div class="col-md-8">
+                <label class="form-label fw-semibold text-secondary small">Medicine Name</label>
+                <div class="input-group input-group-sm mb-1">
+                    <span class="input-group-text bg-white text-muted border-end-0"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control medicine-filter-input border-start-0 ps-1" placeholder="Type to filter..." oninput="filterRowOptions(this)">
+                </div>
+                <select name="medicine_id" class="form-select medicine-select rounded-3" required>
+                    <option value="" disabled selected>-- Select Medicine --</option>
+                    {% for m in medicines %}
+                        <option value="{{ m.medicine_id }}" data-name="{{ m.name|lower }}">
+                            {{ m.name }} &mdash; Rs. {{ m.price }} (Stock: {{ m.stock }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold text-secondary small">Quantity</label>
+                <input type="number" name="quantity" class="form-control rounded-3" placeholder="Qty" min="1" required>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-outline-danger w-100 rounded-3 delete-row-btn" onclick="removeRow(this)">
+                    <i class="fas fa-trash-alt me-1"></i> Delete
+                </button>
+            </div>
+        </div>
+    `);
+}
+</script>
+
+<style>
+.form-control, .form-select {
+    border: 1px solid #d1d5db;
+    padding: 0.6rem 0.8rem;
+    transition: all 0.2s ease-in-out;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+.uppercase {
+    text-transform: uppercase;
+}
+.font-monospace {
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Nursing Station Requests — Asha Hospital HMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header Section -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-primary"><i class="fas fa-hand-holding-medical me-2"></i>Nursing Station Coordination</h2>
+            <p class="text-muted">Request nursing assistance, procedures, vitals check, or escalate care for patients.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'doctor_dashboard' %}" class="btn btn-outline-secondary fw-semibold">
+                <i class="fas fa-chevron-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Request Form Card -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-plus-circle me-2"></i>New Assistance Request</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Assistance/Task Type</label>
+                            {{ form.request_type }}
+                            {% if form.request_type.errors %}
+                            <div class="text-danger small mt-1">{{ form.request_type.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Location/Patient Type</label>
+                            {{ form.patient_type }}
+                            {% if form.patient_type.errors %}
+                            <div class="text-danger small mt-1">{{ form.patient_type.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Clinical Notes / Instructions</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <div class="text-danger small mt-1">{{ form.notes.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 mt-2">
+                            <i class="fas fa-paper-plane me-1"></i> Send to Nursing Station
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Request List Table -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-secondary text-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-list-alt me-2"></i>My Assistance Request Logs</h5>
+                    <span class="badge bg-light text-dark fw-bold">{{ requests.count }} requests logged</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Req ID</th>
+                                    <th>Patient</th>
+                                    <th>Task Requested</th>
+                                    <th>Location</th>
+                                    <th>Workflow Status</th>
+                                    <th>Date & Time</th>
+                                    <th class="pe-4">Details / Nurse</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in requests %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-secondary">#{{ req.id }}</td>
+                                    <td>
+                                        {% if req.patient %}
+                                        <div class="fw-bold text-dark">{{ req.patient.name }}</div>
+                                        <small class="text-muted">ID: PAT-{{ req.patient.patient_id }}</small>
+                                        {% else %}
+                                        <span class="text-muted">— (General Support)</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="fw-semibold text-primary"><i class="fas fa-briefcase-medical me-1 text-secondary"></i>{{ req.request_type }}</span>
+                                    </td>
+                                    <td>
+                                        {% if req.patient_type == 'OP' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">OPD</span>
+                                        {% elif req.patient_type == 'IP' %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">Inpatient</span>
+                                        {% elif req.patient_type == 'ICU' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">ICU</span>
+                                        {% else %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">Emergency</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if req.status == 'Pending' %}
+                                        <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Pending</span>
+                                        {% elif req.status == 'Assigned' %}
+                                        <span class="badge bg-info text-white"><i class="fas fa-user-tag me-1"></i>Assigned</span>
+                                        {% elif req.status == 'Accepted' %}
+                                        <span class="badge bg-primary text-white"><i class="fas fa-thumbs-up me-1"></i>Accepted</span>
+                                        {% elif req.status == 'In Progress' %}
+                                        <span class="badge bg-secondary text-white"><i class="fas fa-spinner fa-spin me-1"></i>In Progress</span>
+                                        {% elif req.status == 'Completed' %}
+                                        <span class="badge bg-success text-white"><i class="fas fa-check-circle me-1"></i>Completed</span>
+                                        {% else %}
+                                        <span class="badge bg-danger text-white"><i class="fas fa-times-circle me-1"></i>Cancelled</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ req.created_at|date:"d M Y, h:i A" }}</td>
+                                    <td class="pe-4">
+                                        {% if req.assignments.exists %}
+                                            {% with req.assignments.last as assign %}
+                                                <div class="small fw-semibold text-dark">Nurse: {{ assign.nurse.name }}</div>
+                                                {% if assign.status == 'Completed' and assign.notes %}
+                                                    <small class="text-success d-block italic"><i class="fas fa-comment-dots me-1"></i>"{{ assign.notes }}"</small>
+                                                {% endif %}
+                                            {% endwith %}
+                                        {% else %}
+                                            <span class="text-muted small">Not assigned yet</span>
+                                        {% endif %}
+                                        {% if req.notes %}
+                                            <small class="text-muted d-block mt-1"><em>Notes: {{ req.notes }}</em></small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <i class="fas fa-notes-medical fa-2x mb-3 text-secondary"></i>
+                                        <p class="mb-0 fw-semibold">No nursing station requests logged yet.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

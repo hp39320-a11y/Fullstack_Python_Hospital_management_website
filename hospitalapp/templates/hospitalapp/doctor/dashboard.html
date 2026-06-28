@@ -1,0 +1,195 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Doctor Dashboard - CarePlus HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="fw-bold text-primary">Doctor's Workspace</h2>
+            <p class="text-muted">Manage your appointments and patients.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Today's Appointments</h5>
+            <span class="badge bg-primary">{{ appointments.count }} Pending</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Patient Name</th>
+                            <th>Date</th>
+                            <th>Reason</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in appointments %}
+                        <tr>
+                            <td>{{ app.patient.name }}</td>
+                            <td>{{ app.appointment_date }}</td>
+                            <td>{{ app.reason|truncatechars:50 }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'add_prescription' app.appointment_id %}" class="btn btn-primary">Add Prescription</a>
+                                    {% if app.admission_status == 'Pending' %}
+                                        <span class="btn btn-outline-secondary" style="pointer-events: none;">Admission Pending</span>
+                                    {% elif app.admission_status == 'Admitted' %}
+                                        <span class="btn btn-info text-dark fw-bold" style="pointer-events: none;">Admitted</span>
+                                    {% elif app.admission_status == 'Ready For Discharge' %}
+                                        <span class="btn btn-warning text-dark fw-bold" style="pointer-events: none;">Ready for Discharge</span>
+                                    {% elif app.admission_status == 'Discharged' %}
+                                        <span class="btn btn-success" style="pointer-events: none;">Discharged</span>
+                                    {% else %}
+                                        <a href="{% url 'doctor_admit_patient' app.appointment_id %}" class="btn btn-warning text-dark fw-bold">Admit Patient</a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">No appointments for today.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Inpatient Admissions -->
+    <div class="card border-0 shadow-sm mt-4" style="border-radius: 16px;">
+        <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-bed text-primary me-2"></i>Active Admitted Inpatients</h5>
+                <p class="text-muted mb-0 small">Patients currently admitted under your care in ICU, General, or Private rooms.</p>
+            </div>
+            <span class="badge bg-primary px-3 py-2" style="border-radius: 8px;">{{ admitted_patients.count }} Active</span>
+        </div>
+        <div class="card-body px-4 pb-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr class="text-muted small uppercase" style="border-bottom: 2px solid #f1f5f9;">
+                            <th>Patient Name</th>
+                            <th>Ward & Bed No.</th>
+                            <th>Admitted Since</th>
+                            <th>Admitting Reason</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for adm in admitted_patients %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle me-3 bg-light text-primary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 50%; font-weight: 700;">
+                                        {{ adm.patient.name|slice:":1" }}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-semibold">
+                                            <a href="{% url 'patient_details' adm.admission_id %}" class="text-decoration-none text-primary hover-underline">
+                                                {{ adm.patient.name }}
+                                            </a>
+                                        </h6>
+                                        <small class="text-muted">ADM-{{ adm.admission_id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info-subtle text-info px-2 py-1" style="border-radius: 6px;">
+                                    {{ adm.ward_type }}
+                                </span>
+                                {% if adm.bed %}
+                                <strong class="text-secondary ms-1">{{ adm.bed.bed_number }}</strong>
+                                {% else %}
+                                <span class="text-muted small ms-1">(Not Allocated)</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ adm.admission_date|date:"d M Y, h:i A" }}</td>
+                            <td>{{ adm.reason|truncatechars:40 }}</td>
+                            <td class="text-end">
+                                <div class="btn-group gap-2">
+                                    <a href="{% url 'patient_details' adm.admission_id %}" class="btn btn-sm btn-info text-dark fw-bold" style="border-radius: 8px; font-weight: 500;">
+                                        <i class="fa fa-notes-medical me-1"></i>Patient Care
+                                    </a>
+                                    <a href="{% url 'doctor_inpatient_prescription' adm.admission_id %}" class="btn btn-sm btn-primary" style="border-radius: 8px; font-weight: 500;">
+                                        <i class="fa fa-file-prescription me-1"></i>Prescribe IP Meds
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-warning text-dark fw-bold" style="border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#referInpatientModal{{ adm.admission_id }}">
+                                        <i class="fas fa-share-square me-1"></i>Refer Specialist
+                                    </button>
+                                    {% if adm.status == 'Admitted' %}
+                                    <a href="{% url 'doctor_discharge_ready' adm.admission_id %}" class="btn btn-sm btn-warning text-dark fw-bold" style="border-radius: 8px;" onclick="return confirm('Mark this patient as Ready for Discharge?');">
+                                        <i class="fa-solid fa-circle-check me-1"></i>Discharge Ready
+                                    </a>
+                                    {% else %}
+                                    <span class="btn btn-sm btn-outline-success border-0 px-3 py-1" style="pointer-events: none; border-radius: 8px;">
+                                        <i class="fa-solid fa-circle-check me-1"></i>Discharge Pending
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="fa-solid fa-bed-pulse fa-2x mb-3 text-secondary"></i>
+                                <p class="mb-0">No active inpatient admissions under your care.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Refer Specialist Modals (outside table to prevent backdrop issues) -->
+{% for adm in admitted_patients %}
+<div class="modal fade" id="referInpatientModal{{ adm.admission_id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title fw-bold"><i class="fas fa-share-square me-2"></i>Refer to Specialist</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'doctor_refer_inpatient' adm.admission_id %}">
+                {% csrf_token %}
+                <div class="modal-body text-start">
+                    <div class="alert alert-light border mb-3">
+                        <p class="mb-1 small text-secondary">Patient: <strong>{{ adm.patient.name }}</strong></p>
+                        <p class="mb-1 small text-secondary">Ward: <strong>{{ adm.ward_type }}</strong> | Bed: <strong>{{ adm.bed_number }}</strong></p>
+                        <p class="mb-0 small text-secondary">Reason: <strong>{{ adm.reason|truncatechars:60 }}</strong></p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Select Specialist</label>
+                        <select name="specialist_id" class="form-select" required>
+                            <option value="">-- Select Specialist --</option>
+                            {% for spec in specialist_doctors %}
+                            <option value="{{ spec.doctor_id }}">{{ spec.specialization }}  {{ spec.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Referral Notes / Condition</label>
+                        <textarea name="referral_notes" class="form-control" rows="3" placeholder="Describe the condition, reason for referral, immediate treatment given..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning fw-bold text-dark"><i class="fas fa-check me-2"></i>Confirm Referral</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}

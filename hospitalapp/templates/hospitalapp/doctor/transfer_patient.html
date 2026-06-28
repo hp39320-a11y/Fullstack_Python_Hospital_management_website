@@ -1,0 +1,125 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Transfer Patient — Asha Hospital HMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 640px;">
+    <div class="card shadow-sm border-0" style="border-radius: 14px;">
+        <div class="card-header text-white fw-bold fs-5" style="background: linear-gradient(90deg,#0ea5e9,#0284c7); border-radius: 14px 14px 0 0;">
+            <i class="fas fa-exchange-alt me-2"></i>Ward Transfer
+        </div>
+        <div class="card-body p-4">
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <!-- Patient info strip -->
+            <div class="alert alert-light border mb-4 py-2 px-3">
+                <small class="text-muted d-block">Patient</small>
+                <strong>{{ admission.patient.name }}</strong>
+                <span class="badge bg-secondary ms-2">ADM-{{ admission.admission_id }}</span>
+            </div>
+
+            <form method="POST" id="transferForm">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary small">Current Ward</label>
+                    <input class="form-control bg-light" value="{{ admission.ward_type }}" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary small" for="ward_select">Transfer To Ward</label>
+                    <select name="ward_type" id="ward_select" class="form-select" required>
+                        <option value="General Ward" {% if admission.ward_type != 'General Ward' %}selected{% endif %}>General Ward</option>
+                        <option value="ICU">ICU</option>
+                        <option value="Semi Private">Semi Private</option>
+                        <option value="Private Room">Private Room</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold text-secondary small" for="bed_select">Select Available Bed</label>
+                    <select name="bed_id" id="bed_select" class="form-select" required>
+                        <!-- populated by JS -->
+                    </select>
+                    <div id="noBedWarning" class="text-danger small mt-1 d-none">
+                        <i class="fas fa-exclamation-triangle me-1"></i>No available beds in this ward.
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" id="submitBtn" class="btn btn-success fw-bold px-4">
+                        <i class="fas fa-exchange-alt me-1"></i>Confirm Transfer
+                    </button>
+                    <a href="{% url 'patient_details' admission.admission_id %}" class="btn btn-light border px-4">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bed data passed to JS -->
+<script id="bedData" type="application/json">
+[
+  {% for bed in beds %}
+  {"id": {{ bed.id }}, "bed_number": "{{ bed.bed_number }}", "ward_type": "{{ bed.ward_type }}"}{% if not forloop.last %},{% endif %}
+  {% endfor %}
+]
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const wardSelect   = document.getElementById('ward_select');
+    const bedSelect    = document.getElementById('bed_select');
+    const submitBtn    = document.getElementById('submitBtn');
+    const noBedWarning = document.getElementById('noBedWarning');
+
+    let allBeds = [];
+    try {
+        allBeds = JSON.parse(document.getElementById('bedData').textContent);
+    } catch (e) {}
+
+    function filterBeds() {
+        const selectedWard = wardSelect.value;
+        const matching = allBeds.filter(b => b.ward_type === selectedWard);
+
+        bedSelect.innerHTML = '';
+        noBedWarning.classList.add('d-none');
+        submitBtn.disabled = false;
+
+        if (matching.length === 0) {
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = '— No beds available —';
+            opt.disabled = true;
+            opt.selected = true;
+            bedSelect.appendChild(opt);
+            noBedWarning.classList.remove('d-none');
+            submitBtn.disabled = true;
+        } else {
+            matching.forEach((b, i) => {
+                const opt = document.createElement('option');
+                opt.value = b.id;
+                opt.textContent = b.bed_number + ' — ' + b.ward_type;
+                if (i === 0) opt.selected = true;
+                bedSelect.appendChild(opt);
+            });
+        }
+    }
+
+    wardSelect.addEventListener('change', filterBeds);
+    filterBeds(); // run on load
+});
+</script>
+{% endblock %}

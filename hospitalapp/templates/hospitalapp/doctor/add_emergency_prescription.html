@@ -1,0 +1,342 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Emergency Prescription - {{ case.patient.name }} - CarePlus HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- HEADER -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center gap-3">
+                <a href="{% url 'doctor_emergency_dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </a>
+                <div>
+                    <h2 class="fw-bold text-danger mb-0">
+                        <i class="fas fa-syringe me-2"></i>Emergency Prescription
+                    </h2>
+                    <p class="text-muted mb-0">Write an emergency treatment prescription for the casualty patient.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALERTS -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+
+        <!-- LEFT: PATIENT INFO CARD -->
+        <div class="col-lg-4 mb-4">
+
+            <!-- Patient Info -->
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-danger text-white py-3">
+                    <h6 class="mb-0"><i class="fas fa-user-injured me-2"></i>Patient Details</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-borderless mb-0">
+                        <tr>
+                            <td class="text-muted small">Name</td>
+                            <td class="fw-bold">{{ case.patient.name }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted small">Patient ID</td>
+                            <td>PAT-{{ case.patient.patient_id }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted small">Age / Gender</td>
+                            <td>{{ case.patient.age }} yrs / {{ case.patient.gender }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted small">Blood Group</td>
+                            <td>
+                                <span class="badge bg-danger">{{ case.patient.blood_group|default:"N/A" }}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted small">Case ID</td>
+                            <td class="fw-bold text-danger">CAS-{{ case.id }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted small">Priority</td>
+                            <td>
+                                {% if case.priority == 'Critical' %}
+                                    <span class="badge bg-danger">Critical</span>
+                                {% elif case.priority == 'High' %}
+                                    <span class="badge bg-warning text-dark">High</span>
+                                {% elif case.priority == 'Medium' %}
+                                    <span class="badge bg-info text-dark">Medium</span>
+                                {% else %}
+                                    <span class="badge bg-success">Low</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted small">Status</td>
+                            <td>
+                                <span class="badge bg-primary">{{ case.status }}</span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Emergency Reason -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark py-2">
+                    <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Emergency Reason</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0 small">{{ case.emergency_reason }}</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT: PRESCRIPTION FORM -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-danger text-white py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-prescription-bottle-alt me-2"></i>Emergency Prescription Form
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+
+                    <form method="POST" id="emergency-prescription-form">
+                        {% csrf_token %}
+
+                        <!-- CLINICAL NOTES -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Clinical Notes / Assessment</label>
+                            <textarea name="notes"
+                                      class="form-control"
+                                      rows="4"
+                                      placeholder="Describe the patient's current condition, symptoms, initial assessment..."></textarea>
+                            <small class="text-muted">Include vitals, symptoms, initial diagnosis if applicable.</small>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- MEDICINES SECTION -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0">
+                                <i class="fas fa-pills me-2 text-danger"></i>Prescribed Medicines
+                            </h5>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="addMedicineRow()">
+                                <i class="fas fa-plus me-1"></i> Add Medicine
+                            </button>
+                        </div>
+
+                        <div id="medicine-rows-container">
+                            <!-- Medicine Row Template -->
+                            <div class="medicine-row card border-1 border-light bg-light mb-3 p-3" id="med-row-0">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-danger">Medicine #1</span>
+                                    <button type="button"
+                                            class="btn btn-outline-secondary btn-sm"
+                                            onclick="removeMedicineRow(this)"
+                                            disabled>
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                                <div class="row g-2">
+                                    <!-- Medicine Select + Search -->
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold text-muted">Medicine</label>
+                                        <div class="input-group input-group-sm mb-1">
+                                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                            <input type="text" class="form-control med-filter" placeholder="Search medicine..." oninput="filterMeds(this)">
+                                        </div>
+                                        <select name="medicine_id" class="form-select med-select" required>
+                                            <option value="" disabled selected>-- Select Medicine --</option>
+                                            {% for m in medicines %}
+                                                <option value="{{ m.medicine_id }}" data-name="{{ m.name|lower }}">
+                                                    {{ m.name }} (Stock: {{ m.stock }})
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <!-- Dosage -->
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-muted">Dosage</label>
+                                        <input type="text" name="dosage" class="form-control form-control-sm"
+                                               placeholder="e.g. 500mg, 2 tabs" required>
+                                    </div>
+                                    <!-- Frequency -->
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-muted">Frequency</label>
+                                        <select name="frequency" class="form-select form-select-sm" required>
+                                            <option value="" disabled selected>Select</option>
+                                            <option value="OD">Once Daily (OD)</option>
+                                            <option value="BD">Twice Daily (BD)</option>
+                                            <option value="TDS">Thrice Daily (TDS)</option>
+                                            <option value="QID">Four Times Daily (QID)</option>
+                                            <option value="SOS">As Needed (SOS)</option>
+                                            <option value="STAT">Immediately (STAT)</option>
+                                            <option value="Hourly">Every Hour</option>
+                                            <option value="Q4H">Every 4 Hours</option>
+                                            <option value="Q6H">Every 6 Hours</option>
+                                            <option value="Q8H">Every 8 Hours</option>
+                                        </select>
+                                    </div>
+                                    <!-- Duration -->
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-muted">Duration (days)</label>
+                                        <input type="number" name="duration_days" class="form-control form-control-sm"
+                                               placeholder="Days" min="1" value="1" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ACTIONS -->
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a href="{% url 'doctor_emergency_dashboard' %}" class="btn btn-light px-4 border">
+                                <i class="fas fa-times me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger px-5 fw-bold">
+                                <i class="fas fa-check me-2"></i>Save Emergency Prescription
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+// ---- Medicine Filter ----
+function filterMeds(inputEl) {
+    const filter = inputEl.value.toLowerCase().trim();
+    const row = inputEl.closest('.medicine-row');
+    const select = row.querySelector('.med-select');
+    Array.from(select.options).forEach(opt => {
+        if (!opt.value) return;
+        const name = opt.getAttribute('data-name') || '';
+        opt.style.display = name.includes(filter) ? '' : 'none';
+        opt.disabled = !name.includes(filter);
+    });
+    // Reset if selected option hidden
+    const selected = select.options[select.selectedIndex];
+    if (selected && selected.disabled) select.value = '';
+}
+
+// ---- Dynamic Medicine Rows ----
+let rowCount = 1;
+
+function addMedicineRow() {
+    rowCount++;
+    const container = document.getElementById('medicine-rows-container');
+
+    // Build medicine options from first row
+    const firstSelect = document.querySelector('.med-select');
+    let optionsHtml = '<option value="" disabled selected>-- Select Medicine --</option>';
+    Array.from(firstSelect.querySelectorAll('option:not([value=""])')).forEach(opt => {
+        optionsHtml += `<option value="${opt.value}" data-name="${opt.getAttribute('data-name')}">${opt.textContent.trim()}</option>`;
+    });
+
+    const html = `
+    <div class="medicine-row card border-1 border-light bg-light mb-3 p-3" id="med-row-${rowCount}">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge bg-danger">Medicine #${rowCount}</span>
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeMedicineRow(this)">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+        <div class="row g-2">
+            <div class="col-12">
+                <label class="form-label small fw-bold text-muted">Medicine</label>
+                <div class="input-group input-group-sm mb-1">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control med-filter" placeholder="Search medicine..." oninput="filterMeds(this)">
+                </div>
+                <select name="medicine_id" class="form-select med-select" required>
+                    ${optionsHtml}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-bold text-muted">Dosage</label>
+                <input type="text" name="dosage" class="form-control form-control-sm" placeholder="e.g. 500mg" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-bold text-muted">Frequency</label>
+                <select name="frequency" class="form-select form-select-sm" required>
+                    <option value="" disabled selected>Select</option>
+                    <option value="OD">Once Daily (OD)</option>
+                    <option value="BD">Twice Daily (BD)</option>
+                    <option value="TDS">Thrice Daily (TDS)</option>
+                    <option value="QID">Four Times Daily (QID)</option>
+                    <option value="SOS">As Needed (SOS)</option>
+                    <option value="STAT">Immediately (STAT)</option>
+                    <option value="Hourly">Every Hour</option>
+                    <option value="Q4H">Every 4 Hours</option>
+                    <option value="Q6H">Every 6 Hours</option>
+                    <option value="Q8H">Every 8 Hours</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-bold text-muted">Duration (days)</label>
+                <input type="number" name="duration_days" class="form-control form-control-sm" placeholder="Days" min="1" value="1" required>
+            </div>
+        </div>
+    </div>`;
+
+    container.insertAdjacentHTML('beforeend', html);
+
+    // Renumber badges
+    renumberRows();
+}
+
+function removeMedicineRow(btn) {
+    const row = btn.closest('.medicine-row');
+    const container = document.getElementById('medicine-rows-container');
+    if (container.querySelectorAll('.medicine-row').length > 1) {
+        row.remove();
+        renumberRows();
+    } else {
+        alert('At least one medicine is required.');
+    }
+}
+
+function renumberRows() {
+    document.querySelectorAll('.medicine-row').forEach((row, idx) => {
+        const badge = row.querySelector('.badge');
+        if (badge) badge.textContent = `Medicine #${idx + 1}`;
+        // First row's delete button stays disabled
+        const deleteBtn = row.querySelector('button[onclick="removeMedicineRow(this)"]');
+        if (deleteBtn) {
+            deleteBtn.disabled = (idx === 0 && document.querySelectorAll('.medicine-row').length === 1);
+        }
+    });
+}
+</script>
+
+<style>
+.medicine-row {
+    border-radius: 0.75rem;
+    transition: box-shadow 0.2s;
+}
+.medicine-row:hover {
+    box-shadow: 0 2px 12px rgba(220,53,69,0.10);
+}
+.card {
+    border-radius: 1rem;
+}
+</style>
+
+{% endblock %}

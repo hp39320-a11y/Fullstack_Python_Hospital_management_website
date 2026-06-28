@@ -1,0 +1,109 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Referrals Inbox — Asha Hospital HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="fw-bold text-primary"><i class="fas fa-inbox me-2"></i>Specialist Referral Inbox</h2>
+            <p class="text-muted">Review and accept emergency referrals from the Casualty care teams.</p>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+        <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold text-dark mb-0"><i class="fas fa-notes-medical text-primary me-2"></i>Pending / Active Referrals</h5>
+            <span class="badge bg-primary px-3 py-2" style="border-radius: 8px;">{{ referrals.count }} Referral(s)</span>
+        </div>
+        <div class="card-body px-4 pb-4">
+
+            {% if referral_data %}
+                {% for entry in referral_data %}
+                {% with referral=entry.referral lab_orders=entry.lab_orders radiology_orders=entry.radiology_orders %}
+                <div class="card mb-4 border shadow-sm" style="border-radius: 14px; overflow: hidden;">
+
+                    <!-- ── Referral Header ─────────────────────────────────── -->
+                    <div class="card-header bg-light d-flex flex-wrap align-items-center justify-content-between gap-2 py-3 px-4">
+                        <div>
+                            <span class="fw-bold text-dark fs-6">{{ referral.casualty.patient.name }}</span>
+                            <span class="text-muted small ms-2">
+                                CAS-{{ referral.casualty.id }} · {{ referral.casualty.patient.age }} yrs · {{ referral.casualty.patient.gender }}
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            {% if referral.status == 'Pending' %}
+                                <span class="badge bg-warning text-dark px-2 py-1" style="border-radius:6px;"><i class="fas fa-clock me-1"></i>Pending</span>
+                            {% elif referral.status == 'Accepted' %}
+                                <span class="badge bg-success px-2 py-1" style="border-radius:6px;"><i class="fas fa-check-circle me-1"></i>Accepted</span>
+                            {% else %}
+                                <span class="badge bg-danger px-2 py-1" style="border-radius:6px;"><i class="fas fa-times-circle me-1"></i>Rejected</span>
+                            {% endif %}
+
+                            {% if referral.status == 'Pending' %}
+                            <a href="{% url 'accept_referral' referral.id %}" class="btn btn-success btn-sm fw-bold" style="border-radius:8px;">
+                                <i class="fas fa-check me-1"></i>Accept
+                            </a>
+                            <a href="{% url 'reject_referral' referral.id %}" class="btn btn-outline-danger btn-sm fw-bold" style="border-radius:8px;">
+                                <i class="fas fa-times me-1"></i>Reject
+                            </a>
+                            {% elif referral.status == 'Accepted' %}
+                                {% if referral.casualty.status == 'Admitted' %}
+                                    {% with admission=referral.casualty.patient.admission_set.last %}
+                                        {% if admission %}
+                                            <a href="{% url 'patient_details' admission.admission_id %}" class="btn btn-sm btn-outline-success fw-bold" style="border-radius:8px;">
+                                                <i class="fas fa-bed me-1"></i>Inpatient Care
+                                            </a>
+                                        {% else %}
+                                            <span class="text-success small fw-semibold"><i class="fas fa-bed me-1"></i>Inpatient Care</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% else %}
+                                    <a href="{% url 'doctor_admit_casuality' referral.casualty.id %}" class="btn btn-sm btn-outline-primary fw-bold" style="border-radius:8px;">
+                                        <i class="fas fa-bed me-1"></i>In Patient Care
+                                    </a>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted small">—</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- ── Referral Details ────────────────────────────────── -->
+                    <div class="card-body px-4 pt-3 pb-2">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <span class="text-muted small"><i class="fas fa-user-md me-1"></i><strong>Referred By:</strong>
+                                    {{ referral.referred_by.name }}
+                                    <span class="text-muted">({{ referral.referred_by.specialization }})</span>
+                                </span>
+                            </div>
+                            <div class="col-md-6">
+                                <span class="text-muted small"><i class="fas fa-exclamation-circle me-1 text-danger"></i><strong>Reason:</strong>
+                                    {{ referral.casualty.emergency_reason|truncatechars:120 }}
+                                </span>
+                            </div>
+                            {% if referral.notes %}
+                            <div class="col-12">
+                                <span class="text-muted small"><i class="fas fa-sticky-note me-1"></i><em>Notes:</em> {{ referral.notes }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                    </div><!-- /card-body -->
+                </div><!-- /card -->
+                {% endwith %}
+                {% endfor %}
+
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-inbox fa-3x mb-3 text-secondary opacity-50"></i>
+                <h5>Your referral inbox is empty.</h5>
+                <p class="text-muted mb-0 small">When casualty doctors refer cases to you, they will appear here.</p>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

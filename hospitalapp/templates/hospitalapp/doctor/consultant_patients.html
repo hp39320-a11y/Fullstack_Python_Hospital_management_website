@@ -1,0 +1,61 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<h3>
+
+Consultant Patients
+
+</h3>
+
+<table class="table table-striped">
+
+<tr>
+
+<th>Admission</th>
+<th>Patient</th>
+<th>Ward</th>
+<th>Action</th>
+
+</tr>
+
+{% for consultant in consultants %}
+
+<tr>
+
+<td>
+ADM-{{ consultant.admission.admission_id }}
+</td>
+
+<td>
+{{ consultant.admission.patient.name }}
+</td>
+
+<td>
+{{ consultant.admission.ward_type }}
+</td>
+
+<td>
+
+<a
+href="{% url 'doctor_inpatient_prescription' consultant.admission.admission_id %}"
+class="btn btn-primary btn-sm"
+>
+
+IP Prescription
+
+</a>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+{% endblock %}

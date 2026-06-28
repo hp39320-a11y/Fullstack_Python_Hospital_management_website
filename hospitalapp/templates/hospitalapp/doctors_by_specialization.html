@@ -1,0 +1,79 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Doctors - {{ specialization }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3">
+        <div>
+            <span class="text-success fw-bold text-uppercase tracking-wider small">{{ specialization }} Specialist</span>
+            <h2 class="fw-bold text-dark mt-1 mb-0">Our {{ specialization }} Experts</h2>
+        </div>
+        <a href="{% url 'departments' %}" class="btn btn-outline-primary rounded-pill px-4">
+            <i class="fas fa-arrow-left me-2"></i>Back to Departments
+        </a>
+    </div>
+
+    <!-- Doctors Cards Grid -->
+    <div class="row g-4">
+        {% for doctor in doctors %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <!-- Custom Doctor Profile Avatar Image -->
+                        <div class="me-3 position-relative">
+                            <img src="https://cdn-icons-png.flaticon.com/512/3774/3774299.png" alt="{{ doctor.name }}" class="rounded-circle border border-3 border-success-subtle shadow-sm" style="width: 70px; height: 70px; object-fit: cover; background: #f8fafc;">
+                            <span class="position-absolute bottom-0 end-0 bg-success border border-white border-2 rounded-circle" style="width: 14px; height: 14px;" title="Available"></span>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1">
+                                {{ doctor.name }}
+                            </h5>
+                            <span class="badge bg-success-subtle text-success rounded-pill px-2.5 py-1 small fw-semibold">{{ doctor.specialization }}</span>
+                        </div>
+                    </div>
+
+                    <hr class="text-muted border-opacity-25 mb-4">
+
+                    <!-- Contact Details -->
+                    <div class="mb-4 small text-muted">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-light text-success rounded p-2 me-3" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                            <span>{{ doctor.phone|default:"+91 98765 43210" }}</span>
+                             
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light text-success rounded p-2 me-3" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-envelope"></i>
+                            </div>  
+                            <span>{{ doctor.email|default:"[EMAIL_ADDRESS]" }}</span>   
+                             
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light text-danger rounded p-2 me-3" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <span>{{ doctor.address|default:"Asha Hospital OPD Block" }}</span>
+                        </div>
+                    </div>
+
+                  
+                    
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="card border-0 shadow-sm p-5 rounded-4">
+                <i class="fas fa-user-md fa-3x text-muted mb-3"></i>
+                <p class="text-muted mb-0">No active doctors found in this department right now.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

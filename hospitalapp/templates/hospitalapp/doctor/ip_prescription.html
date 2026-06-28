@@ -1,0 +1,185 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Inpatient Prescription - Asha HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Patient Info Card -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <span class="badge bg-primary-subtle text-primary px-3 py-2 mb-2" style="font-weight: 600; border-radius: 8px;">Inpatient In-care</span>
+                    <h3 class="fw-bold text-dark mb-1">{{ admission.patient.name }}</h3>
+                    <p class="text-muted mb-0">ADM ID: <strong class="text-secondary">ADM-{{ admission.admission_id }}</strong> | Bed Allocated: <strong class="text-secondary">{{ admission.bed.bed_number }} ({{ admission.ward_type }})</strong></p>
+                </div>
+                <div class="text-end">
+                    <p class="text-muted mb-1">Admitted Date: <strong>{{ admission.admission_date|date:"d M Y" }}</strong></p>
+                    <p class="text-muted mb-0">Doctor-in-charge: <strong>{{ admission.doctor.name }}</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prescription Form Card -->
+    <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+        <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="fw-bold text-dark mb-0">Create Medication Prescription</h4>
+                <p class="text-muted mb-0 small">Prescribe medications from pharmacy inventory. System will auto-schedule doses.</p>
+            </div>
+            <button type="button" class="btn btn-primary" id="add-medicine-row" style="border-radius: 10px; font-weight: 500;">
+                <i class="fa fa-plus me-2"></i>Add Medicine
+            </button>
+        </div>
+        <div class="card-body p-4">
+            <form method="POST" id="prescription-form">
+                {% csrf_token %}
+                
+                <!-- Diagnosis Notes -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold text-secondary">Clinical Diagnosis / Admitting Notes</label>
+                    <textarea class="form-control" name="diagnosis_notes" rows="2" placeholder="Describe the current clinical diagnosis or general observation notes..." style="border-radius: 10px;"></textarea>
+                </div>
+
+                <!-- Medicines Table -->
+                <div class="table-responsive mb-4">
+                    <table class="table table-borderless align-middle" id="medicines-table">
+                        <thead>
+                            <tr class="text-muted small uppercase" style="border-bottom: 2px solid #f1f5f9;">
+                                <th style="width: 30%;">Medicine Name</th>
+                                <th style="width: 15%;">Dosage</th>
+                                <th style="width: 15%;">Route</th>
+                                <th style="width: 15%;">Frequency</th>
+                                <th style="width: 10%;">Duration (Days)</th>
+                                <th style="width: 25%;">Special Instructions</th>
+                                <th style="width: 5%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="prescription-rows">
+                            <!-- Rows will be dynamically loaded here by JS -->
+                            <tr class="medicine-row" style="border-bottom: 1px solid #f8fafc;">
+                                <td>
+                                    <select name="medicine_ids[]" class="form-select medicine-select" required style="border-radius: 10px;">
+                                        <option value="" disabled selected>Select Medicine</option>
+                                        {% for med in medicines %}
+                                        <option value="{{ med.medicine_id }}" data-price="{{ med.price }}" data-stock="{{ med.stock }}">{{ med.name }} (Stock: {{ med.stock }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="text" name="dosages[]" class="form-control" placeholder="e.g. 500mg" required style="border-radius: 10px;">
+                                </td>
+                                <td>
+                                    <select name="routes[]" class="form-select" required style="border-radius: 10px;">
+                                        {% for route in routes %}
+                                        <option value="{{ route }}">{{ route }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="frequencies[]" class="form-select" required style="border-radius: 10px;">
+                                        {% for freq in frequencies %}
+                                        <option value="{{ freq }}">{{ freq }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" name="durations[]" class="form-control" min="1" max="60" value="3" required style="border-radius: 10px;">
+                                </td>
+                                <td>
+                                    <input type="text" name="instructions[]" class="form-control" placeholder="e.g. After food" style="border-radius: 10px;">
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-link text-danger remove-row" style="display: none;"><i class="fa-solid fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Submit Section -->
+                <div class="d-flex justify-content-end gap-3 mt-4 pt-3" style="border-top: 1px solid #f1f5f9;">
+                    <a href="{% url 'doctor_dashboard' %}" class="btn btn-outline-secondary px-4" style="border-radius: 10px;">Cancel</a>
+                    <button type="submit" class="btn btn-success px-4" style="border-radius: 10px; background-color: var(--primary-green); border-color: var(--primary-green);">
+                        <i class="fa fa-paper-plane me-2"></i>Send to Nursing Station
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const addRowBtn = document.getElementById('add-medicine-row');
+        const rowsContainer = document.getElementById('prescription-rows');
+
+        // Show/hide remove button based on row count
+        function updateRemoveButtons() {
+            const rows = rowsContainer.getElementsByClassName('medicine-row');
+            for (let i = 0; i < rows.length; i++) {
+                const removeBtn = rows[i].querySelector('.remove-row');
+                if (rows.length > 1) {
+                    removeBtn.style.display = 'block';
+                } else {
+                    removeBtn.style.display = 'none';
+                }
+            }
+        }
+
+        addRowBtn.addEventListener('click', function () {
+            // Get original row template
+            const firstRow = rowsContainer.querySelector('.medicine-row');
+            const newRow = firstRow.cloneNode(true);
+
+            // Reset values
+            newRow.querySelector('.medicine-select').value = '';
+            newRow.querySelector('input[name="dosages[]"]').value = '';
+            newRow.querySelector('input[name="durations[]"]').value = '3';
+            newRow.querySelector('input[name="instructions[]"]').value = '';
+
+            // Add remove handler to new row button
+            newRow.querySelector('.remove-row').addEventListener('click', function () {
+                newRow.remove();
+                updateRemoveButtons();
+            });
+
+            rowsContainer.appendChild(newRow);
+            updateRemoveButtons();
+        });
+
+        // Add remove handler to the first row (in case it increases and decreases later)
+        const firstRemoveBtn = rowsContainer.querySelector('.remove-row');
+        firstRemoveBtn.addEventListener('click', function () {
+            const rows = rowsContainer.getElementsByClassName('medicine-row');
+            if (rows.length > 1) {
+                firstRemoveBtn.closest('.medicine-row').remove();
+                updateRemoveButtons();
+            }
+        });
+
+        // Form submission confirmation
+        const form = document.getElementById('prescription-form');
+        form.addEventListener('submit', function (e) {
+            const selects = form.querySelectorAll('.medicine-select');
+            let duplicate = false;
+            const values = [];
+
+            selects.forEach(select => {
+                if (select.value) {
+                    if (values.includes(select.value)) {
+                        duplicate = true;
+                    }
+                    values.push(select.value);
+                }
+            });
+
+            if (duplicate) {
+                e.preventDefault();
+                alert("You have prescribed the same medicine twice. Please adjust quantities or remove the duplicate row.");
+            }
+        });
+    });
+</script>
+{% endblock %}

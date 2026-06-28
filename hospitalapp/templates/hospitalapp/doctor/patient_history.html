@@ -1,0 +1,489 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Patient History - Asha Hospital{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header/Back Nav -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <h2 class="fw-bold text-dark mb-0">
+            <i class="fas fa-history text-success me-2"></i>Patient History
+        </h2>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'doctor_create_lab_order' patient.patient_id %}" class="btn btn-primary rounded-pill px-3 shadow-sm">
+                <i class="fas fa-flask me-1"></i>Order Lab Test
+            </a>
+            <a href="{% url 'doctor_create_radiology_order' patient.patient_id %}" class="btn btn-warning text-dark fw-semibold rounded-pill px-3 shadow-sm">
+                <i class="fas fa-x-ray me-1"></i>Order Radiology Scan
+            </a>
+            <a href="{% url 'doctor_patients' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="fas fa-arrow-left me-2"></i>Back to My Patients
+            </a>
+        </div>
+    </div>
+
+    <!-- Patient Info Card -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white border-start border-success border-4">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-md-2 text-center text-md-start mb-3 mb-md-0">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Patient Avatar" class="rounded-circle border border-2 border-light bg-light p-1" style="width: 80px; height: 80px; object-fit: cover;">
+                </div>
+                <div class="col-md-10">
+                    <h3 class="fw-bold text-dark mb-1">{{ patient.name }}</h3>
+                    <div class="d-flex flex-wrap gap-3 text-muted small mt-2">
+                        <span><i class="fas fa-phone-alt text-success me-1"></i>{{ patient.phone|default:"Not Available" }}</span>
+                        <span><i class="fas fa-envelope text-primary me-1"></i>{{ patient.email }}</span>
+                        <span><i class="fas fa-id-card text-warning me-1"></i>ID: #{{ patient.patient_id }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Sections Grid -->
+    <div class="row g-4">
+        <!-- Appointments -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-calendar-alt text-primary me-2"></i>Appointments
+                    </h5>
+                    <span class="badge bg-primary-subtle text-primary rounded-pill px-3">{{ appointments|length }}</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="timeline">
+                        {% for a in appointments %}
+                        <div class="pb-3 border-bottom mb-3 last-no-border">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <span class="fw-semibold text-dark">{{ a.appointment_date }}</span>
+                                {% if a.status|lower == 'completed' %}
+                                    <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 small">Completed</span>
+                                {% elif a.status|lower == 'pending' %}
+                                    <span class="badge bg-warning-subtle text-warning rounded-pill px-2 py-1 small">Pending</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark rounded-pill px-2 py-1 small">{{ a.status }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-calendar-times fa-2x mb-2 text-black-50"></i>
+                            <p class="mb-0 small">No appointments recorded</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prescriptions -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-file-prescription text-success me-2"></i>Prescriptions
+                    </h5>
+                    <span class="badge bg-success-subtle text-success rounded-pill px-3">{{ prescriptions|length }}</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="prescription-list">
+                        {% for p in prescriptions %}
+                        <div class="pb-3 border-bottom mb-3 last-no-border">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="fw-bold text-dark small"><i class="fas fa-file-alt text-muted me-1"></i>Diagnosis</span>
+                                <span class="text-muted extra-small">{{ p.created_at|date:"M d, Y" }}</span>
+                            </div>
+                            <p class="text-muted small mb-0">{{ p.diagnosis }}</p>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-prescription-bottle fa-2x mb-2 text-black-50"></i>
+                            <p class="mb-0 small">No prescriptions recorded</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bills -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-file-invoice-dollar text-warning me-2"></i>Bills
+                    </h5>
+                    <span class="badge bg-warning-subtle text-warning rounded-pill px-3">{{ bills|length }}</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="bill-list">
+                        {% for b in bills %}
+                        <div class="pb-3 border-bottom mb-3 last-no-border">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold text-dark">₹{{ b.total_amount }}</span>
+                                    <br>
+                                    <span class="text-muted extra-small">{{ b.created_at|date:"M d, Y" }}</span>
+                                </div>
+                                {% if b.payment_status|lower == 'paid' %}
+                                    <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 small">Paid</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger rounded-pill px-2 py-1 small">Unpaid</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-receipt fa-2x mb-2 text-black-50"></i>
+                            <p class="mb-0 small">No bills recorded</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investigations Grid -->
+    <div class="row g-4 mt-1">
+        <!-- Lab Orders -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-flask text-primary me-2"></i>Laboratory History
+                    </h5>
+                    <span class="badge bg-primary-subtle text-primary rounded-pill px-3">{{ lab_orders|length }}</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="lab-list">
+                        {% for order in lab_orders %}
+                        <div class="pb-3 border-bottom mb-3 last-no-border">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="fw-bold text-dark">Order #{{ order.id }}</span>
+                                {% if order.status == 'Completed' or order.status == 'Verified' %}
+                                    <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 small">{{ order.status }}</span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-warning rounded-pill px-2 py-1 small">{{ order.status }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="small text-muted mb-2">{{ order.created_at|date:"M d, Y" }}</div>
+                            <ul class="list-unstyled mb-0">
+                                {% for item in order.items.all %}
+                                <li class="mb-1 d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-caret-right me-2 text-primary"></i>{{ item.test.name }}</span>
+                                    {% if order.status == 'Completed' and item.labresult or order.status == 'Verified' and item.labresult %}
+                                        <button class="btn btn-sm btn-outline-primary py-0 px-2" data-bs-toggle="modal" data-bs-target="#historyLabModal{{ item.id }}">Result</button>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-flask fa-2x mb-2 text-black-50"></i>
+                            <p class="mb-0 small">No laboratory history</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Radiology Orders -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-x-ray text-info me-2"></i>Radiology History
+                    </h5>
+                    <span class="badge bg-info-subtle text-info rounded-pill px-3">{{ radiology_orders|length }}</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="rad-list">
+                        {% for order in radiology_orders %}
+                        <div class="pb-3 border-bottom mb-3 last-no-border">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="fw-bold text-dark">Order #{{ order.id }}</span>
+                                {% if order.status == 'Reported' %}
+                                    <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 small">Reported</span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-warning rounded-pill px-2 py-1 small">{{ order.status }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="small text-muted mb-2">{{ order.created_at|date:"M d, Y" }}</div>
+                            <ul class="list-unstyled mb-0">
+                                {% for item in order.items.all %}
+                                <li class="mb-1 d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-caret-right me-2 text-info"></i>{{ item.test.name }}</span>
+                                    {% if order.status == 'Reported' and item.radiologyreport %}
+                                        <button class="btn btn-sm btn-outline-info py-0 px-2" data-bs-toggle="modal" data-bs-target="#historyRadModal{{ item.id }}">Report</button>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-x-ray fa-2x mb-2 text-black-50"></i>
+                            <p class="mb-0 small">No radiology history</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= LAB RESULT MODALS ================= -->
+{% for order in lab_orders %}
+    {% for item in order.items.all %}
+        {% if order.status == 'Completed' and item.labresult or order.status == 'Verified' and item.labresult %}
+            <!-- Modal -->
+            <div class="modal fade" id="historyLabModal{{ item.id }}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white py-2">
+                            <h6 class="modal-title mb-0"><i class="fas fa-flask me-2"></i>Result: {{ item.test.name }}</h6>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-start">
+                            <p class="mb-1 text-muted small">Result Value</p>
+                            {% if item.labresult.is_cbc %}
+                                <div class="table-responsive mt-2 mb-3">
+                                    <table class="table table-bordered table-sm align-middle mb-0 shadow-sm" style="font-size: 12px;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="py-2">Parameter</th>
+                                                <th class="py-2 text-primary">Result</th>
+                                                <th class="py-2">Normal Range</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for name, range, val in item.labresult.cbc_fields_with_results %}
+                                            <tr>
+                                                <td class="py-2">{{ name }}</td>
+                                                <td class="py-2 fw-bold text-primary">{{ val }}</td>
+                                                <td class="py-2 text-muted">{{ range }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% elif item.labresult.is_lipid %}
+                                <div class="table-responsive mt-2 mb-3">
+                                    <table class="table table-bordered table-sm align-middle mb-0 shadow-sm" style="font-size: 12px;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="py-2">Parameter</th>
+                                                <th class="py-2 text-primary">Result</th>
+                                                <th class="py-2">Normal Range</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for name, range, val in item.labresult.lipid_fields_with_results %}
+                                            <tr>
+                                                <td class="py-2">{{ name }}</td>
+                                                <td class="py-2 fw-bold text-primary">{{ val }}</td>
+                                                <td class="py-2 text-muted">{{ range }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% elif item.labresult.is_thyroid %}
+                                <div class="table-responsive mt-2 mb-3">
+                                    <table class="table table-bordered table-sm align-middle mb-0 shadow-sm" style="font-size: 12px;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="py-2">Parameter</th>
+                                                <th class="py-2 text-primary">Result</th>
+                                                <th class="py-2">Normal Range</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for name, range, val in item.labresult.thyroid_fields_with_results %}
+                                            <tr>
+                                                <td class="py-2">{{ name }}</td>
+                                                <td class="py-2 fw-bold text-primary">{{ val }}</td>
+                                                <td class="py-2 text-muted">{{ range }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% elif item.labresult.is_lft %}
+                                <div class="table-responsive mt-2 mb-3">
+                                    <table class="table table-bordered table-sm align-middle mb-0 shadow-sm" style="font-size: 12px;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="py-2">Parameter</th>
+                                                <th class="py-2 text-primary">Result</th>
+                                                <th class="py-2">Normal Range</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for name, range, val in item.labresult.lft_fields_with_results %}
+                                            <tr>
+                                                <td class="py-2">{{ name }}</td>
+                                                <td class="py-2 fw-bold text-primary">{{ val }}</td>
+                                                <td class="py-2 text-muted">{{ range }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% elif item.labresult.is_kft %}
+                                <div class="table-responsive mt-2 mb-3">
+                                    <table class="table table-bordered table-sm align-middle mb-0 shadow-sm" style="font-size: 12px;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="py-2">Parameter</th>
+                                                <th class="py-2 text-primary">Result</th>
+                                                <th class="py-2">Normal Range</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for name, range, val in item.labresult.kft_fields_with_results %}
+                                            <tr>
+                                                <td class="py-2">{{ name }}</td>
+                                                <td class="py-2 fw-bold text-primary">{{ val }}</td>
+                                                <td class="py-2 text-muted">{{ range }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% elif item.labresult.is_blood_sugar %}
+                                <div class="table-responsive mt-2 mb-3">
+                                    <table class="table table-bordered table-sm align-middle mb-0 shadow-sm" style="font-size: 12px;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="py-2">Parameter</th>
+                                                <th class="py-2 text-primary">Result</th>
+                                                <th class="py-2">Normal Range</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for name, range, val in item.labresult.blood_sugar_fields_with_results %}
+                                            <tr>
+                                                <td class="py-2">{{ name }}</td>
+                                                <td class="py-2 fw-bold text-primary">{{ val }}</td>
+                                                <td class="py-2 text-muted">{{ range }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% elif item.labresult.is_hba1c %}
+                                <div class="table-responsive mt-2 mb-3">
+                                    <table class="table table-bordered table-sm align-middle mb-0 shadow-sm" style="font-size: 12px;">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="py-2">Parameter</th>
+                                                <th class="py-2 text-primary">Result</th>
+                                                <th class="py-2">Reference Range</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for name, range, val in item.labresult.hba1c_fields_with_results %}
+                                            <tr>
+                                                <td class="py-2">{{ name }}</td>
+                                                <td class="py-2 fw-bold text-primary">{{ val }}</td>
+                                                <td class="py-2 text-muted">{{ range }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                             {% elif item.labresult.parameter_results.exists %}
+                                 <div class="table-responsive mt-2 mb-3">
+                                     <table class="table table-bordered table-sm align-middle mb-0 shadow-sm" style="font-size: 12px;">
+                                         <thead class="table-light">
+                                             <tr>
+                                                 <th class="py-2">Parameter</th>
+                                                 <th class="py-2 text-primary">Result</th>
+                                                 <th class="py-2">Normal Range</th>
+                                             </tr>
+                                         </thead>
+                                         <tbody>
+                                             {% for pr in item.labresult.parameter_results.all %}
+                                             <tr>
+                                                 <td class="py-2">{{ pr.parameter.name }}</td>
+                                                 <td class="py-2 fw-bold {% if pr.is_abnormal or pr.is_critical %}text-danger{% else %}text-primary{% endif %}">
+                                                     {{ pr.value }} {% if pr.parameter.unit %}<span style="font-size:10px; font-weight:normal; color:#64748b;">{{ pr.parameter.unit }}</span>{% endif %}
+                                                 </td>
+                                                 <td class="py-2 text-muted">{{ pr.parameter.reference_range|default:"—" }}</td>
+                                             </tr>
+                                             {% endfor %}
+                                         </tbody>
+                                     </table>
+                                 </div>
+                             {% else %}
+                                <p class="fw-bold">{{ item.labresult.result_value }}</p>
+                            {% endif %}
+                            {% if item.labresult.remarks %}
+                            <p class="mb-1 text-muted small mt-3">Remarks</p>
+                            <p>{{ item.labresult.remarks }}</p>
+                            {% endif %}
+                            <p class="mb-1 text-muted small mt-3">Date</p>
+                            <p>{{ item.labresult.completed_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        <div class="modal-footer py-2">
+                            <a href="{% url 'print_lab_report' order.id %}" target="_blank" class="btn btn-sm btn-primary"><i class="fas fa-print me-1"></i> Print Report</a>
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+
+<!-- ================= RADIOLOGY REPORT MODALS ================= -->
+{% for order in radiology_orders %}
+    {% for item in order.items.all %}
+        {% if order.status == 'Reported' and item.radiologyreport %}
+            <!-- Modal -->
+            <div class="modal fade" id="historyRadModal{{ item.id }}" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-info text-white py-2">
+                            <h6 class="modal-title mb-0"><i class="fas fa-x-ray me-2"></i>Report: {{ item.test.name }}</h6>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-start">
+                            <p class="mb-1 text-muted small">Findings</p>
+                            <p class="fw-bold">{{ item.radiologyreport.findings }}</p>
+                            <p class="mb-1 text-muted small mt-3">Impression</p>
+                            <p class="fw-bold text-primary">{{ item.radiologyreport.impression }}</p>
+                            {% if item.radiologyreport.report_file %}
+                            <a href="{{ item.radiologyreport.report_file.url }}" target="_blank" class="btn btn-sm btn-info text-white mt-3"><i class="fas fa-download me-1"></i> Download File</a>
+                            {% endif %}
+                            <p class="mb-1 text-muted small mt-3">Date</p>
+                            <p>{{ item.radiologyreport.reported_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        <div class="modal-footer py-2">
+                            <a href="{% url 'print_radiology_report' order.id %}" target="_blank" class="btn btn-sm btn-info text-white"><i class="fas fa-print me-1"></i> Print Report</a>
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+
+<style>
+.last-no-border:last-child {
+    border-bottom: 0 !important;
+    margin-bottom: 0 !important;
+}
+.extra-small {
+    font-size: 0.75rem;
+}
+</style>
+{% endblock %}

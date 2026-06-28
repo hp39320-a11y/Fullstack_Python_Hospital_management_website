@@ -1,0 +1,288 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Add Prescription - CarePlus HMS{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="fw-bold text-primary">Add Prescription</h2>
+            <p class="text-muted">Create prescription for patient consultation.</p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+
+            <div class="card shadow border-0">
+
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-prescription me-2"></i>
+                        Prescription Details
+                    </h5>
+                </div>
+
+                <div class="card-body p-4">
+
+                    <!-- PATIENT INFO -->
+                    <div class="row mb-4">
+
+                        <div class="col-md-4">
+                            <div class="info-box">
+                                <small class="text-muted">Patient Name</small>
+                                <h6 class="fw-bold">{{ appointment.patient.name }}</h6>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="info-box">
+                                <small class="text-muted">Doctor</small>
+                                <h6 class="fw-bold"> {{ appointment.doctor.name }}</h6>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="info-box">
+                                <small class="text-muted">Appointment Date</small>
+                                <h6 class="fw-bold">{{ appointment.appointment_date }}</h6>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- FORM -->
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Diagnosis</label>
+                            <textarea name="diagnosis" rows="4" class="form-control" required></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Doctor Notes</label>
+                            <textarea name="notes" rows="4" class="form-control" required></textarea>
+                        </div>
+ 
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Prescription Priority</label>
+                            <select name="priority_level" class="form-select" required style="width: 100%; padding: 0.7rem 0.9rem; border: 1px solid #ced4da; border-radius: 0.5rem; background-color: #fff;">
+                                <option value="Regular" {% if appointment.patient.age < 60 %}selected{% endif %}>Regular</option>
+                                <option value="Senior Citizen" {% if appointment.patient.age >= 60 %}selected{% endif %}>Senior Citizen (Age: {{ appointment.patient.age }})</option>
+                                <option value="VIP">VIP</option>
+                                <option value="Emergency">Emergency</option>
+                                <option value="Corporate">Corporate</option>
+                            </select>
+                        </div>
+ 
+                        <hr>
+
+                        <h5 class="fw-bold mb-3">Medicines</h5>
+
+                        <div id="medicine-box">
+
+                            <div class="row mb-3 medicine-row align-items-center">
+
+                                <div class="col-md-3">
+                                    <div class="input-group input-group-sm mb-1">
+                                        <span class="input-group-text bg-light text-muted"><i class="fas fa-search"></i></span>
+                                        <input type="text" class="form-control medicine-filter-input" placeholder="Filter..." oninput="filterRowOptions(this)">
+                                    </div>
+                                    <select name="medicine_id" class="form-control medicine-select" required>
+                                        <option value="" disabled selected>-- Select Medicine --</option>
+                                        {% for m in medicines %}
+                                            <option value="{{ m.medicine_id }}" data-name="{{ m.name|lower }}">
+                                                {{ m.name }} (Stock: {{ m.stock }})
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <input type="text"
+                                           name="dosage"
+                                           class="form-control"
+                                           placeholder="Dosage (e.g. 1 tab / 500mg)">
+                                </div>
+
+                                <div class="col-md-3">
+                                    <input type="text"
+                                           name="frequency"
+                                           class="form-control"
+                                           placeholder="Frequency (e.g. 1-0-1)">
+                                </div>
+
+                                <div class="col-md-2">
+                                    <input type="number"
+                                           name="quantity"
+                                           class="form-control"
+                                           placeholder="Qty"
+                                           min="1"
+                                           required>
+                                </div>
+
+                                <div class="col-md-1 text-end">
+                                    <button type="button" class="btn btn-outline-danger btn-sm w-100 py-2 delete-row-btn" onclick="removeRow(this)">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <button type="button"
+                                class="btn btn-secondary btn-sm mb-3"
+                                onclick="addMore()">
+                            + Add More Medicines
+                        </button>
+
+                        <div class="text-end">
+
+                            <a href="{% url 'doctor_dashboard' %}"
+                               class="btn btn-light px-4 me-2">
+                                Back
+                            </a>
+
+                            <button type="submit"
+                                    class="btn btn-primary px-4">
+                                Save Prescription
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+function filterRowOptions(inputEl) {
+    const filterText = inputEl.value.toLowerCase().trim();
+    const row = inputEl.closest('.medicine-row');
+    const select = row.querySelector('.medicine-select');
+    const options = select.querySelectorAll('option');
+
+    options.forEach(opt => {
+        if (opt.value === "") return; // Skip placeholder
+        
+        const name = opt.getAttribute('data-name');
+        if (name.includes(filterText)) {
+            opt.style.display = '';
+            opt.disabled = false;
+        } else {
+            opt.style.display = 'none';
+            opt.disabled = true;
+        }
+    });
+
+    // Reset value if selected option is now hidden
+    const selectedOpt = select.options[select.selectedIndex];
+    if (selectedOpt && selectedOpt.disabled && selectedOpt.value !== "") {
+        select.value = "";
+    }
+}
+
+function removeRow(btnEl) {
+    const row = btnEl.closest('.medicine-row');
+    const box = document.getElementById("medicine-box");
+    const rows = box.querySelectorAll('.medicine-row');
+    
+    if (rows.length > 1) {
+        row.remove();
+    } else {
+        // Clear instead of removing last row
+        row.querySelector('.medicine-filter-input').value = '';
+        row.querySelector('.medicine-select').value = '';
+        row.querySelector('input[name="dosage"]').value = '';
+        row.querySelector('input[name="frequency"]').value = '';
+        row.querySelector('input[name="quantity"]').value = '';
+        filterRowOptions(row.querySelector('.medicine-filter-input'));
+        alert("You must include at least one medicine. Cleared the values.");
+    }
+}
+
+function addMore() {
+    let box = document.getElementById("medicine-box");
+    box.insertAdjacentHTML('beforeend', `
+        <div class="row mb-3 medicine-row align-items-center border-top pt-3 mt-3">
+            <div class="col-md-3">
+                <div class="input-group input-group-sm mb-1">
+                    <span class="input-group-text bg-light text-muted"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control medicine-filter-input" placeholder="Filter..." oninput="filterRowOptions(this)">
+                </div>
+                <select name="medicine_id" class="form-control medicine-select" required>
+                    <option value="" disabled selected>-- Select Medicine --</option>
+                    {% for m in medicines %}
+                        <option value="{{ m.medicine_id }}" data-name="{{ m.name|lower }}">
+                            {{ m.name }} (Stock: {{ m.stock }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="text"
+                       name="dosage"
+                       class="form-control"
+                       placeholder="Dosage (e.g. 1 tab / 500mg)">
+            </div>
+            <div class="col-md-3">
+                <input type="text"
+                       name="frequency"
+                       class="form-control"
+                       placeholder="Frequency (e.g. 1-0-1)">
+            </div>
+            <div class="col-md-2">
+                <input type="number"
+                       name="quantity"
+                       class="form-control"
+                       placeholder="Qty"
+                       min="1"
+                       required>
+            </div>
+            <div class="col-md-1 text-end">
+                <button type="button" class="btn btn-outline-danger btn-sm w-100 py-2 delete-row-btn" onclick="removeRow(this)">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    `);
+}
+</script>
+
+<style>
+
+input, select, textarea {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.5rem;
+}
+
+textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.card {
+    border-radius: 1rem;
+}
+
+.info-box {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+}
+
+</style>
+
+{% endblock %}

@@ -1,0 +1,617 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Emergency Workspace - Doctor Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- HEADER -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="fw-bold text-danger">
+                <i class="fas fa-ambulance me-2"></i>Emergency Workspace
+            </h2>
+            <p class="text-muted">
+                Manage active emergency cases assigned to you. Perform immediate action and request admissions.
+            </p>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-heartbeat me-2"></i>My Emergency Patients
+                    </h5>
+                    <span class="badge bg-white text-danger px-3 py-2 fs-6">
+                        {{ queue.count }} Assigned Case(s)
+                    </span>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Token</th>
+                                    <th>Patient</th>
+                                    <th>Priority</th>
+                                    <th>Reason</th>
+                                    <th>Admitted Date</th>
+                                    <th>Status</th>
+                                    <th class="text-end pe-4">Actions</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for case in queue %}
+                                <tr>
+
+                                    <!-- TOKEN -->
+                                    <td class="ps-4 fw-bold text-danger">
+                                        CAS-{{ case.id }}
+                                    </td>
+
+                                    <!-- PATIENT -->
+                                    <td>
+                                        <div class="fw-bold">{{ case.patient.name }}</div>
+                                        <small class="text-muted">
+                                            ID: PAT-{{ case.patient.patient_id }} |
+                                            {{ case.patient.age }} yrs /
+                                            {{ case.patient.gender }}
+                                        </small>
+                                        {% if case.is_critical_vitals %}
+                                            <div class="text-danger small fw-bold mt-1">
+                                                <i class="fas fa-heartbeat animate-pulse text-danger me-1"></i>Vitals Checked: Critical!
+                                            </div>
+                                        {% endif %}
+                                    </td>
+
+                                    <!-- PRIORITY -->
+                                    <td>
+                                        {% if case.priority == 'Critical' %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>Critical
+                                            </span>
+                                        {% elif case.priority == 'High' %}
+                                            <span class="badge bg-warning text-dark">
+                                                High
+                                            </span>
+                                        {% elif case.priority == 'Medium' %}
+                                            <span class="badge bg-info text-dark">
+                                                Medium
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-success">Low</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <!-- REASON -->
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ case.emergency_reason|truncatechars:50 }}
+                                        </small>
+                                    </td>
+
+                                    <!-- DATE -->
+                                    <td>
+                                        {{ case.created_at|date:"d-m-Y H:i" }}
+                                    </td>
+
+                                    <!-- STATUS -->
+                                    <td>
+                                        {% if case.status == 'Pending' %}
+                                            <span class="badge bg-secondary">Pending</span>
+
+                                        {% elif case.status == 'Under Emergency Care' %}
+                                            <span class="badge bg-primary">Under Care</span>
+
+                                        {% elif case.status == 'Stabilized' %}
+                                            <span class="badge bg-info text-dark">Stabilized</span>
+
+                                        {% elif case.status == 'Referred' %}
+                                            <span class="badge bg-warning text-dark">Referred</span>
+
+                                        {% elif case.status == 'Admitted' %}
+                                            <span class="badge bg-purple text-white" style="background:#6f42c1;">
+                                                Admitted
+                                            </span>
+
+                                        {% else %}
+                                            <span class="badge bg-success">Discharged</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <!-- ACTIONS -->
+                                    <td class="text-end pe-4">
+                                        <div class="d-inline-flex gap-2 align-items-center">
+                                            <button class="btn btn-sm btn-outline-info text-dark fw-bold"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#casualtyDetailsModal{{ case.id }}">
+                                                <i class="fas fa-file-medical-alt me-1"></i>Details & MAR
+                                            </button>
+
+                                            {% if case.status == 'Pending' %}
+                                                {% if case.is_critical_vitals %}
+                                                    <button class="btn btn-sm btn-danger fw-bold"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#criticalAlertModal{{ case.id }}">
+                                                        <i class="fas fa-exclamation-triangle me-1"></i> Send Critical Alert
+                                                    </button>
+                                                {% else %}
+                                                    <a href="{% url 'update_casuality_status_doctor' case.id 'Under Emergency Care' %}"
+                                                       class="btn btn-sm btn-primary">
+                                                        Start Care
+                                                    </a>
+                                                {% endif %}
+
+                                            {% elif case.status == 'Under Emergency Care' %}
+
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{% url 'doctor_add_prescription_casuality' case.id %}"
+                                                       class="btn btn-outline-primary">
+                                                        Prescribe
+                                                    </a>
+
+                                                    <a href="{% url 'update_casuality_status_doctor' case.id 'Stabilized' %}"
+                                                       class="btn btn-info text-white">
+                                                        Stabilize
+                                                    </a>
+                                                </div>
+
+                                            {% elif case.status == 'Stabilized' or case.status == 'Referred' %}
+
+                                                <div class="btn-group btn-group-sm">
+
+                                                    <button class="btn btn-warning text-dark"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#referModal{{ case.id }}">
+                                                        Refer
+                                                    </button>
+
+                                                    <a href="{% url 'doctor_admit_casuality' case.id %}"
+                                                       class="btn btn-primary">
+                                                        Admit
+                                                    </a>
+
+                                                    <a href="{% url 'update_casuality_status_doctor' case.id 'Discharged' %}"
+                                                       class="btn btn-success">
+                                                        Discharge
+                                                    </a>
+
+                                                </div>
+
+                                            {% elif case.status == 'Admitted' %}
+
+                                                <span class="text-muted small">Admitted</span>
+
+                                            {% else %}
+                                                <span class="text-success small">Completed</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+
+                                </tr>
+
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                        <h5>No emergency patients assigned.</h5>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+
+                        </table>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ================= REFER MODALS ================= -->
+{% for case in queue %}
+    {% if case.status == 'Stabilized' or case.status == 'Referred' %}
+    <div class="modal fade" id="referModal{{ case.id }}" tabindex="-1">
+
+        <div class="modal-dialog">
+
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+
+                <div class="modal-header bg-gradient bg-warning border-0 px-4 py-3">
+                    <h5 class="modal-title fw-bold text-dark">
+                        <i class="fas fa-share-square me-2"></i>Refer to Specialist
+                    </h5>
+                    <button type="button" class="btn-close text-dark" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form method="POST" action="{% url 'doctor_refer_specialist' case.id %}">
+                    {% csrf_token %}
+
+                    <div class="modal-body px-4 py-4">
+
+                        <div class="d-flex align-items-center mb-4 p-3 rounded" style="background-color: #fff9e6; border-left: 4px solid #ffc107;">
+                            <div class="me-3">
+                                <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px; font-size: 1.2rem;">
+                                    {{ case.patient.name|slice:":1"|upper }}
+                                </div>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold text-dark">{{ case.patient.name }}</h6>
+                                <span class="text-muted small">Token: <span class="fw-bold text-dark">CAS-{{ case.id }}</span></span>
+                            </div>
+                        </div>
+
+                        <!-- SELECT SPECIALISTS -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-dark mb-2">
+                                <i class="fas fa-user-md me-1 text-warning"></i> Select Specialists
+                            </label>
+
+                            <div class="border rounded p-2" style="max-height: 240px; overflow-y: auto; background-color: #f8f9fa;">
+                                {% for spec in specialist_doctors %}
+                                <label class="form-check custom-checkbox-card mb-2 p-2 rounded bg-white border d-flex align-items-center mb-2" style="cursor:pointer; transition: all 0.2s ease;">
+                                    <input class="form-check-input ms-1 me-3" type="checkbox" name="specialist_ids" value="{{ spec.doctor_id }}" style="transform: scale(1.2);">
+                                    <div class="d-flex flex-column w-100">
+                                        <span class="fw-bold text-dark mb-1"> {{ spec.name }}</span>
+                                        <span class="text-muted small"><i class="fas fa-stethoscope me-1"></i>{{ spec.specialization }}</span>
+                                    </div>
+                                </label>
+                                {% empty %}
+                                <div class="text-center py-4 text-muted small">
+                                    <i class="fas fa-exclamation-circle mb-2" style="font-size:1.5rem;"></i><br>
+                                    No specialists available
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- NOTES -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-dark mb-2">
+                                <i class="fas fa-comment-medical me-1 text-warning"></i> Referral Notes
+                            </label>
+                            <textarea name="referral_notes"
+                                      class="form-control bg-light"
+                                      rows="3"
+                                      placeholder="Provide clinical context for the specialist..."
+                                      style="resize: none; border-radius: 8px;"
+                                      required></textarea>
+                        </div>
+
+                        <!-- EXISTING REFERRALS -->
+                        <div class="mb-2">
+                            <label class="form-label fw-bold small text-secondary mb-2">
+                                Existing Referrals for this Patient
+                            </label>
+
+                            {% if case.referrals.all %}
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% for referral in case.referrals.all %}
+                                        <div class="badge bg-light border text-dark p-2 d-flex align-items-center gap-2" style="border-radius: 6px;">
+                                            <i class="fas fa-user-md text-secondary"></i>
+                                            <span> {{ referral.referred_doctor.name }}</span>
+                                            <span class="badge {% if referral.status == 'Pending' %}bg-warning text-dark{% elif referral.status == 'Accepted' %}bg-success{% else %}bg-danger{% endif %} rounded-pill" style="font-size:0.65rem;">
+                                                {{ referral.status }}
+                                            </span>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted small mb-0"><i class="fas fa-info-circle me-1"></i>No prior referrals.</p>
+                            {% endif %}
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer bg-light border-0 px-4 py-3" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+                        <button type="button" class="btn btn-outline-secondary px-4 fw-bold" data-bs-dismiss="modal" style="border-radius: 6px;">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-warning px-4 fw-bold text-dark shadow-sm" style="border-radius: 6px;">
+                            <i class="fas fa-paper-plane me-1"></i> Send Referral
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+    {% endif %}
+{% endfor %}
+
+{% for case in queue %}
+<!-- Casualty Details & MAR Modal -->
+<div class="modal fade" id="casualtyDetailsModal{{ case.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white py-3">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-file-medical-alt me-2"></i>CAS-{{ case.id }} — Clinical Details & MAR
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-start p-4">
+                <div class="alert alert-light border mb-4">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <small class="d-block text-muted">Patient Details</small>
+                            <h6 class="mb-0 fw-bold">{{ case.patient.name }} (PAT-{{ case.patient.patient_id }})</h6>
+                            <small class="text-muted">{{ case.patient.age }} yrs / {{ case.patient.gender }}</small>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="d-block text-muted">Primary Doctor</small>
+                            <h6 class="mb-0 fw-bold"> {{ case.doctor.name }}</h6>
+                            <small class="text-muted">Emergency Medicine</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs/Pills for Vitals, Prescriptions, Nurse Notes -->
+                <ul class="nav nav-pills mb-3 gap-2" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active px-3 py-1.5 small fw-bold" id="vitals-tab-{{ case.id }}" data-bs-toggle="pill" data-bs-target="#vitals-pane-{{ case.id }}" type="button" role="tab">
+                            <i class="fas fa-heartbeat me-1"></i>Nurse Vitals Logs
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link px-3 py-1.5 small fw-bold" id="mar-tab-{{ case.id }}" data-bs-toggle="pill" data-bs-target="#mar-pane-{{ case.id }}" type="button" role="tab">
+                            <i class="fas fa-syringe me-1"></i>Medication Admin (MAR)
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link px-3 py-1.5 small fw-bold" id="notes-tab-{{ case.id }}" data-bs-toggle="pill" data-bs-target="#notes-pane-{{ case.id }}" type="button" role="tab">
+                            <i class="fas fa-user-nurse me-1"></i>Nursing Notes
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link px-3 py-1.5 small fw-bold" id="bill-tab-{{ case.id }}" data-bs-toggle="pill" data-bs-target="#bill-pane-{{ case.id }}" type="button" role="tab">
+                            <i class="fas fa-receipt me-1"></i>Casualty Bill
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content border p-3 bg-white" style="border-radius: 8px;">
+                    <!-- Vitals Pane -->
+                    <div class="tab-pane fade show active" id="vitals-pane-{{ case.id }}" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr class="small text-muted" style="font-size:0.75rem;">
+                                        <th>Time</th>
+                                        <th>BP (mmHg)</th>
+                                        <th>Pulse</th>
+                                        <th>Temp</th>
+                                        <th>SpO₂</th>
+                                        <th>Resp. Rate</th>
+                                        <th>Condition</th>
+                                        <th>Recorded By</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for v in case.vitals.all %}
+                                    <tr class="small" style="font-size:0.8rem;">
+                                        <td>{{ v.recorded_at|date:"d-m-Y H:i" }}</td>
+                                        <td>{{ v.bp_systolic }}/{{ v.bp_diastolic }}</td>
+                                        <td>{{ v.heart_rate }} bpm</td>
+                                        <td>{{ v.temperature }}°F</td>
+                                        <td>{{ v.oxygen_level }}%</td>
+                                        <td>{{ v.respiratory_rate }}/min</td>
+                                        <td>
+                                            {% if v.patient_condition == 'Critical' %}
+                                                <span class="badge bg-danger">Critical</span>
+                                            {% elif v.patient_condition == 'Serious' %}
+                                                <span class="badge bg-warning text-dark">Serious</span>
+                                            {% elif v.patient_condition == 'Observation' %}
+                                                <span class="badge bg-info text-dark">Observation</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Stable</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ v.recorded_by.name }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="8" class="text-center py-3 text-muted small" style="font-size:0.8rem;">No vitals logged yet by nursing staff.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- MAR Pane -->
+                    <div class="tab-pane fade" id="mar-pane-{{ case.id }}" role="tabpanel">
+                        <h6 class="fw-bold mb-2 small text-secondary" style="font-size:0.8rem;">Emergency Prescription Administration Status</h6>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr class="small text-muted" style="font-size:0.75rem;">
+                                        <th>Prescribed Medicine</th>
+                                        <th>Dosage / Freq / Dur</th>
+                                        <th>Status</th>
+                                        <th>Administered At</th>
+                                        <th>Administered By</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for rx in case.emergency_prescriptions.all %}
+                                        {% for item in rx.items.all %}
+                                        <tr class="small" style="font-size:0.8rem;">
+                                            <td>
+                                                <strong>{{ item.medicine.name }}</strong>
+                                                <small class="d-block text-muted">{{ rx.doctor.name }}</small>
+                                            </td>
+                                            <td>{{ item.dosage }} · {{ item.frequency }} · {{ item.duration_days }}d</td>
+                                            <td>
+                                                {% if item.is_administered %}
+                                                    <span class="badge bg-success"><i class="fas fa-check me-1"></i>Administered</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary"><i class="fas fa-clock me-1"></i>Pending</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.is_administered %}
+                                                    {{ item.administered_at|date:"d-m-Y H:i" }}
+                                                {% else %}
+                                                    —
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.is_administered %}
+                                                    Nurse {{ item.administered_by.name }}
+                                                {% else %}
+                                                    —
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-3 text-muted small" style="font-size:0.8rem;">No emergency prescriptions written yet.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Nursing Notes Pane -->
+                    <div class="tab-pane fade" id="notes-pane-{{ case.id }}" role="tabpanel">
+                        <ul class="list-group list-group-flush mb-0">
+                            {% for note in case.nursing_notes.all %}
+                            <li class="list-group-item px-0 py-2">
+                                <div class="d-flex justify-content-between">
+                                    <strong class="small text-secondary" style="font-size:0.8rem;">Nurse {{ note.nurse.name }}</strong>
+                                    <small class="text-muted" style="font-size:0.75rem;">{{ note.created_at|date:"d-m-Y H:i" }}</small>
+                                </div>
+                                <p class="mb-0 small text-dark mt-1" style="font-size:0.8rem;">{{ note.note_text }}</p>
+                            </li>
+                            {% empty %}
+                            <li class="text-center py-3 text-muted small list-group-item px-0" style="font-size:0.8rem;">No nursing care notes logged.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- Casualty Bill Pane -->
+                    <div class="tab-pane fade" id="bill-pane-{{ case.id }}" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr class="small text-muted" style="font-size:0.75rem;">
+                                        <th>#</th>
+                                        <th>Description</th>
+                                        <th>Type</th>
+                                        <th>Administered By</th>
+                                        <th>Date & Time</th>
+                                        <th class="text-end">Amount (Rs.)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for charge in case.casualty_bills.all %}
+                                    <tr class="small" style="font-size:0.8rem;">
+                                        <td class="text-muted">{{ forloop.counter }}</td>
+                                        <td>{{ charge.description }}</td>
+                                        <td>
+                                            <span class="badge
+                                                {% if charge.charge_type == 'Medicine' %}bg-primary
+                                                {% elif charge.charge_type == 'Procedure' %}bg-warning text-dark
+                                                {% elif charge.charge_type == 'Investigation' %}bg-info text-dark
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ charge.charge_type }}
+                                            </span>
+                                        </td>
+                                        <td>{% if charge.administered_by %}{{ charge.administered_by.name }}{% else %}—{% endif %}</td>
+                                        <td>{{ charge.created_at|date:"d-m-Y H:i" }}</td>
+                                        <td class="text-end fw-bold text-success">{{ charge.amount }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-3 text-muted small" style="font-size:0.8rem;">
+                                            <i class="fas fa-receipt me-1"></i>No charges billed yet.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                {% if case.casualty_bills.all %}
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="5" class="text-end fw-bold small">Total Emergency Charges:</td>
+                                        <td class="text-end fw-bold text-danger">
+                                            Rs. {{ case.total_bill|default:0 }}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                                {% endif %}
+                            </table>
+                        </div>
+                        {% if case.casualty_bills.all %}
+                        <div class="alert alert-warning border-0 mt-3 py-2 px-3 d-flex align-items-center gap-2" style="font-size:0.82rem;">
+                            <i class="fas fa-info-circle text-warning"></i>
+                            These charges will be merged into the main IP Bill upon formal patient admission.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% for case in queue %}
+    {% if case.is_critical_vitals and case.status == 'Pending' %}
+    <!-- Critical Alert Modal -->
+    <div class="modal fade" id="criticalAlertModal{{ case.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white py-3">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Send Critical Alert & Start Care</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{% url 'doctor_send_critical_alert' case.id %}">
+                    {% csrf_token %}
+                    <div class="modal-body p-4 text-start">
+                        <div class="alert alert-warning mb-3">
+                            <strong><i class="fas fa-heartbeat text-danger me-1"></i> Critical Vitals Detected:</strong>
+                            {% if case.latest_vital %}
+                                <div class="mt-1 small">
+                                    SpO₂: <strong>{{ case.latest_vital.oxygen_level }}%</strong> | 
+                                    HR: <strong>{{ case.latest_vital.heart_rate }} bpm</strong> | 
+                                    BP: <strong>{{ case.latest_vital.bp_systolic }}/{{ case.latest_vital.bp_diastolic }}</strong> | 
+                                    Temp: <strong>{{ case.latest_vital.temperature }}°F</strong>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Critical Message / Instructions for Nurse</label>
+                            <textarea name="critical_message" class="form-control" rows="4" placeholder="e.g. Patient is critical. Prepare IV push, prep crash cart, monitor vitals continuously..." required style="border-radius: 8px;"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger fw-bold"><i class="fas fa-paper-plane me-1"></i>Send Alert & Start Care</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
+
+{% endblock %}
