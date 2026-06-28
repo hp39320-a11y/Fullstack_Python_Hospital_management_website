@@ -1,0 +1,250 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Hospital Inventory Management Portal - CarePlus HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 header-container">
+        <div>
+            <h2 class="fw-bold text-primary mb-1"><i class="fas fa-warehouse me-2"></i>Advanced Inventory Portal</h2>
+            <p class="text-muted mb-0">Multi-department integrated hospital supply chain, asset and biomedical tracking console.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill fw-bold"><i class="fas fa-bell me-1"></i>Stock Alerts: {{ low_stock_count }} Low</span>
+            <button class="btn btn-outline-primary rounded-pill px-3 py-2" onclick="location.reload();">
+                <i class="fas fa-sync-alt me-1"></i> Refresh
+            </button>
+        </div>
+    </div>
+
+    {% if request.user.role != 'store_keeper' %}
+    <!-- Tab Navigation -->
+    <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-pill custom-nav-pills" id="inventoryTabs">
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'dashboard' %}active{% endif %} rounded-pill fw-bold" href="{% url 'admin_inventory_dashboard' %}"><i class="fas fa-chart-line me-2"></i>Dashboard</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'items' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_items' %}"><i class="fas fa-boxes me-2"></i>Item Master</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'suppliers' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_suppliers' %}"><i class="fas fa-truck-loading me-2"></i>Suppliers</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'purchase' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_purchase' %}"><i class="fas fa-shopping-cart me-2"></i>Purchase</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'grn' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_grn' %}"><i class="fas fa-receipt me-2"></i>GRN</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'expiry' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_expiry' %}"><i class="fas fa-hourglass-half me-2"></i>Expiry</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'issue' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_issue' %}"><i class="fas fa-clipboard-list me-2"></i>Stock Issues</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'biomedical' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_biomedical' %}"><i class="fas fa-heartbeat me-2"></i>Biomedical Asset</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'emergency' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_emergency' %}"><i class="fas fa-ambulance me-2"></i>Emergency</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'reports' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_reports' %}"><i class="fas fa-file-invoice-dollar me-2"></i>Reports</a>
+        </li>
+    </ul>
+    {% endif %}
+
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card kpi-card border-0 shadow-sm rounded-4 p-3 bg-gradient-primary text-white">
+                <small class="text-white-50 text-uppercase fw-bold">Total Inventory Value</small>
+                <h2 class="fw-bold mt-1 mb-0">₹{{ total_val|default:"0.00" }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card kpi-card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <small class="text-muted text-uppercase fw-bold">Total Active Items</small>
+                <h2 class="fw-bold text-dark mt-1 mb-0">{{ total_items }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card kpi-card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <small class="text-muted text-uppercase fw-bold">Low Stock Items</small>
+                <h2 class="fw-bold text-warning mt-1 mb-0">{{ low_stock_count }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card kpi-card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <small class="text-muted text-uppercase fw-bold">Out of Stock</small>
+                <h2 class="fw-bold text-danger mt-1 mb-0">{{ out_of_stock_count }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card kpi-card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <small class="text-muted text-uppercase fw-bold">Expiring (30 Days)</small>
+                <h2 class="fw-bold text-info mt-1 mb-0">{{ expiring_soon_count }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card kpi-card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <small class="text-muted text-uppercase fw-bold">Expired Items</small>
+                <h2 class="fw-bold text-danger mt-1 mb-0">{{ expired_count }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card kpi-card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <small class="text-muted text-uppercase fw-bold">Pending Requisitions</small>
+                <h2 class="fw-bold text-secondary mt-1 mb-0">{{ pending_po_count }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card kpi-card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <small class="text-muted text-uppercase fw-bold">Today's Issues</small>
+                <h2 class="fw-bold text-primary mt-1 mb-0">{{ stock_issues.count }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts & Alerts Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <h5 class="fw-bold mb-3">Stock Value Trend</h5>
+                <canvas id="stockTrendChart" height="220"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <h5 class="fw-bold mb-3">Department Consumption</h5>
+                <canvas id="deptConsumptionChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Critical Alerts Panel -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <h5 class="fw-bold mb-3 text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Critical Inventory Alerts</h5>
+                <div class="list-group list-group-flush">
+                    {% for item in items %}
+                        {% if item.current_stock <= item.reorder_level %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0 border-bottom">
+                            <div>
+                                <h6 class="mb-0 fw-bold">{{ item.name }}</h6>
+                                <small class="text-muted">Code: {{ item.item_code }} | Loc: {{ item.storage_location|default:"-" }}</small>
+                            </div>
+                            <span class="badge bg-danger rounded-pill">Only {{ item.current_stock }} {{ item.uom }}</span>
+                        </div>
+                        {% endif %}
+                    {% empty %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                            <p class="mb-0">All stock levels are optimal.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Stock Movements -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <h5 class="fw-bold mb-3"><i class="fas fa-exchange-alt me-2 text-primary"></i>Recent Stock Movements</h5>
+                <div class="table-responsive">
+                    <table class="table align-middle table-hover">
+                        <thead>
+                            <tr class="table-light">
+                                <th>Doc No</th>
+                                <th>Dept / Supplier</th>
+                                <th>Date</th>
+                                <th>Status / Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for issue in stock_issues|slice:":5" %}
+                            <tr>
+                                <td><strong>{{ issue.issue_number }}</strong></td>
+                                <td>{{ issue.department }}</td>
+                                <td>{{ issue.created_at|date:"M d, Y H:i" }}</td>
+                                <td><span class="badge bg-primary-subtle text-primary">Issued ({{ issue.quantity }} items)</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No recent stock movements recorded.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts for Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Stock Trend Chart
+    const trendCtx = document.getElementById('stockTrendChart').getContext('2d');
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Stock Value (₹)',
+                data: [420000, 480000, 510000, 490000, 530000, {{ total_val|default:600000 }}],
+                borderColor: '#4f46e5',
+                tension: 0.4,
+                fill: false,
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // Department Consumption Chart
+    const deptCtx = document.getElementById('deptConsumptionChart').getContext('2d');
+    new Chart(deptCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Pharmacy', 'ICU', 'Emergency', 'OT', 'Lab', 'Radiology'],
+            datasets: [{
+                data: [35, 20, 15, 15, 10, 5],
+                backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#6b7280']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'right' } }
+        }
+    });
+});
+</script>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #4f46e5, #6366f1);
+}
+.kpi-card {
+    transition: all 0.3s ease;
+}
+.kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+}
+.custom-nav-pills .nav-link {
+    color: #4b5563;
+    transition: all 0.2s ease;
+}
+.custom-nav-pills .nav-link.active {
+    background-color: #4f46e5 !important;
+    color: #fff !important;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Expiry & Batch Management - CarePlus HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 header-container">
+        <div>
+            <h2 class="fw-bold text-primary mb-1"><i class="fas fa-warehouse me-2"></i>Advanced Inventory Portal</h2>
+            <p class="text-muted mb-0">Multi-department integrated hospital supply chain, asset and biomedical tracking console.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill fw-bold"><i class="fas fa-bell me-1"></i>Stock Alerts: {{ low_stock_count }} Low</span>
+            <button class="btn btn-outline-primary rounded-pill px-3 py-2" onclick="location.reload();">
+                <i class="fas fa-sync-alt me-1"></i> Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-pill custom-nav-pills" id="inventoryTabs">
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'dashboard' %}active{% endif %} rounded-pill fw-bold" href="{% url 'admin_inventory_dashboard' %}"><i class="fas fa-chart-line me-2"></i>Dashboard</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'items' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_items' %}"><i class="fas fa-boxes me-2"></i>Item Master</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'suppliers' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_suppliers' %}"><i class="fas fa-truck-loading me-2"></i>Suppliers</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'purchase' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_purchase' %}"><i class="fas fa-shopping-cart me-2"></i>Purchase</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'grn' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_grn' %}"><i class="fas fa-receipt me-2"></i>GRN</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'expiry' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_expiry' %}"><i class="fas fa-hourglass-half me-2"></i>Expiry</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'issue' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_issue' %}"><i class="fas fa-clipboard-list me-2"></i>Stock Issues</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'biomedical' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_biomedical' %}"><i class="fas fa-heartbeat me-2"></i>Biomedical Asset</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'emergency' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_emergency' %}"><i class="fas fa-ambulance me-2"></i>Emergency</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'reports' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_reports' %}"><i class="fas fa-file-invoice-dollar me-2"></i>Reports</a>
+        </li>
+    </ul>
+
+    <!-- Expiry Content -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <h4 class="fw-bold text-danger mb-1">{{ expired_count }}</h4>
+                <small class="text-muted fw-bold">Expired Stock</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <h4 class="fw-bold text-warning mb-1">{{ expiring_soon_count }}</h4>
+                <small class="text-muted fw-bold">Expiring in 30 Days</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <h4 class="fw-bold text-info mb-1">5</h4>
+                <small class="text-muted fw-bold">Expiring in 60 Days</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <h4 class="fw-bold text-success mb-1">12</h4>
+                <small class="text-muted fw-bold">Expiring in 90 Days</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+        <h5 class="fw-bold mb-3">Expiring & Batch Ledger</h5>
+        <div class="table-responsive">
+            <table class="table align-middle table-hover">
+                <thead>
+                    <tr class="table-light">
+                        <th>Item / Medicine</th>
+                        <th>Batch No</th>
+                        <th>Expiry Date</th>
+                        <th>Alert</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Paracetamol 650mg</strong></td>
+                        <td>BATCH-PC402</td>
+                        <td>Jul 12, 2026</td>
+                        <td><span class="badge bg-warning-subtle text-warning">Expiring Soon</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-warning rounded-pill px-3" onclick="alert('Quarantined BATCH-PC402')">Quarantine</button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="alert('Marked BATCH-PC402 for disposal')">Dispose</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Amoxicillin 500mg</strong></td>
+                        <td>BATCH-AM109</td>
+                        <td>Apr 05, 2026</td>
+                        <td><span class="badge bg-danger-subtle text-danger">Expired</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="alert('Marked BATCH-AM109 for disposal')">Dispose</button>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="alert('Returning BATCH-AM109 to supplier')">Return Supplier</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.custom-nav-pills .nav-link {
+    color: #4b5563;
+    transition: all 0.2s ease;
+}
+.custom-nav-pills .nav-link.active {
+    background-color: #4f46e5 !important;
+    color: #fff !important;
+}
+</style>
+{% endblock %}

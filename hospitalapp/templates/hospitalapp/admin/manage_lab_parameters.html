@@ -1,0 +1,312 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Manage Parameters - Asha Hospital Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'admin_manage_lab_tests' %}" class="text-decoration-none">Lab Test Master</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ test.name }} Parameters</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1">Configure Parameters</h2>
+            <p class="text-muted mb-0">Set up normal ranges, units, and critical ranges for <strong>{{ test.name }}</strong>.</p>
+        </div>
+        <button class="btn btn-primary rounded-pill px-4 shadow-sm hover-translate-y" data-bs-toggle="modal" data-bs-target="#addParamModal">
+            <i class="fas fa-plus me-1"></i> Add Parameter
+        </button>
+    </div>
+
+    <!-- Parameters Catalog Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-white py-3 border-0 border-bottom">
+            <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-sliders-h me-2 text-primary"></i>Investigation Spec List</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 table-hover">
+                <thead class="table-light text-uppercase font-size-xs text-muted">
+                    <tr>
+                        <th class="py-3 ps-4">Parameter Name</th>
+                        <th class="py-3">Unit</th>
+                        <th class="py-3">Reference Range (Text)</th>
+                        <th class="py-3 text-center">General Range</th>
+                        <th class="py-3 text-center">Gender Ranges (M/F)</th>
+                        <th class="py-3 text-center">Child Range</th>
+                        <th class="py-3 text-center text-danger">Critical Alerts</th>
+                        <th class="py-3 pe-4 text-end" style="width: 150px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for param in parameters %}
+                    <tr>
+                        <td class="ps-4">
+                            <span class="fw-bold text-dark">{{ param.name }}</span>
+                        </td>
+                        <td>
+                            <strong class="text-secondary">{{ param.unit|default:"-" }}</strong>
+                        </td>
+                        <td class="text-muted small">
+                            {{ param.reference_range|default:"-" }}
+                        </td>
+                        <td class="text-center font-size-sm">
+                            {% if param.min_value is not None or param.max_value is not None %}
+                                {{ param.min_value|default:"0" }} – {{ param.max_value|default:"∞" }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center font-size-sm">
+                            {% if param.male_min is not None or param.female_min is not None %}
+                                <div class="small">
+                                    <span class="text-primary font-bold">M:</span> {{ param.male_min|default:"0" }}–{{ param.male_max|default:"∞" }}<br>
+                                    <span class="text-danger font-bold">F:</span> {{ param.female_min|default:"0" }}–{{ param.female_max|default:"∞" }}
+                                </div>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center font-size-sm">
+                            {% if param.child_min is not None or param.child_max is not None %}
+                                {{ param.child_min|default:"0" }} – {{ param.child_max|default:"∞" }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center font-size-sm text-danger fw-semibold">
+                            {% if param.critical_min is not None or param.critical_max is not None %}
+                                &lt; {{ param.critical_min|default:"0" }} or &gt; {{ param.critical_max|default:"∞" }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="pe-4 text-end">
+                            <button class="btn btn-sm btn-light border rounded-pill me-1 text-primary" data-bs-toggle="modal" data-bs-target="#editParamModal{{ param.id }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-light border rounded-pill text-danger" data-bs-toggle="modal" data-bs-target="#deleteParamModal{{ param.id }}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Edit Modal -->
+                    <div class="modal fade" id="editParamModal{{ param.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                <form method="POST" action="{% url 'admin_manage_lab_parameters' test.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="update">
+                                    <input type="hidden" name="parameter_id" value="{{ param.id }}">
+                                    <div class="modal-header bg-primary text-white py-3 border-0">
+                                        <h5 class="modal-title fw-bold">Edit Parameter Specs</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body p-4">
+                                        <!-- General Info -->
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold text-secondary">Parameter Name</label>
+                                                <input type="text" name="name" value="{{ param.name }}" class="form-control rounded-3" required>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-semibold text-secondary">Unit</label>
+                                                <input type="text" name="unit" value="{{ param.unit|default:'' }}" class="form-control rounded-3" placeholder="e.g. g/dL, mg/dL">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-semibold text-secondary">Text Range (Descriptive)</label>
+                                                <input type="text" name="reference_range" value="{{ param.reference_range|default:'' }}" class="form-control rounded-3" placeholder="e.g. 13-17 (M)">
+                                            </div>
+                                        </div>
+
+                                        <!-- Numeric Limits -->
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="fas fa-chart-line me-1 text-primary"></i>Quantitative Alert Limits (Optional)</h6>
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-md-3 col-6">
+                                                <label class="form-label small text-muted">General Min</label>
+                                                <input type="number" step="0.01" name="min_value" value="{{ param.min_value|default:'' }}" class="form-control rounded-3">
+                                            </div>
+                                            <div class="col-md-3 col-6">
+                                                <label class="form-label small text-muted">General Max</label>
+                                                <input type="number" step="0.01" name="max_value" value="{{ param.max_value|default:'' }}" class="form-control rounded-3">
+                                            </div>
+                                            <div class="col-md-3 col-6">
+                                                <label class="form-label small text-danger">Critical Alert Min</label>
+                                                <input type="number" step="0.01" name="critical_min" value="{{ param.critical_min|default:'' }}" class="form-control rounded-3">
+                                            </div>
+                                            <div class="col-md-3 col-6">
+                                                <label class="form-label small text-danger">Critical Alert Max</label>
+                                                <input type="number" step="0.01" name="critical_max" value="{{ param.critical_max|default:'' }}" class="form-control rounded-3">
+                                            </div>
+                                        </div>
+
+                                        <div class="row g-3 mb-3 border-top pt-3">
+                                            <div class="col-md-3 col-6">
+                                                <label class="form-label small text-primary">Male Min</label>
+                                                <input type="number" step="0.01" name="male_min" value="{{ param.male_min|default:'' }}" class="form-control rounded-3">
+                                            </div>
+                                            <div class="col-md-3 col-6">
+                                                <label class="form-label small text-primary">Male Max</label>
+                                                <input type="number" step="0.01" name="male_max" value="{{ param.male_max|default:'' }}" class="form-control rounded-3">
+                                            </div>
+                                            <div class="col-md-3 col-6">
+                                                <label class="form-label small text-danger">Female Min</label>
+                                                <input type="number" step="0.01" name="female_min" value="{{ param.female_min|default:'' }}" class="form-control rounded-3">
+                                            </div>
+                                            <div class="col-md-3 col-6">
+                                                <label class="form-label small text-danger">Female Max</label>
+                                                <input type="number" step="0.01" name="female_max" value="{{ param.female_max|default:'' }}" class="form-control rounded-3">
+                                            </div>
+                                        </div>
+
+                                        <div class="row g-3 mb-3 border-top pt-3">
+                                            <div class="col-md-3 col-6">
+                                                <label class="form-label small text-success">Child Min (&lt; 18 Yrs)</label>
+                                                <input type="number" step="0.01" name="child_min" value="{{ param.child_min|default:'' }}" class="form-control rounded-3">
+                                            </div>
+                                            <div class="col-md-3 col-6">
+                                                <label class="form-label small text-success">Child Max (&lt; 18 Yrs)</label>
+                                                <input type="number" step="0.01" name="child_max" value="{{ param.child_max|default:'' }}" class="form-control rounded-3">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-0 p-3 bg-light">
+                                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary rounded-pill px-4 text-white">Save Specs</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delete Modal -->
+                    <div class="modal fade" id="deleteParamModal{{ param.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-sm">
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                <form method="POST" action="{% url 'admin_manage_lab_parameters' test.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="parameter_id" value="{{ param.id }}">
+                                    <div class="modal-body p-4 text-center">
+                                        <div class="text-danger mb-3">
+                                            <i class="fas fa-exclamation-triangle fa-3x"></i>
+                                        </div>
+                                        <h5 class="fw-bold mb-2">Delete Specification?</h5>
+                                        <p class="text-muted small mb-0">Delete parameter <strong>{{ param.name }}</strong>? Lab reports will not render reference ranges for this parameter.</p>
+                                    </div>
+                                    <div class="modal-footer border-0 p-3 bg-light d-flex justify-content-center">
+                                        <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-danger rounded-pill px-3">Confirm Delete</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="fas fa-sliders-h fa-3x mb-3 opacity-25"></i>
+                            <p class="mb-0 fw-medium">No specs or parameters defined for this test.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal fade" id="addParamModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form method="POST" action="{% url 'admin_manage_lab_parameters' test.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+                <div class="modal-header bg-primary text-white py-3 border-0">
+                    <h5 class="modal-title fw-bold">Add Parameter Spec</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- General Info -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-secondary">Parameter Name</label>
+                            <input type="text" name="name" class="form-control rounded-3" required placeholder="e.g. Hb, WBC, Platelets, Fasting Sugar">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold text-secondary">Unit</label>
+                            <input type="text" name="unit" class="form-control rounded-3" placeholder="e.g. g/dL, mg/dL, /uL">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold text-secondary">Text Range (Descriptive)</label>
+                            <input type="text" name="reference_range" class="form-control rounded-3" placeholder="e.g. 13-17 (M)">
+                        </div>
+                    </div>
+
+                    <!-- Numeric Limits -->
+                    <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="fas fa-chart-line me-1 text-primary"></i>Quantitative Alert Limits (Optional)</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3 col-6">
+                            <label class="form-label small text-muted">General Min</label>
+                            <input type="number" step="0.01" name="min_value" class="form-control rounded-3">
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <label class="form-label small text-muted">General Max</label>
+                            <input type="number" step="0.01" name="max_value" class="form-control rounded-3">
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <label class="form-label small text-danger">Critical Alert Min</label>
+                            <input type="number" step="0.01" name="critical_min" class="form-control rounded-3">
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <label class="form-label small text-danger">Critical Alert Max</label>
+                            <input type="number" step="0.01" name="critical_max" class="form-control rounded-3">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3 border-top pt-3">
+                        <div class="col-md-3 col-6">
+                            <label class="form-label small text-primary">Male Min</label>
+                            <input type="number" step="0.01" name="male_min" class="form-control rounded-3">
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <label class="form-label small text-primary">Male Max</label>
+                            <input type="number" step="0.01" name="male_max" class="form-control rounded-3">
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <label class="form-label small text-danger">Female Min</label>
+                            <input type="number" step="0.01" name="female_min" class="form-control rounded-3">
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <label class="form-label small text-danger">Female Max</label>
+                            <input type="number" step="0.01" name="female_max" class="form-control rounded-3">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3 border-top pt-3">
+                        <div class="col-md-3 col-6">
+                            <label class="form-label small text-success">Child Min (&lt; 18 Yrs)</label>
+                            <input type="number" step="0.01" name="child_min" class="form-control rounded-3">
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <label class="form-label small text-success">Child Max (&lt; 18 Yrs)</label>
+                            <input type="number" step="0.01" name="child_max" class="form-control rounded-3">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 bg-light">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 text-white">Create Spec</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

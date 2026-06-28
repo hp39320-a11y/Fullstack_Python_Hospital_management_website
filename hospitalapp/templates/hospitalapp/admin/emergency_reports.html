@@ -1,0 +1,166 @@
+{% extends 'hospitalapp/base.html' %}
+{% block title %}Emergency Department Analytics - Asha Hospital{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="mb-4">
+        <h1 class="h3 mb-0 text-gray-800 fw-bold"><i class="fas fa-chart-bar text-success me-2"></i>Emergency Department Analytics</h1>
+        <p class="text-muted mb-0">Daily monitoring of emergency census, triage zone allocations, response metrics, and admissions.</p>
+    </div>
+
+    <!-- Analytics Key Metrics Cards -->
+    <div class="row mb-4">
+        <!-- Daily Census -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm border-0 rounded-4 p-3 h-100">
+                <div class="d-flex align-items-center">
+                    <div class="p-3 bg-primary-subtle text-primary rounded-4 me-3">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                    <div>
+                        <span class="text-muted small uppercase fw-bold">Daily Census</span>
+                        <h3 class="mb-0 fw-black text-dark">{{ total_today }}</h3>
+                        <span class="text-muted small">Registered Today</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admission Conversion Rate -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm border-0 rounded-4 p-3 h-100">
+                <div class="d-flex align-items-center">
+                    <div class="p-3 bg-success-subtle text-success rounded-4 me-3">
+                        <i class="fas fa-exchange-alt fa-2x"></i>
+                    </div>
+                    <div>
+                        <span class="text-muted small uppercase fw-bold">Conversion Rate</span>
+                        <h3 class="mb-0 fw-black text-dark">{{ admission_conversion_rate }}%</h3>
+                        <span class="text-muted small">Admitted to IP / ICU</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Avg Treatment Time -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm border-0 rounded-4 p-3 h-100">
+                <div class="d-flex align-items-center">
+                    <div class="p-3 bg-info-subtle text-info rounded-4 me-3">
+                        <i class="fas fa-stopwatch fa-2x"></i>
+                    </div>
+                    <div>
+                        <span class="text-muted small uppercase fw-bold">Avg Treatment Time</span>
+                        <h3 class="mb-0 fw-black text-dark">{{ avg_treatment_time_min }} mins</h3>
+                        <span class="text-muted small">Triage to Completion</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Discharge / Stabilized count -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm border-0 rounded-4 p-3 h-100">
+                <div class="d-flex align-items-center">
+                    <div class="p-3 bg-warning-subtle text-warning rounded-4 me-3">
+                        <i class="fas fa-heart fa-2x"></i>
+                    </div>
+                    <div>
+                        <span class="text-muted small uppercase fw-bold">Discharges</span>
+                        <h3 class="mb-0 fw-black text-dark">{{ discharged_count }}</h3>
+                        <span class="text-muted small">Stabilized & Discharged</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Zone distribution card -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm border-0 rounded-4 h-100 p-4">
+                <h5 class="fw-bold text-dark mb-4"><i class="fas fa-traffic-light me-2"></i>Triage Zone Distribution</h5>
+                
+                <!-- RED ZONE BAR -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-bold text-danger">RED ZONE (Critical)</span>
+                        <span class="fw-bold text-dark">{{ red_count }}</span>
+                    </div>
+                    <div class="progress rounded-pill" style="height: 12px;">
+                        <div class="progress-bar bg-danger rounded-pill" role="progressbar" style="width: {% if total_today > 0 %}{{ red_count|add:"0"|divisibleby:total_today }}%{% else %}0%{% endif %};"></div>
+                    </div>
+                </div>
+
+                <!-- ORANGE ZONE BAR -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-bold" style="color: #fd7e14;">ORANGE ZONE (Very Urgent)</span>
+                        <span class="fw-bold text-dark">{{ orange_count }}</span>
+                    </div>
+                    <div class="progress rounded-pill" style="height: 12px;">
+                        <div class="progress-bar rounded-pill" role="progressbar" style="background-color: #fd7e14; width: {% if total_today > 0 %}{{ orange_count|add:"0"|divisibleby:total_today }}%{% else %}0%{% endif %};"></div>
+                    </div>
+                </div>
+
+                <!-- YELLOW ZONE BAR -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-bold text-warning-emphasis">YELLOW ZONE (Urgent)</span>
+                        <span class="fw-bold text-dark">{{ yellow_count }}</span>
+                    </div>
+                    <div class="progress rounded-pill" style="height: 12px;">
+                        <div class="progress-bar bg-warning rounded-pill" role="progressbar" style="width: {% if total_today > 0 %}{{ yellow_count|add:"0"|divisibleby:total_today }}%{% else %}0%{% endif %};"></div>
+                    </div>
+                </div>
+
+                <!-- GREEN ZONE BAR -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-bold text-success">GREEN ZONE (Non-Urgent)</span>
+                        <span class="fw-bold text-dark">{{ green_count }}</span>
+                    </div>
+                    <div class="progress rounded-pill" style="height: 12px;">
+                        <div class="progress-bar bg-success rounded-pill" role="progressbar" style="width: {% if total_today > 0 %}{{ green_count|add:"0"|divisibleby:total_today }}%{% else %}0%{% endif %};"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dispositions breakdown -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm border-0 rounded-4 h-100 p-4">
+                <h5 class="fw-bold text-dark mb-4"><i class="fas fa-sign-out-alt me-2"></i>Patient Dispositions (Outcomes)</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Outcome Disposition</th>
+                                <th class="text-end">Patient Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><i class="fas fa-procedures text-danger me-2"></i>ICU Ward Admissions</td>
+                                <td class="text-end fw-bold">{{ icu_count }}</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-heartbeat text-warning me-2"></i>OT (Operating Theatre) Transfer</td>
+                                <td class="text-end fw-bold">{{ ot_count }}</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-bed text-primary me-2"></i>General Ward Admissions</td>
+                                <td class="text-end fw-bold">{{ admitted_count }}</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-door-open text-success me-2"></i>Discharged Home (Stabilized)</td>
+                                <td class="text-end fw-bold">{{ discharged_count }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

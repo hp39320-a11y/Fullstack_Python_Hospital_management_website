@@ -1,0 +1,67 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Update Staff - CarePlus HMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-primary text-white py-3 rounded-top-4">
+            <h4 class="mb-0 fw-bold"><i class="fas fa-edit me-2"></i>Update Staff Member: {{ staff.username }}</h4>
+        </div>
+        <div class="card-body p-4">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="row">
+                    {% for field in form %}
+                        <div class="col-md-6 mb-3">
+                            {% if field.name == 'is_active' %}
+                                <div class="form-check form-switch mt-4 pt-2">
+                                    {{ field }}
+                                    <label class="form-check-label fw-semibold text-muted" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                </div>
+                            {% else %}
+                                <label class="form-label fw-semibold text-muted">{{ field.label }}</label>
+                                {{ field }}
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ field.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-4 border-top pt-3 d-flex justify-content-between">
+                    <a href="{% url 'manage_staff' %}" class="btn btn-outline-secondary px-4 py-2 rounded-3">
+                        <i class="fas fa-arrow-left me-2"></i>Cancel & Back
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4 py-2 rounded-3">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+input[type="text"], input[type="email"], select {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    background-color: #fff;
+    outline: none;
+    transition: border-color 0.2s;
+}
+input:focus, select:focus {
+    border-color: var(--primary-blue);
+}
+.form-check-input {
+    width: 3em !important;
+    height: 1.5em !important;
+    margin-right: 0.8em;
+}
+</style>
+{% endblock %}

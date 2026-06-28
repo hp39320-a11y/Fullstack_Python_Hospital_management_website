@@ -1,0 +1,83 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Update Medicine - CarePlus HMS{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-primary text-white py-3 border-0 rounded-top-3 d-flex align-items-center">
+                    <h4 class="mb-0 fw-bold"><i class="fas fa-pills me-2 animate__animated animate__pulse animate__infinite"></i>Update Medicine</h4>
+                </div>
+                <div class="card-body p-4 bg-white rounded-bottom-3">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-secondary small">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <div class="form-text text-muted small mt-1">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                            <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle me-1"></i>{{ field.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        <div class="d-grid gap-2 mt-5">
+                            <button type="submit" class="btn btn-primary btn-lg fw-semibold shadow-sm transition-btn">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                            <a href="{% url 'manage_medicines' %}" class="btn btn-outline-secondary btn-lg fw-semibold">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rounded-top-3 {
+        border-top-left-radius: 12px !important;
+        border-top-right-radius: 12px !important;
+    }
+    .rounded-bottom-3 {
+        border-bottom-left-radius: 12px !important;
+        border-bottom-right-radius: 12px !important;
+    }
+    .card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.125) !important;
+    }
+    .transition-btn {
+        transition: all 0.2s ease-in-out;
+    }
+    .transition-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,123,255,0.2) !important;
+    }
+    input, select, textarea {
+        display: block;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        color: #495057;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    }
+    input:focus, select:focus, textarea:focus {
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.15);
+    }
+</style>
+{% endblock %}

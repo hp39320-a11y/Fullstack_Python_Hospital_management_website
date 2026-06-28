@@ -1,0 +1,69 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Update Supplier - CarePlus HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 header-container">
+        <div>
+            <h2 class="fw-bold text-primary mb-1"><i class="fas fa-edit me-2"></i>Update Supplier</h2>
+            <p class="text-muted mb-0">Modify details for supplier "{{ supplier.name }}".</p>
+        </div>
+        <div>
+            <a href="{% url 'inventory_suppliers' %}" class="btn btn-outline-primary rounded-pill px-4">
+                <i class="fas fa-arrow-left me-1"></i> Back to Directory
+            </a>
+        </div>
+    </div>
+
+    <!-- Update Form -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden p-4 max-width-600 mx-auto bg-white">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-12">
+                    <label class="form-label small text-muted fw-bold">Supplier Name</label>
+                    <input type="text" name="name" class="form-control rounded-3" value="{{ supplier.name }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-muted fw-bold">Contact Person</label>
+                    <input type="text" name="contact_person" class="form-control rounded-3" value="{{ supplier.contact_person|default:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-muted fw-bold">Phone Number</label>
+                    <input type="text" name="phone" class="form-control rounded-3" value="{{ supplier.phone }}" required>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label small text-muted fw-bold">Email</label>
+                    <input type="email" name="email" class="form-control rounded-3" value="{{ supplier.email|default:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-muted fw-bold">GST Number</label>
+                    <input type="text" name="gst_number" class="form-control rounded-3" value="{{ supplier.gst_number|default:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-muted fw-bold">Rating (Out of 5.0)</label>
+                    <input type="number" step="0.1" min="0" max="5" name="rating" class="form-control rounded-3" value="{{ supplier.rating|default:'5.0' }}">
+                </div>
+                <div class="col-md-12">
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input" type="checkbox" name="is_active" id="isActiveSwitch" {% if supplier.is_active %}checked{% endif %}>
+                        <label class="form-check-label fw-bold text-muted small" for="isActiveSwitch">Supplier Status: Active</label>
+                    </div>
+                </div>
+                <div class="col-md-12 text-end mt-4">
+                    <a href="{% url 'inventory_suppliers' %}" class="btn btn-light rounded-pill px-4 me-2">Cancel</a>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Update Details</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.max-width-600 {
+    max-width: 600px;
+}
+</style>
+{% endblock %}

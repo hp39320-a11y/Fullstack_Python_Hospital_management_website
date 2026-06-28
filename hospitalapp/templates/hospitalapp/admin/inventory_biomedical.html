@@ -1,0 +1,154 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Biomedical Equipment - CarePlus HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 header-container">
+        <div>
+            <h2 class="fw-bold text-primary mb-1"><i class="fas fa-warehouse me-2"></i>Advanced Inventory Portal</h2>
+            <p class="text-muted mb-0">Multi-department integrated hospital supply chain, asset and biomedical tracking console.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill fw-bold"><i class="fas fa-bell me-1"></i>Stock Alerts: {{ low_stock_count }} Low</span>
+            <button class="btn btn-outline-primary rounded-pill px-3 py-2" onclick="location.reload();">
+                <i class="fas fa-sync-alt me-1"></i> Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-pill custom-nav-pills" id="inventoryTabs">
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'dashboard' %}active{% endif %} rounded-pill fw-bold" href="{% url 'admin_inventory_dashboard' %}"><i class="fas fa-chart-line me-2"></i>Dashboard</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'items' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_items' %}"><i class="fas fa-boxes me-2"></i>Item Master</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'suppliers' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_suppliers' %}"><i class="fas fa-truck-loading me-2"></i>Suppliers</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'purchase' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_purchase' %}"><i class="fas fa-shopping-cart me-2"></i>Purchase</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'grn' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_grn' %}"><i class="fas fa-receipt me-2"></i>GRN</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'expiry' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_expiry' %}"><i class="fas fa-hourglass-half me-2"></i>Expiry</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'issue' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_issue' %}"><i class="fas fa-clipboard-list me-2"></i>Stock Issues</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'biomedical' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_biomedical' %}"><i class="fas fa-heartbeat me-2"></i>Biomedical Asset</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'emergency' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_emergency' %}"><i class="fas fa-ambulance me-2"></i>Emergency</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'reports' %}active{% endif %} rounded-pill fw-bold" href="{% url 'inventory_reports' %}"><i class="fas fa-file-invoice-dollar me-2"></i>Reports</a>
+        </li>
+    </ul>
+
+    <!-- Biomedical Asset Content -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Biomedical Equipment Assets</h5>
+        <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addAssetModal">
+            <i class="fas fa-heartbeat me-1"></i> Register Asset
+        </button>
+    </div>
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Asset ID</th>
+                        <th>Equipment Name</th>
+                        <th>Manufacturer / Model</th>
+                        <th>Department</th>
+                        <th>Calibration / Next Service</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in biomedical_assets %}
+                    <tr>
+                        <td class="ps-4 fw-bold">{{ asset.asset_id }}</td>
+                        <td>{{ asset.name }}</td>
+                        <td>{{ asset.manufacturer }} / {{ asset.model_number }}</td>
+                        <td>{{ asset.assigned_department }}</td>
+                        <td>{{ asset.next_service_date|default:"TBD" }}</td>
+                        <td><span class="badge bg-success-subtle text-success">Optimal</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">No biomedical equipment registered yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Asset Modal -->
+<div class="modal fade" id="addAssetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">Register Biomedical Asset</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_asset">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Asset ID / Code</label>
+                            <input type="text" name="asset_id" class="form-control" required placeholder="e.g. ASSET-VT02">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Asset Name</label>
+                            <input type="text" name="name" class="form-control" required placeholder="e.g. Mindray Ventilator">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Manufacturer</label>
+                            <input type="text" name="manufacturer" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Model Number</label>
+                            <input type="text" name="model_number" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Serial Number</label>
+                            <input type="text" name="serial_number" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Assigned Department</label>
+                            <input type="text" name="assigned_department" class="form-control" placeholder="e.g. ICU">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-bold">Register Asset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.custom-nav-pills .nav-link {
+    color: #4b5563;
+    transition: all 0.2s ease;
+}
+.custom-nav-pills .nav-link.active {
+    background-color: #4f46e5 !important;
+    color: #fff !important;
+}
+</style>
+{% endblock %}

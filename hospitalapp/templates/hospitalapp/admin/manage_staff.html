@@ -1,0 +1,128 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Manage Staff - CarePlus HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1">Hospital Staff Management</h2>
+            <p class="text-muted mb-0">View, update, and manage receptionists, pharmacists, laboratoryists, and radiologists.</p>
+        </div>
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle px-4 py-2 rounded-3" type="button" id="addStaffDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-plus me-2"></i>Register New Staff
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2" aria-labelledby="addStaffDropdown">
+                <li><a class="dropdown-item py-2" href="{% url 'add_receptionist' %}"><i class="fas fa-user-tie text-info me-2"></i>Add Receptionist</a></li>
+                <li><a class="dropdown-item py-2" href="{% url 'add_pharmacist' %}"><i class="fas fa-capsules text-danger me-2"></i>Add Pharmacist</a></li>
+                <li><a class="dropdown-item py-2" href="{% url 'add_laboratoryist' %}"><i class="fas fa-flask text-primary me-2"></i>Add Laboratoryist</a></li>
+                <li><a class="dropdown-item py-2" href="{% url 'add_radiologist' %}"><i class="fas fa-x-ray text-warning me-2"></i>Add Radiologist</a></li>
+                <li><a class="dropdown-item py-2" href="{% url 'add_inventory_manager' %}"><i class="fas fa-boxes text-success me-2"></i>Add Inventory Manager</a></li>
+                <li><a class="dropdown-item py-2" href="{% url 'add_store_keeper' %}"><i class="fas fa-warehouse text-warning me-2"></i>Add Store Keeper</a></li>
+                <li><a class="dropdown-item py-2" href="{% url 'add_nursing_station' %}"><i class="fas fa-clinic-medical text-dark me-2"></i>Add Nursing Station</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Staff Members Card -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-3 border-0">
+            <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-users-cog me-2 text-primary"></i>Active Staff Members</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 table-hover">
+                <thead class="table-light text-uppercase font-size-xs text-muted">
+                    <tr>
+                        <th class="py-3 ps-4" style="width: 80px;">User ID</th>
+                        <th class="py-3">Staff Name / Username</th>
+                        <th class="py-3">Email Address</th>
+                        <th class="py-3">Department / Role</th>
+                        <th class="py-3">Status</th>
+                        <th class="py-3 pe-4 text-end" style="width: 200px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for staff in staff_members %}
+                    <tr>
+                        <td class="ps-4 fw-semibold text-muted">#{{ staff.user_id }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-3 bg-light-primary text-primary fw-bold">
+                                    {{ staff.username|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-bold text-dark">{{ staff.username }}</h6>
+                                    <small class="text-muted">Joined: {{ staff.created_at|date:"M d, Y" }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ staff.email|default:"No Email Linked" }}</td>
+                        <td>
+                            {% if staff.role == 'receptionist' %}
+                                <span class="badge bg-info-subtle text-info px-3 py-2 rounded-pill font-size-xs text-uppercase fw-bold"><i class="fas fa-user-tie me-1"></i>Receptionist</span>
+                            {% elif staff.role == 'pharmacist' %}
+                                <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill font-size-xs text-uppercase fw-bold"><i class="fas fa-capsules me-1"></i>Pharmacist</span>
+                            {% elif staff.role == 'lab_technician' %}
+                                <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill font-size-xs text-uppercase fw-bold"><i class="fas fa-flask me-1"></i>Laboratoryist</span>
+                            {% elif staff.role == 'radiologist' %}
+                                <span class="badge bg-warning-subtle text-warning px-3 py-2 rounded-pill font-size-xs text-uppercase fw-bold"><i class="fas fa-x-ray me-1"></i>Radiologist</span>
+                            {% elif staff.role == 'inventory_manager' %}
+                                <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill font-size-xs text-uppercase fw-bold"><i class="fas fa-boxes me-1"></i>Inventory Manager</span>
+                            {% elif staff.role == 'store_keeper' %}
+                                <span class="badge bg-warning-subtle text-warning px-3 py-2 rounded-pill font-size-xs text-uppercase fw-bold text-dark"><i class="fas fa-warehouse me-1"></i>Store Keeper</span>
+                            {% elif staff.role == 'nursing_station' %}
+                                <span class="badge bg-dark-subtle text-dark px-3 py-2 rounded-pill font-size-xs text-uppercase fw-bold"><i class="fas fa-clinic-medical me-1"></i>Nursing Station</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill font-size-xs text-uppercase fw-bold">{{ staff.get_role_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if staff.is_active %}
+                                <span class="badge bg-success-subtle text-success px-2 py-1 rounded fw-semibold small">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded fw-semibold small">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="pe-4 text-end">
+                            <a href="{% url 'update_staff' staff.user_id %}" class="btn btn-sm btn-outline-primary px-3 rounded-pill me-1"><i class="fas fa-edit me-1"></i>Edit</a>
+                            <a href="{% url 'delete_staff' staff.user_id %}" class="btn btn-sm btn-outline-danger px-3 rounded-pill" onclick="return confirm('Are you sure you want to delete staff account {{ staff.username }}?')"><i class="fas fa-trash-alt me-1"></i>Delete</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fas fa-users-slash fa-3x mb-3 opacity-25"></i>
+                            <p class="mb-0">No custom hospital staff registered yet.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.bg-light-primary {
+    background-color: #eef2ff !important;
+}
+.font-size-xs {
+    font-size: 0.75rem;
+}
+.bg-info-subtle { background-color: #e0f2fe; }
+.bg-danger-subtle { background-color: #fee2e2; }
+.bg-primary-subtle { background-color: #e0e7ff; }
+.bg-warning-subtle { background-color: #fef3c7; }
+.bg-success-subtle { background-color: #d1fae5; }
+.bg-dark-subtle { background-color: #f3f4f6; }
+</style>
+{% endblock %}
