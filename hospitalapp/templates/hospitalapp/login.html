@@ -1,0 +1,54 @@
+{% extends 'hospitalapp/base.html' %}
+{% load static %}
+
+{% block title %}Login - Asha Hospital{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center py-4" style="min-height: 80vh;">
+    <div class="col-md-5">
+        <!-- Logo and Portal Brand -->
+        <div class="text-center mb-4">
+            <img src="{% static 'hospitalapp/images/logo.png' %}" alt="Asha Hospital Logo" class="mb-3" style="height: 90px; width: auto; background: white; padding: 10px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.06);">
+            <h4 class="fw-bold text-dark mb-1">Asha Hospital Portal</h4>
+            <p class="text-muted small">Please sign in to access your dashboard</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="card-body p-5">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Username field -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted small">Username</label>
+                        <div class="input-group border rounded-3 p-1">
+                            <span class="input-group-text bg-white border-0 text-muted"><i class="fas fa-user"></i></span>
+                            <input type="text" name="username" class="form-control border-0 bg-white" placeholder="Enter your username" required style="box-shadow: none;">
+                        </div>
+                    </div>
+
+                    <!-- Password field -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label fw-semibold text-muted small mb-0">Password</label>
+                            <a href="{% url 'forgot_password' %}" class="text-decoration-none text-primary small fw-semibold">Forgot?</a>
+                        </div>
+                        <div class="input-group border rounded-3 p-1">
+                            <span class="input-group-text bg-white border-0 text-muted"><i class="fas fa-lock"></i></span>
+                            <input type="password" name="password" class="form-control border-0 bg-white" placeholder="Enter your password" required style="box-shadow: none;">
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 text-uppercase tracking-wider fw-bold">
+                        <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                    </button>
+                </form>
+
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
