@@ -1,0 +1,125 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Schedule Scan - Asha Hospital{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+                <!-- Card Header -->
+                <div class="card-header bg-primary text-white py-3 border-0">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white text-primary rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="fas fa-calendar-alt fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 fw-bold">Schedule Radiology Scan</h5>
+                            <small class="opacity-75">Order #RAD-{{ order.id }} | Patient: {{ order.patient.name }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <!-- Patient Summary Info -->
+                    <div class="bg-light p-3 rounded-3 mb-4">
+                        <div class="row g-3">
+                            <div class="col-6 col-sm-3">
+                                <span class="text-muted small d-block">Patient ID</span>
+                                <strong class="text-dark">#PAT-{{ order.patient.patient_id }}</strong>
+                            </div>
+                            <div class="col-6 col-sm-3">
+                                <span class="text-muted small d-block">Age / Gender</span>
+                                <strong class="text-dark">{{ order.patient.age }} Yrs / {{ order.patient.gender }}</strong>
+                            </div>
+                            <div class="col-6 col-sm-3">
+                                <span class="text-muted small d-block">Ordered By</span>
+                                <strong class="text-dark">{{ order.ordered_by.name }}</strong>
+                            </div>
+                            <div class="col-6 col-sm-3">
+                                <span class="text-muted small d-block">Request Date</span>
+                                <strong class="text-dark">{{ order.created_at|date:"d M Y, H:i" }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Requested Procedures -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-secondary mb-2"><i class="fas fa-clipboard-list me-1"></i>Procedures Requested:</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for item in order.items.all %}
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-semibold">
+                                    {{ item.test.name }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Scheduling Form -->
+                    <form method="POST" action="{% url 'radiology_schedule_scan' order.id %}">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <!-- Date Selector -->
+                            <div class="col-md-6">
+                                <label for="scheduled_date" class="form-label fw-semibold text-secondary">Scheduled Date <span class="text-danger">*</span></label>
+                                <input type="date" name="scheduled_date" id="scheduled_date" class="form-control rounded-3" required min="{% now 'Y-m-d' %}">
+                            </div>
+
+                            <!-- Time Selector -->
+                            <div class="col-md-6">
+                                <label for="scheduled_time" class="form-label fw-semibold text-secondary">Scheduled Time <span class="text-danger">*</span></label>
+                                <input type="time" name="scheduled_time" id="scheduled_time" class="form-control rounded-3" required>
+                            </div>
+
+                            <!-- Machine Selector -->
+                            <div class="col-md-6">
+                                <label for="machine" class="form-label fw-semibold text-secondary">Modality / Machine Room <span class="text-danger">*</span></label>
+                                <select name="machine" id="machine" class="form-select rounded-3" required>
+                                    <option value="" disabled selected>-- Select Modality --</option>
+                                    <option value="X-Ray Room 1 (PA Plain)">X-Ray Room 1 (PA Plain)</option>
+                                    <option value="X-Ray Room 2 (AP & Lateral)">X-Ray Room 2 (AP & Lateral)</option>
+                                    <option value="Ultrasound Room A (Abdomen/Pelvis)">Ultrasound Room A (Abdomen/Pelvis)</option>
+                                    <option value="Ultrasound Room B (Obstetric)">Ultrasound Room B (Obstetric)</option>
+                                    <option value="CT Scanner Suite (128-Slice)">CT Scanner Suite (128-Slice)</option>
+                                    <option value="MRI Scanner Suite (3-Tesla)">MRI Scanner Suite (3-Tesla)</option>
+                                    <option value="ECG Room / Cardiology Suite">ECG Room / Cardiology Suite</option>
+                                    <option value="Mammography Lab">Mammography Lab</option>
+                                </select>
+                            </div>
+
+                            <!-- Priority Selector -->
+                            <div class="col-md-6">
+                                <label for="priority" class="form-label fw-semibold text-secondary">Scan Priority</label>
+                                <select name="priority" id="priority" class="form-select rounded-3">
+                                    <option value="Routine" selected>Routine</option>
+                                    <option value="Urgent">Urgent</option>
+                                    <option value="Emergency">Emergency (STAT)</option>
+                                </select>
+                            </div>
+
+                            <!-- Technician Selector -->
+                            <div class="col-md-12">
+                                <label for="technician" class="form-label fw-semibold text-secondary">Assigned Technologist / Specialist</label>
+                                <select name="technician" id="technician" class="form-select rounded-3">
+                                    <option value="">-- Select Technician (Optional) --</option>
+                                    {% for tech in technicians %}
+                                        <option value="{{ tech.id }}">{{ tech.username }} ({{ tech.get_role_display }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <a href="{% url 'radiology_dashboard' %}" class="btn btn-light rounded-3 px-4">Cancel</a>
+                            <button type="submit" class="btn btn-primary rounded-3 px-4 text-white fw-semibold">
+                                <i class="fas fa-calendar-check me-1"></i>Book Appointment Slot
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

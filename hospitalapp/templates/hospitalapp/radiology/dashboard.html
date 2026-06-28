@@ -1,0 +1,163 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Radiology Overview - Asha Hospital HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Block -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-warning mb-1">Radiology Workstation Overview</h2>
+            <p class="text-muted mb-0">Track and monitor scan scheduling, active patient scanning, and diagnostic imaging reports.</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-warning-subtle text-warning px-3 py-2 rounded-3 fw-bold">
+                <i class="fas fa-calendar-alt me-1"></i> {% now "l, d M Y" %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Analytics Dashboard Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2 col-sm-4 col-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 border-start border-warning border-4">
+                <h6 class="text-muted small text-uppercase mb-1 fw-semibold">Pending Scans</h6>
+                <h3 class="mb-0 fw-bold">{{ pending_scans }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 border-start border-primary border-4">
+                <h6 class="text-muted small text-uppercase mb-1 fw-semibold">Scheduled</h6>
+                <h3 class="mb-0 fw-bold">{{ scheduled_scans }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 border-start border-info border-4">
+                <h6 class="text-muted small text-uppercase mb-1 fw-semibold">Active Scanning</h6>
+                <h3 class="mb-0 fw-bold">{{ active_cases }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 border-start border-success border-4">
+                <h6 class="text-muted small text-uppercase mb-1 fw-semibold">Completed Today</h6>
+                <h3 class="mb-0 fw-bold">{{ completed_scans_today }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 border-start border-danger border-4">
+                <h6 class="text-muted small text-uppercase mb-1 fw-semibold">Critical Findings</h6>
+                <h3 class="mb-0 fw-bold">{{ critical_findings_today }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 border-start border-dark border-4">
+                <h6 class="text-muted small text-uppercase mb-1 fw-semibold">Daily Revenue</h6>
+                <h3 class="mb-0 fw-bold">Rs. {{ daily_revenue_today }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Navigation Hub -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 position-relative overflow-hidden">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="p-3 rounded-4 bg-warning-subtle text-warning">
+                        <i class="fas fa-calendar-alt fa-2x"></i>
+                    </div>
+                    <span class="badge bg-warning text-dark rounded-pill px-3 py-1.5 fw-bold">{{ pending_scans }} Awaiting</span>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">Schedule Scans</h5>
+                <p class="text-muted small mb-4">Assign technicians, allocate imaging machinery (X-Ray, MRI, CT, UltraSound), and set appointment slots.</p>
+                <a href="{% url 'radiology_schedule_queue' %}" class="btn btn-warning text-white fw-bold rounded-pill px-4 align-self-start mt-auto shadow-sm">
+                    Open Queue <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 position-relative overflow-hidden">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="p-3 rounded-4 bg-info-subtle text-info">
+                        <i class="fas fa-radiation fa-2x text-info"></i>
+                    </div>
+                    <span class="badge bg-info rounded-pill px-3 py-1.5 fw-bold">{{ active_cases }} Running</span>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">Active Scanning Queue</h5>
+                <p class="text-muted small mb-4">Perform clinical scans, upload imaging attachments, and compose diagnostic reports.</p>
+                <a href="{% url 'radiology_active_queue' %}" class="btn btn-info fw-bold text-white rounded-pill px-4 align-self-start mt-auto shadow-sm">
+                    Open Workstation <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 position-relative overflow-hidden">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="p-3 rounded-4 bg-success-subtle text-success">
+                        <i class="fas fa-check-double fa-2x"></i>
+                    </div>
+                    <span class="badge bg-success rounded-pill px-3 py-1.5 fw-bold">Certified Log</span>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">Certified Imaging Reports</h5>
+                <p class="text-muted small mb-4">Browse, search, export, and print completed imaging reports and clinical details.</p>
+                <a href="{% url 'radiology_completed' %}" class="btn btn-success fw-bold rounded-pill px-4 align-self-start mt-auto shadow-sm">
+                    Open Archive <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Critical Findings Watchlist -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-danger text-white py-3 border-0">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-exclamation-triangle fa-fade me-2"></i>Critical Findings Watchlist (Recent)</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 table-hover">
+                <thead class="table-light text-uppercase font-size-xs text-muted">
+                    <tr>
+                        <th class="py-3 ps-4">Patient</th>
+                        <th class="py-3">Procedure</th>
+                        <th class="py-3">Findings Summary</th>
+                        <th class="py-3">Impression</th>
+                        <th class="py-3 text-end pe-4">Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in recent_critical_reports %}
+                    <tr class="table-danger-subtle">
+                        <td class="ps-4">
+                            <h6 class="mb-0 fw-bold text-dark">{{ report.order_item.order.patient.name }}</h6>
+                            <small class="text-muted">ID: #PAT-{{ report.order_item.order.patient.patient_id }}</small>
+                        </td>
+                        <td>
+                            <span class="fw-semibold text-primary">{{ report.order_item.test.name }}</span>
+                        </td>
+                        <td>{{ report.findings|truncatechars:100 }}</td>
+                        <td>
+                            <span class="badge bg-danger text-white px-3 py-1.5 rounded-pill fw-bold">{{ report.impression }}</span>
+                        </td>
+                        <td class="text-end pe-4 text-muted small">{{ report.reported_at|date:"d M Y, H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="fas fa-shield-alt fa-3x mb-3 text-success opacity-50"></i>
+                            <p class="mb-0 fw-medium">No critical findings registered in the active session.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-warning-subtle { background-color: #fff9db !important; }
+.bg-primary-subtle { background-color: #eef2ff !important; }
+.bg-success-subtle { background-color: #ebfbee !important; }
+.bg-info-subtle { background-color: #e0f2fe !important; }
+.table-danger-subtle { background-color: #fff5f5; }
+.font-size-xs { font-size: 0.75rem; }
+</style>
+{% endblock %}

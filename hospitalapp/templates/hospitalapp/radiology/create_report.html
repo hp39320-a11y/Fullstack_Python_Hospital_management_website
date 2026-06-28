@@ -1,0 +1,128 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Create Radiology Report - CarePlus HMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm border-0 rounded-4 max-width-700 mx-auto">
+        <div class="card-header bg-warning text-dark py-3 rounded-top-4">
+            <h4 class="mb-0 fw-bold"><i class="fas fa-x-ray me-2"></i>Create Imaging Report</h4>
+        </div>
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-4 p-3 bg-light rounded-3">
+                <div class="bg-warning text-dark rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width:45px; height:45px;">
+                    <i class="fas fa-procedures fa-lg"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-1 text-dark">{{ item.test.name }}</h5>
+                    <p class="text-muted small mb-0">Patient Name: <strong>{{ item.order.patient.name }}</strong> | Order ID: #RAD-{{ item.order.id }}</p>
+                </div>
+            </div>
+
+            <!-- Scan Attachments View -->
+            {% if attachments %}
+            <div class="mb-4">
+                <h6 class="fw-bold text-secondary mb-2"><i class="fas fa-images me-1"></i>Uploaded Scans:</h6>
+                <div class="row g-2">
+                    {% for att in attachments %}
+                    <div class="col-md-4 col-sm-6">
+                        <div class="card p-2 border border-light-subtle rounded-3 text-center">
+                            <i class="fas fa-file-image fa-3x mb-2 text-warning"></i>
+                            <span class="d-block small text-truncate fw-semibold mb-2" style="max-width: 100%;">{{ att.file.name|slice:"16:" }}</span>
+                            <a href="{{ att.file.url }}" target="_blank" class="btn btn-xs btn-outline-warning rounded-pill py-0.5 px-2 font-size-xs text-decoration-none">
+                                <i class="fas fa-external-link-alt me-1"></i>Open File
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-muted">Clinical History</label>
+                    <textarea
+                        name="clinical_history"
+                        class="form-control rounded-3 p-3"
+                        rows="2"
+                        placeholder="Enter patient symptoms, previous records, clinical indications..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-muted">Findings <span class="text-danger">*</span></label>
+                    <textarea
+                        name="findings"
+                        class="form-control rounded-3 p-3"
+                        rows="4"
+                        placeholder="Describe observations, imaging patterns, bone alignment, organ sizes, or other findings..."
+                        required></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-muted">Impression <span class="text-danger">*</span></label>
+                    <textarea
+                        name="impression"
+                        class="form-control rounded-3 p-3"
+                        rows="3"
+                        placeholder="Provide summary, final diagnosis suggestion, or clinical correlations..."
+                        required></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-muted">Recommendations</label>
+                    <textarea
+                        name="recommendations"
+                        class="form-control rounded-3 p-3"
+                        rows="2"
+                        placeholder="Specify follow-up scans, specialist reviews, or clinical recommendations..."></textarea>
+                </div>
+
+                <div class="form-check form-switch mb-3 p-3 bg-danger-subtle rounded-3 text-danger border border-danger-subtle">
+                    <input class="form-check-input ms-0 me-2" type="checkbox" name="is_critical" id="isCriticalSwitch">
+                    <label class="form-check-label fw-bold" for="isCriticalSwitch">
+                        <i class="fas fa-exclamation-triangle me-1"></i>Contains Critical Findings (STAT alert will be sent to referring doctor)
+                    </label>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold text-muted"><i class="fas fa-paperclip me-1"></i>Upload Signed Report PDF / File (Optional)</label>
+                    <input
+                        type="file"
+                        name="report_file"
+                        class="form-control rounded-3 p-2">
+                    <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle me-1"></i>Attach final signed report PDF or annotated scan images.</small>
+                </div>
+
+                <div class="mt-4 border-top pt-3 d-flex justify-content-between">
+                    <a href="{% url 'radiology_dashboard' %}" class="btn btn-outline-secondary px-4 py-2 rounded-3">
+                        <i class="fas fa-arrow-left me-2"></i>Cancel & Back
+                    </a>
+                    <button type="submit" class="btn btn-warning text-dark fw-bold px-4 py-2 rounded-3">
+                        <i class="fas fa-save me-2"></i>Submit & Certify Report
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.max-width-700 {
+    max-width: 700px;
+}
+textarea:focus, input[type="file"]:focus {
+    border-color: #ffc107 !important;
+    box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.2) !important;
+}
+.font-size-xs {
+    font-size: 0.72rem;
+}
+.btn-xs {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+}
+</style>
+{% endblock %}
