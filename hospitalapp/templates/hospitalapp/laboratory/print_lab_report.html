@@ -1,0 +1,853 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Report — LAB-{{ order.id }} | Asha Hospital</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Roboto+Mono:wght@400;500&display=swap');
+
+        :root {
+            --blue:       #0b4c8c;
+            --blue-light: #e8f0fb;
+            --green:      #1a6e44;
+            --green-light:#e6f5ee;
+            --red:        #c0392b;
+            --red-light:  #fdecea;
+            --grey:       #64748b;
+            --border:     #dce4f0;
+            --row-alt:    #f7faff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #e8ecf3;
+            color: #1e293b;
+            font-size: 12.5px;
+            line-height: 1.55;
+        }
+
+        /* ===== PRINT BUTTON BAR ===== */
+        .toolbar {
+            background: var(--blue);
+            padding: 10px 30px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+        }
+        .toolbar button {
+            background: white;
+            color: var(--blue);
+            border: none;
+            padding: 8px 26px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .toolbar button.back {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1.5px solid rgba(255,255,255,0.4);
+        }
+
+        /* ===== PAGE WRAPPER ===== */
+        .page {
+            max-width: 820px;
+            margin: 24px auto;
+            background: white;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        /* ===== HEADER STRIPE ===== */
+        .header-stripe {
+            background: linear-gradient(135deg, var(--blue) 0%, #1565c0 100%);
+            height: 6px;
+        }
+
+        /* ===== HOSPITAL LETTERHEAD ===== */
+        .letterhead {
+            padding: 22px 32px 18px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+
+        .letterhead .logo-wrap {
+            flex-shrink: 0;
+        }
+
+        .letterhead .logo-wrap img {
+            height: 72px;
+            width: auto;
+            border-radius: 8px;
+            object-fit: contain;
+            background: #f0f5fa;
+            padding: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .letterhead .hospital-info {
+            flex: 1;
+        }
+
+        .letterhead .hospital-name {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--blue);
+            letter-spacing: 0.5px;
+            line-height: 1.1;
+        }
+
+        .letterhead .hospital-tagline {
+            font-size: 10.5px;
+            color: var(--grey);
+            font-style: italic;
+            margin-bottom: 5px;
+        }
+
+        .letterhead .hospital-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 4px;
+        }
+
+        .letterhead .hospital-meta span {
+            font-size: 11px;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .letterhead .hospital-meta .icon {
+            color: var(--blue);
+            font-size: 11px;
+        }
+
+        .letterhead .report-id-box {
+            text-align: right;
+            flex-shrink: 0;
+            min-width: 130px;
+        }
+
+        .letterhead .report-id-box .label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--grey);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .letterhead .report-id-box .rid {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--blue);
+            background: var(--blue-light);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid #c3d6f7;
+            display: inline-block;
+        }
+
+        /* ===== REPORT TITLE BAND ===== */
+        .report-title-band {
+            background: var(--blue-light);
+            border-bottom: 2px solid #c3d6f7;
+            padding: 10px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .report-title-band h1 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--blue);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .report-title-band .status-badge {
+            background: var(--green);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        /* ===== PATIENT INFO TABLE ===== */
+        .patient-section {
+            padding: 16px 32px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .section-heading {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            color: var(--grey);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .patient-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px 20px;
+        }
+
+        .patient-grid .field {
+            min-width: 0;
+        }
+
+        .patient-grid .field label {
+            display: block;
+            font-size: 9.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--grey);
+            margin-bottom: 3px;
+        }
+
+        .patient-grid .field .val {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .patient-grid .field .val.blood {
+            color: var(--red);
+            font-size: 14px;
+        }
+
+        .patient-grid .field .val.pid {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 12px;
+            color: var(--blue);
+        }
+
+        /* ===== CLINICAL NOTES ===== */
+        .clinical-note {
+            margin: 0 32px 14px;
+            background: #fffbea;
+            border: 1px solid #fcd34d;
+            border-left: 4px solid #f59e0b;
+            border-radius: 6px;
+            padding: 9px 14px;
+            font-size: 12px;
+            color: #78350f;
+        }
+        .clinical-note strong { color: #92400e; }
+
+        /* ===== RESULTS SECTION ===== */
+        .results-section {
+            padding: 16px 32px;
+        }
+
+        /* Per-test card */
+        .test-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 18px;
+        }
+
+        .test-card-header {
+            background: linear-gradient(135deg, var(--blue) 0%, #1565c0 100%);
+            padding: 9px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .test-card-header .test-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 0.3px;
+        }
+
+        .test-card-header .test-meta {
+            font-size: 10px;
+            color: rgba(255,255,255,0.75);
+        }
+
+        .test-card-header .completed-pill {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 9.5px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.35);
+        }
+
+        .test-card-header .pending-pill {
+            background: #f59e0b;
+            color: white;
+            font-size: 9.5px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        /* Parameter table inside card */
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .param-table thead th {
+            background: #f0f5fb;
+            padding: 8px 14px;
+            text-align: left;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            color: var(--grey);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .param-table thead th:nth-child(2) { text-align: center; }
+        .param-table thead th:last-child  { text-align: right; }
+
+        .param-table tbody td {
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 12.5px;
+        }
+
+        .param-table tbody tr:last-child td { border-bottom: none; }
+        .param-table tbody tr:nth-child(even) td { background: var(--row-alt); }
+
+        .param-table .param-name { color: #334155; font-weight: 500; }
+
+        .param-table .param-val {
+            text-align: center;
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--blue);
+        }
+
+        .param-table .param-range {
+            text-align: right;
+            color: var(--grey);
+            font-size: 11.5px;
+        }
+
+        /* Plain result (non-parameterized) */
+        .plain-result-box {
+            padding: 14px 16px;
+            background: #fafcff;
+        }
+
+        .plain-result-box .val {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--blue);
+        }
+
+        .plain-result-box .remarks-row {
+            margin-top: 8px;
+            font-size: 11.5px;
+            color: var(--grey);
+        }
+
+        .plain-result-box .remarks-row strong { color: #475569; }
+
+        /* Pending test */
+        .pending-box {
+            padding: 16px;
+            text-align: center;
+            color: #b45309;
+            background: #fffbea;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        /* Technician row */
+        .tech-row {
+            padding: 6px 14px;
+            background: #f8faff;
+            border-top: 1px dashed var(--border);
+            font-size: 10.5px;
+            color: var(--grey);
+            text-align: right;
+        }
+
+        /* Remarks row (inside card, below result) */
+        .remarks-inside {
+            padding: 7px 14px;
+            background: #fafcff;
+            border-top: 1px dashed var(--border);
+            font-size: 11px;
+            color: #475569;
+        }
+
+        /* ===== SUMMARY ROW ===== */
+        .summary-bar {
+            margin: 0 32px 16px;
+            background: var(--green-light);
+            border: 1px solid #b7dfc9;
+            border-radius: 8px;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .summary-bar .s-text {
+            font-size: 12px;
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        .summary-bar .s-date {
+            font-size: 11px;
+            color: #1a6e44;
+        }
+
+        /* ===== SIGNATURES ===== */
+        .signature-section {
+            padding: 24px 32px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-top: 2px solid var(--border);
+        }
+
+        .sig-box {
+            text-align: center;
+            min-width: 180px;
+        }
+
+        .sig-line {
+            border-top: 1.5px solid #94a3b8;
+            margin-top: 48px;
+            padding-top: 6px;
+        }
+
+        .sig-line .title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .sig-line .subtitle {
+            font-size: 9.5px;
+            color: var(--grey);
+            margin-top: 2px;
+        }
+
+        /* ===== FOOTER ===== */
+        .report-footer {
+            background: var(--blue-light);
+            border-top: 2px solid #c3d6f7;
+            padding: 10px 32px;
+            text-align: center;
+            font-size: 10px;
+            color: var(--grey);
+            line-height: 1.7;
+        }
+
+        .report-footer strong { color: var(--blue); }
+
+        .footer-stripe {
+            background: linear-gradient(135deg, var(--blue) 0%, #1565c0 100%);
+            height: 5px;
+        }
+
+        /* ===== PRINT ===== */
+        @media print {
+            body { background: white; font-size: 11.5px; }
+            .toolbar { display: none !important; }
+            .page { box-shadow: none; margin: 0; border-radius: 0; max-width: 100%; }
+            .test-card { break-inside: avoid; }
+            .signature-section { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== Print Toolbar ===== -->
+    <div class="toolbar no-print">
+        <button onclick="window.print()">
+            🖨️ Print / Save as PDF
+        </button>
+        <button class="back" onclick="window.history.back()">
+            ← Go Back
+        </button>
+    </div>
+
+    <!-- ===== Report Page ===== -->
+    <div class="page">
+
+        <div class="header-stripe"></div>
+
+        <!-- ===== Letterhead ===== -->
+        <div class="letterhead">
+            <div class="logo-wrap">
+                <img src="{% static 'hospitalapp/images/logo.png' %}" alt="Asha Hospital Logo">
+            </div>
+
+            <div class="hospital-info">
+                <div class="hospital-name">ASHA HOSPITAL</div>
+                <div class="hospital-tagline">Centre of Excellence in Clinical Diagnostics &amp; Patient Care</div>
+                <div class="hospital-meta">
+                    <span><span class="icon">📍</span> Thodupuzha P.O, Idukki District, Kerala — 685 584</span>
+                    <span><span class="icon">📞</span> +91 9876543210</span>
+                    <span><span class="icon">🖷</span> +91 4862 252525</span>
+                    <span><span class="icon">✉</span> info@ashahospital.com</span>
+                    <span><span class="icon">⏰</span> Lab Open: 24 × 7</span>
+                </div>
+            </div>
+
+            <div class="report-id-box">
+                <div class="label">Report No.</div>
+                <div class="rid">LAB-{{ order.id|stringformat:"04d" }}</div>
+                <div style="font-size:9.5px; color:#64748b; margin-top:6px;">
+                    {{ order.created_at|date:"d M Y" }}<br>
+                    {{ order.created_at|date:"H:i" }} IST
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Report Title Band ===== -->
+        <div class="report-title-band">
+            <h1>🔬 Laboratory Investigation Report</h1>
+            {% if order.status == 'Completed' or order.status == 'Verified' %}
+                <span class="status-badge">✔ Report Finalised</span>
+            {% else %}
+                <span class="status-badge" style="background:#b45309;">⏳ Partial / Pending</span>
+            {% endif %}
+        </div>
+
+        <!-- ===== Patient Information ===== -->
+        <div class="patient-section">
+            <div class="section-heading">Patient Information</div>
+            <div class="patient-grid">
+                <div class="field">
+                    <label>Patient Name</label>
+                    <div class="val">{{ order.patient.name }}</div>
+                </div>
+                <div class="field">
+                    <label>Patient ID</label>
+                    <div class="val pid">PAT-{{ order.patient.patient_id }}</div>
+                </div>
+                <div class="field">
+                    <label>Age / Gender</label>
+                    <div class="val">{{ order.patient.age }} yrs / {{ order.patient.gender|default:"—" }}</div>
+                </div>
+                <div class="field">
+                    <label>Blood Group</label>
+                    <div class="val blood">{{ order.patient.blood_group|default:"N/A" }}</div>
+                </div>
+                <div class="field">
+                    <label>Phone</label>
+                    <div class="val">{{ order.patient.phone|default:"—" }}</div>
+                </div>
+                <div class="field">
+                    <label>Email</label>
+                    <div class="val" style="font-size:11.5px;">{{ order.patient.email|default:"—" }}</div>
+                </div>
+                <div class="field">
+                    <label>Referred By</label>
+                    <div class="val">{{ order.ordered_by.name }}</div>
+                </div>
+                <div class="field">
+                    <label>Order Date</label>
+                    <div class="val" style="font-size:12px;">{{ order.created_at|date:"d M Y, H:i" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Clinical Notes ===== -->
+        {% if order.clinical_notes %}
+        <div class="clinical-note">
+            <strong>🩺 Clinical Notes / Indication: </strong>{{ order.clinical_notes }}
+        </div>
+        {% endif %}
+
+        <!-- ===== Investigation Results ===== -->
+        <div class="results-section">
+            <div class="section-heading">Investigation Results ({{ items|length }} Test{{ items|length|pluralize }})</div>
+
+            {% for item in items %}
+            <div class="test-card">
+
+                <!-- Test Header -->
+                <div class="test-card-header">
+                    <div>
+                        <div class="test-name">{{ forloop.counter }}. {{ item.test_name }}</div>
+                        {% if item.category %}
+                        <div class="test-meta">Category: {{ item.category }}</div>
+                        {% endif %}
+                    </div>
+                    {% if item.result %}
+                        <span class="completed-pill">✔ Completed</span>
+                    {% else %}
+                        <span class="pending-pill">⏳ Pending</span>
+                    {% endif %}
+                </div>
+
+                <!-- Result Body -->
+                {% if item.result %}
+
+                    {% if item.result.is_cbc %}
+                    <table class="param-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Result</th>
+                                <th>Normal Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for name, range, val in item.result.cbc_fields_with_results %}
+                            <tr>
+                                <td class="param-name">{{ name }}</td>
+                                <td class="param-val">{{ val|default:"—" }}</td>
+                                <td class="param-range">{{ range }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {% elif item.result.is_lipid %}
+                    <table class="param-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Result</th>
+                                <th>Normal Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for name, range, val in item.result.lipid_fields_with_results %}
+                            <tr>
+                                <td class="param-name">{{ name }}</td>
+                                <td class="param-val">{{ val|default:"—" }}</td>
+                                <td class="param-range">{{ range }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {% elif item.result.is_thyroid %}
+                    <table class="param-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Result</th>
+                                <th>Normal Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for name, range, val in item.result.thyroid_fields_with_results %}
+                            <tr>
+                                <td class="param-name">{{ name }}</td>
+                                <td class="param-val">{{ val|default:"—" }}</td>
+                                <td class="param-range">{{ range }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {% elif item.result.is_lft %}
+                    <table class="param-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Result</th>
+                                <th>Normal Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for name, range, val in item.result.lft_fields_with_results %}
+                            <tr>
+                                <td class="param-name">{{ name }}</td>
+                                <td class="param-val">{{ val|default:"—" }}</td>
+                                <td class="param-range">{{ range }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {% elif item.result.is_kft %}
+                    <table class="param-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Result</th>
+                                <th>Normal Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for name, range, val in item.result.kft_fields_with_results %}
+                            <tr>
+                                <td class="param-name">{{ name }}</td>
+                                <td class="param-val">{{ val|default:"—" }}</td>
+                                <td class="param-range">{{ range }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {% elif item.result.is_blood_sugar %}
+                    <table class="param-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Result</th>
+                                <th>Normal Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for name, range, val in item.result.blood_sugar_fields_with_results %}
+                            <tr>
+                                <td class="param-name">{{ name }}</td>
+                                <td class="param-val">{{ val|default:"—" }}</td>
+                                <td class="param-range">{{ range }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {% elif item.result.is_hba1c %}
+                    <table class="param-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Result</th>
+                                <th>Reference Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for name, range, val in item.result.hba1c_fields_with_results %}
+                            <tr>
+                                <td class="param-name">{{ name }}</td>
+                                <td class="param-val">{{ val|default:"—" }}</td>
+                                <td class="param-range">{{ range }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {% elif item.result.parameter_results.all %}
+                    <table class="param-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Result</th>
+                                <th>Reference Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pr in item.result.parameter_results.all %}
+                            <tr>
+                                <td class="param-name">{{ pr.parameter.name }}</td>
+                                <td class="param-val {% if pr.is_abnormal or pr.is_critical %}text-danger{% endif %}">
+                                    {{ pr.value|default:"—" }} {% if pr.parameter.unit %}<span style="font-size:10px; font-weight:normal; color:#64748b;">{{ pr.parameter.unit }}</span>{% endif %}
+                                </td>
+                                <td class="param-range">{{ pr.parameter.reference_range|default:"—" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {% else %}
+                    <!-- Plain result -->
+                    <div class="plain-result-box">
+                        <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--grey); margin-bottom:4px;">Result</div>
+                        <div class="val">{{ item.result.result_value }}</div>
+                    </div>
+                    {% endif %}
+
+                    {% if item.result.remarks %}
+                    <div class="remarks-inside">
+                        <strong>Remarks: </strong>{{ item.result.remarks }}
+                    </div>
+                    {% endif %}
+
+                    <div class="tech-row">
+                        Reported by: <strong>{{ item.result.technician.username }}</strong> &nbsp;|&nbsp;
+                        Completed: <strong>{{ item.result.completed_at|date:"d M Y, H:i" }}</strong>
+                    </div>
+
+                {% else %}
+                    <div class="pending-box">
+                        ⏳ Result not yet entered — sample processing in progress.
+                    </div>
+                {% endif %}
+
+            </div><!-- /.test-card -->
+            {% endfor %}
+        </div>
+
+        <!-- ===== Summary Bar ===== -->
+        {% if order.status == 'Completed' or order.status == 'Verified' %}
+        <div class="summary-bar">
+            <div class="s-text">✅ All investigations reported. Report is finalised and certified.</div>
+            <div class="s-date">Generated: {% now "d M Y, H:i" %} IST</div>
+        </div>
+        {% endif %}
+
+        <!-- ===== Signatures ===== -->
+        <div class="signature-section">
+            <div class="sig-box">
+                <div class="sig-line">
+                    <div class="title">Lab Technician</div>
+                    <div class="subtitle">Asha Hospital Laboratory</div>
+                </div>
+            </div>
+
+            <div style="text-align:center;">
+                <div style="font-size:28px; color:var(--blue); opacity:0.08; font-weight:900; letter-spacing:6px; text-transform:uppercase; transform:rotate(-15deg);">ASHA HOSPITAL</div>
+            </div>
+
+            <div class="sig-box">
+                <div class="sig-line">
+                    <div class="title">Pathologist / Authorized Signatory</div>
+                    <div class="subtitle">MBBS, MD (Pathology)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Footer ===== -->
+        <div class="report-footer">
+            <strong>⚠ Disclaimer:</strong> This is a computer-generated laboratory report from <strong>Asha Hospital</strong>.
+            Results are valid only for the specimen collected. Clinical correlation is advised. Kindly consult your physician for interpretation.<br>
+            Thodupuzha P.O, Idukki District, Kerala — 685 584 &nbsp;|&nbsp;
+            📞 +91 9876543210 &nbsp;|&nbsp; ✉ info@ashahospital.com &nbsp;|&nbsp;
+            Report generated on {% now "d M Y \a\t H:i" %} IST
+        </div>
+        <div class="footer-stripe"></div>
+
+    </div><!-- /.page -->
+
+</body>
+</html>

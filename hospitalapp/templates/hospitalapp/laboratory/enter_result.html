@@ -1,0 +1,128 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Enter Laboratory Result - CarePlus HMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm border-0 rounded-4 max-width-600 mx-auto">
+        <div class="card-header bg-success text-white py-3 rounded-top-4">
+            <h4 class="mb-0 fw-bold"><i class="fas fa-edit me-2"></i>Enter Investigation Result</h4>
+        </div>
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-4 p-3 bg-light rounded-3">
+                <div class="bg-success text-white rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width:45px; height:45px;">
+                    <i class="fas fa-flask fa-lg"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-1 text-dark">{{ item.test.name }}</h5>
+                    <p class="text-muted small mb-0">Patient Name: <strong>{{ item.order.patient.name }}</strong> | Order ID: #LAB-{{ item.order.id }}</p>
+                </div>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered align-middle shadow-sm rounded-3 overflow-hidden">
+                        <thead class="table-success text-white">
+                            <tr>
+                                <th class="py-3 px-4">Parameter</th>
+                                <th class="py-3 px-4" style="width: 45%;">Result</th>
+                                <th class="py-3 px-4 text-center">Normal Range</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if parameters_data %}
+                                {% for pdata in parameters_data %}
+                                    <tr>
+                                        <td class="py-2.5 px-4">
+                                            <span class="fw-semibold">{{ pdata.parameter.name }}</span>
+                                        </td>
+                                        <td class="py-2.5 px-4">
+                                            <div class="input-group">
+                                                <input type="text" 
+                                                       name="param_{{ pdata.parameter.id }}" 
+                                                       id="input_{{ pdata.parameter.id }}" 
+                                                       value="{{ pdata.result.value|default:'' }}"
+                                                       class="form-control rounded-start py-1.5 px-3 border-light-subtle shadow-sm" 
+                                                       placeholder="Enter observed value..."
+                                                       oninput="validateRange(this)"
+                                                       data-ref="{{ pdata.parameter.reference_range|default:'' }}"
+                                                       data-min="{{ pdata.parameter.min_value|default:'' }}"
+                                                       data-max="{{ pdata.parameter.max_value|default:'' }}"
+                                                       data-male-min="{{ pdata.parameter.male_min|default:'' }}"
+                                                       data-male-max="{{ pdata.parameter.male_max|default:'' }}"
+                                                       data-female-min="{{ pdata.parameter.female_min|default:'' }}"
+                                                       data-female-max="{{ pdata.parameter.female_max|default:'' }}"
+                                                       data-child-min="{{ pdata.parameter.child_min|default:'' }}"
+                                                       data-child-max="{{ pdata.parameter.child_max|default:'' }}"
+                                                       data-crit-min="{{ pdata.parameter.critical_min|default:'' }}"
+                                                       data-crit-max="{{ pdata.parameter.critical_max|default:'' }}">
+                                                <span class="input-group-text bg-white border-start-0">
+                                                    <span id="badge_{{ pdata.parameter.id }}" class="badge bg-secondary font-size-xs">No Value</span>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td class="py-2.5 px-4 text-center">
+                                            <span class="badge bg-light text-muted border px-2.5 py-1.5 small fw-normal">{{ pdata.parameter.reference_range|default:"-" }}</span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td class="py-3 px-4">
+                                        <span class="fw-bold text-dark d-block mb-1">{{ item.test.name }}</span>
+                                        <span class="badge bg-success-subtle text-success rounded-pill px-2.5 py-1 small fw-normal">{{ item.test.category }}</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <input 
+                                            type="text" 
+                                            name="result_value" 
+                                            value="{{ result.result_value|default:'' }}"
+                                            class="form-control rounded-3 py-2 px-3 border-light-subtle shadow-sm" 
+                                            placeholder="Enter parameter result value..." 
+                                            required>
+                                    </td>
+                                    <td class="py-3 px-4 text-center">
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-2 fs-6 fw-normal">
+                                            {{ item.test.normal_range|default:"—" }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+ 
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-muted mb-2">Remarks & Pathology Observations</label>
+                    <textarea
+                        name="remarks"
+                        class="form-control rounded-3 p-3 border-light-subtle shadow-sm"
+                        rows="3"
+                        placeholder="Enter pathologist comments, diagnostic flags (High/Low/Critical) or general observations...">{{ result.remarks|default:'' }}</textarea>
+                </div>
+
+                <div class="mt-4 border-top pt-3 d-flex justify-content-between">
+                    <a href="{% url 'laboratory_dashboard' %}" class="btn btn-outline-secondary px-4 py-2 rounded-3">
+                        <i class="fas fa-arrow-left me-2"></i>Cancel & Back
+                    </a>
+                    <button type="submit" class="btn btn-success px-4 py-2 rounded-3 btn-submit shadow-sm">
+                        <i class="fas fa-save me-2"></i>Submit & Certify
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.max-width-600 {
+    max-width: 600px;
+}
+textarea:focus, input[type="text"]:focus {
+    border-color: #198754 !important;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.2) !important;
+}
+</style>
+{% endblock %}

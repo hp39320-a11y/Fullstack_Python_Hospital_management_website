@@ -1,0 +1,164 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Laboratory Overview - Asha Hospital HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Block -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1">Laboratory Workstation Overview</h2>
+            <p class="text-muted mb-0">Track and monitor diagnostics workflows, critical values, and statistics.</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-3 fw-bold">
+                <i class="fas fa-calendar-alt me-1"></i> {% now "l, d M Y" %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Analytics Dashboard Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2 col-sm-4 col-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 border-start border-primary border-4">
+                <h6 class="text-muted small text-uppercase mb-1 fw-semibold">Total Orders Today</h6>
+                <h3 class="mb-0 fw-bold">{{ total_orders_today }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 border-start border-warning border-4">
+                <h6 class="text-muted small text-uppercase mb-1 fw-semibold">Pending Samples</h6>
+                <h3 class="mb-0 fw-bold">{{ pending_samples }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 border-start border-info border-4">
+                <h6 class="text-muted small text-uppercase mb-1 fw-semibold">Processing</h6>
+                <h3 class="mb-0 fw-bold">{{ processing_tests }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 border-start border-success border-4">
+                <h6 class="text-muted small text-uppercase mb-1 fw-semibold">Completed Today</h6>
+                <h3 class="mb-0 fw-bold">{{ completed_reports_today }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 border-start border-danger border-4">
+                <h6 class="text-muted small text-uppercase mb-1 fw-semibold">Critical Results</h6>
+                <h3 class="mb-0 fw-bold">{{ critical_results_today }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 border-start border-dark border-4">
+                <h6 class="text-muted small text-uppercase mb-1 fw-semibold">Daily Revenue</h6>
+                <h3 class="mb-0 fw-bold">Rs. {{ daily_revenue_today }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Navigation Hub -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 position-relative overflow-hidden">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="p-3 rounded-4 bg-warning-subtle text-warning">
+                        <i class="fas fa-vial fa-2x"></i>
+                    </div>
+                    <span class="badge bg-warning rounded-pill px-3 py-1.5 fw-bold">{{ pending_samples }} Awaiting</span>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">Sample Collection Queue</h5>
+                <p class="text-muted small mb-4">Receive incoming orders, log patient arrivals, print barcodes, and collect bio-samples.</p>
+                <a href="{% url 'laboratory_samples' %}" class="btn btn-warning text-white fw-bold rounded-pill px-4 align-self-start mt-auto shadow-sm">
+                    Open Queue <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 position-relative overflow-hidden">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="p-3 rounded-4 bg-primary-subtle text-primary">
+                        <i class="fas fa-flask fa-2x"></i>
+                    </div>
+                    <span class="badge bg-primary rounded-pill px-3 py-1.5 fw-bold">{{ processing_tests }} Active</span>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">Active Processing & Results</h5>
+                <p class="text-muted small mb-4">Monitor active laboratory analysis, execute runs, input test parameters, and draft result sheets.</p>
+                <a href="{% url 'laboratory_pipeline' %}" class="btn btn-primary fw-bold rounded-pill px-4 align-self-start mt-auto shadow-sm">
+                    Open Workstation <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 position-relative overflow-hidden">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="p-3 rounded-4 bg-success-subtle text-success">
+                        <i class="fas fa-check-double fa-2x"></i>
+                    </div>
+                    <span class="badge bg-success rounded-pill px-3 py-1.5 fw-bold">Certified Log</span>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">Certified Diagnostic Reports</h5>
+                <p class="text-muted small mb-4">Search, print, and export finalized results. View doctor sign-offs and send digital PDF copies.</p>
+                <a href="{% url 'laboratory_completed' %}" class="btn btn-success fw-bold rounded-pill px-4 align-self-start mt-auto shadow-sm">
+                    Open Archive <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Critical Results Watchlist -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-danger text-white py-3 border-0">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-exclamation-triangle fa-fade me-2"></i>Critical Findings Watchlist (Recent)</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 table-hover">
+                <thead class="table-light text-uppercase font-size-xs text-muted">
+                    <tr>
+                        <th class="py-3 ps-4">Patient</th>
+                        <th class="py-3">Investigation</th>
+                        <th class="py-3">Parameter Name</th>
+                        <th class="py-3 text-center">Value</th>
+                        <th class="py-3 text-center">Reference Range</th>
+                        <th class="py-3 text-end pe-4">Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pr in recent_critical_results %}
+                    <tr class="table-danger-subtle">
+                        <td class="ps-4">
+                            <h6 class="mb-0 fw-bold text-dark">{{ pr.result.order_item.order.patient.name }}</h6>
+                            <small class="text-muted">ID: #PAT-{{ pr.result.order_item.order.patient.patient_id }}</small>
+                        </td>
+                        <td>
+                            <span class="fw-semibold text-primary">{{ pr.result.order_item.test.name }}</span>
+                        </td>
+                        <td>{{ pr.parameter.name }}</td>
+                        <td class="text-center">
+                            <span class="badge bg-danger text-white px-3 py-1.5 rounded-pill fw-bold">{{ pr.value }} {{ pr.parameter.unit }}</span>
+                        </td>
+                        <td class="text-center text-muted">{{ pr.parameter.reference_range }}</td>
+                        <td class="text-end pe-4 text-muted small">{{ pr.result.completed_at|date:"d M Y, H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fas fa-shield-alt fa-3x mb-3 text-success opacity-50"></i>
+                            <p class="mb-0 fw-medium">No critical alert values registered in the active session.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-warning-subtle { background-color: #fff9db !important; }
+.bg-primary-subtle { background-color: #eef2ff !important; }
+.bg-success-subtle { background-color: #ebfbee !important; }
+.table-danger-subtle { background-color: #fff5f5; }
+.font-size-xs { font-size: 0.75rem; }
+</style>
+{% endblock %}

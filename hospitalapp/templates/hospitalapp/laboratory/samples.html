@@ -1,0 +1,125 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Collect Samples - Laboratory - CarePlus HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Block -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-1"><i class="fas fa-vial me-2 text-warning"></i>Sample Collection Queue</h2>
+            <p class="text-muted mb-0">Procure bio-samples, print barcode IDs, and register arrivals for doctor lab orders.</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2 rounded-3 fw-bold">
+                <i class="fas fa-spinner fa-spin me-1"></i> Awaiting Samples: {{ pending_orders|length }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Pipeline Orders Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-white py-3 border-0 border-bottom">
+            <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-list me-2 text-primary"></i>Awaiting Procurements</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 table-hover">
+                <thead class="table-light text-uppercase font-size-xs text-muted">
+                    <tr>
+                        <th class="py-3 ps-4" style="width: 100px;">Order ID</th>
+                        <th class="py-3">Patient Details</th>
+                        <th class="py-3">Admission</th>
+                        <th class="py-3">Tests Ordered</th>
+                        <th class="py-3 text-center">Urgency</th>
+                        <th class="py-3 pe-4 text-end" style="width: 250px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in pending_orders %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-primary">#LAB-{{ order.id }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-3 bg-light-primary text-primary fw-bold">
+                                    {{ order.patient.name|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-bold text-dark">{{ order.patient.name }}</h6>
+                                    <small class="text-muted">ID: #PAT-{{ order.patient.patient_id }} ({{ order.patient.age }}y, {{ order.patient.gender }})</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if order.admission %}
+                                <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill font-size-xs text-uppercase fw-bold"><i class="fas fa-bed me-1"></i>Inpatient</span>
+                            {% else %}
+                                <span class="badge bg-info-subtle text-info px-3 py-2 rounded-pill font-size-xs text-uppercase fw-bold"><i class="fas fa-user-injured me-1"></i>Outpatient</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for item in order.items.all %}
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small fw-semibold">
+                                        {{ item.test.name }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            {% if order.urgency == 'STAT' %}
+                                <span class="badge bg-danger text-white px-3 py-1.5 rounded-pill font-size-xs fw-bold">STAT</span>
+                            {% elif order.urgency == 'Urgent' %}
+                                <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill font-size-xs fw-bold">Urgent</span>
+                            {% else %}
+                                <span class="badge bg-secondary text-white px-3 py-1.5 rounded-pill font-size-xs fw-bold">Routine</span>
+                            {% endif %}
+                        </td>
+                        <td class="pe-4 text-end">
+                            <a href="{% url 'laboratory_collect_sample' order.id %}" class="btn btn-sm btn-warning rounded-pill px-4 py-1.5 fw-bold text-white shadow-sm hover-translate-y">
+                                <i class="fas fa-vial me-1"></i>Collect Sample
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fas fa-vial fa-3x mb-3 opacity-25"></i>
+                            <p class="mb-0 fw-medium">No pending sample collections on queue. All clean!</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.bg-light-primary {
+    background-color: #eef2ff !important;
+}
+.font-size-xs {
+    font-size: 0.75rem;
+}
+.bg-info-subtle { background-color: #e0f2fe; }
+.bg-danger-subtle { background-color: #fee2e2; }
+.bg-primary-subtle { background-color: #e0e7ff; }
+.bg-warning-subtle { background-color: #fef3c7; }
+.bg-success-subtle { background-color: #dcfce7; }
+.hover-translate-y {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-translate-y:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.25) !important;
+}
+</style>
+{% endblock %}

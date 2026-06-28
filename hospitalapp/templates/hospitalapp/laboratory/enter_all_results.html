@@ -1,0 +1,241 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Enter Lab Results - Asha Hospital{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Back Link -->
+    <div class="mb-4">
+        <a href="{% url 'laboratory_dashboard' %}" class="btn btn-link text-decoration-none text-muted p-0">
+            <i class="fas fa-arrow-left me-2"></i>Back to Laboratory Dashboard
+        </a>
+    </div>
+
+    <!-- Main Card -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+        <div class="card-header bg-success text-white py-3 border-0">
+            <div class="d-flex align-items-center">
+                <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    <i class="fas fa-flask fa-lg"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 fw-bold">Laboratory Workspace</h5>
+                    <small class="opacity-75">Order ID: #LAB-{{ order.id }}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <!-- Patient Banner -->
+            <div class="bg-light p-3 rounded-3 mb-4">
+                <div class="row align-items-center g-3">
+                    <div class="col-md-7">
+                        <span class="text-muted small uppercase fw-bold">PATIENT RECORD</span>
+                        <h5 class="fw-bold text-success mb-1 mt-1">{{ order.patient.name }}</h5>
+                        <div class="d-flex flex-wrap gap-3 text-muted small mt-2">
+                            <span><i class="fas fa-id-card me-1"></i>ID: #PAT-{{ order.patient.patient_id }}</span>
+                            <span><i class="fas fa-calendar-alt me-1"></i>{{ order.patient.age }} Yrs</span>
+                            <span><i class="fas fa-venus-mars me-1"></i>{{ order.patient.gender }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-5 text-md-end">
+                        {% if order.admission %}
+                            <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill font-size-xs text-uppercase fw-bold"><i class="fas fa-bed me-1"></i>Inpatient</span>
+                        {% else %}
+                            <span class="badge bg-info-subtle text-info px-3 py-2 rounded-pill font-size-xs text-uppercase fw-bold"><i class="fas fa-user-injured me-1"></i>Outpatient</span>
+                        {% endif %}
+                        <div class="text-muted small mt-2"><i class="far fa-clock me-1"></i>Ordered: {{ order.created_at|date:"d M Y, H:i" }}</div>
+                    </div>
+                </div>
+                {% if order.clinical_notes %}
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="fw-bold text-secondary d-block mb-1">CLINICAL NOTES FROM DOCTOR:</small>
+                        <p class="mb-0 text-dark small bg-white p-2.5 rounded border border-light-subtle">{{ order.clinical_notes }}</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Parameters entry form -->
+            <form method="POST">
+                {% csrf_token %}
+
+                {% for entry in items_data %}
+                    <div class="card border border-light-subtle rounded-3 mb-4 overflow-hidden">
+                        <div class="card-header bg-light py-2.5 px-3 border-0 border-bottom d-flex align-items-center justify-content-between">
+                            <span class="fw-bold text-dark"><i class="fas fa-flask text-success me-2"></i>{{ entry.item.test.name }} ({{ entry.item.test.category }})</span>
+                            <span class="badge bg-success-subtle text-success">Rs. {{ entry.item.test.price }}</span>
+                        </div>
+                        <div class="card-body p-3">
+                            {% if entry.parameters_data %}
+                                <div class="table-responsive">
+                                    <table class="table table-bordered align-middle mb-0" style="font-size: 13px;">
+                                        <thead class="table-light text-muted">
+                                            <tr>
+                                                <th style="width: 30%;">Parameter</th>
+                                                <th style="width: 35%;">Result Value</th>
+                                                <th style="width: 15%;" class="text-center">Unit</th>
+                                                <th style="width: 20%;" class="text-center">Reference Range</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for pdata in entry.parameters_data %}
+                                                <tr>
+                                                    <td>
+                                                        <span class="fw-semibold text-dark">{{ pdata.parameter.name }}</span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="input-group input-group-sm">
+                                                            <input type="text" 
+                                                                   name="param_{{ entry.item.id }}_{{ pdata.parameter.id }}" 
+                                                                   id="input_{{ entry.item.id }}_{{ pdata.parameter.id }}"
+                                                                   value="{{ pdata.result.value|default:'' }}"
+                                                                   class="form-control range-input"
+                                                                   placeholder="Enter observed value..."
+                                                                   oninput="validateRange(this)"
+                                                                   data-ref="{{ pdata.parameter.reference_range|default:'' }}"
+                                                                   data-min="{{ pdata.parameter.min_value|default:'' }}"
+                                                                   data-max="{{ pdata.parameter.max_value|default:'' }}"
+                                                                   data-male-min="{{ pdata.parameter.male_min|default:'' }}"
+                                                                   data-male-max="{{ pdata.parameter.male_max|default:'' }}"
+                                                                   data-female-min="{{ pdata.parameter.female_min|default:'' }}"
+                                                                   data-female-max="{{ pdata.parameter.female_max|default:'' }}"
+                                                                   data-child-min="{{ pdata.parameter.child_min|default:'' }}"
+                                                                   data-child-max="{{ pdata.parameter.child_max|default:'' }}"
+                                                                   data-crit-min="{{ pdata.parameter.critical_min|default:'' }}"
+                                                                   data-crit-max="{{ pdata.parameter.critical_max|default:'' }}">
+                                                            <span class="input-group-text bg-white border-start-0">
+                                                                <span id="badge_{{ entry.item.id }}_{{ pdata.parameter.id }}" class="badge bg-secondary font-size-xs">No Value</span>
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center fw-bold text-secondary">
+                                                        {{ pdata.parameter.unit|default:"-" }}
+                                                    </td>
+                                                    <td class="text-center text-muted">
+                                                        {{ pdata.parameter.reference_range|default:"Dynamic" }}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <!-- Fallback: free text input -->
+                                <div class="mb-3">
+                                    <label for="result_value_{{ entry.item.id }}" class="form-label fw-semibold text-secondary">Result Findings</label>
+                                    <textarea name="result_value_{{ entry.item.id }}" id="result_value_{{ entry.item.id }}" rows="3" class="form-control rounded-3" placeholder="Enter findings or qualitative report result..." required>{{ entry.result.result_value|default:'' }}</textarea>
+                                </div>
+                            {% endif %}
+ 
+                            <!-- Remarks -->
+                            <div class="mt-3">
+                                <label for="remarks_{{ entry.item.id }}" class="form-label text-secondary small fw-semibold">Remarks for {{ entry.item.test.name }}</label>
+                                <input type="text" name="remarks_{{ entry.item.id }}" id="remarks_{{ entry.item.id }}" value="{{ entry.result.remarks|default:'' }}" class="form-control form-control-sm rounded-2" placeholder="e.g. Sample hemolyzed / normal values / repeated test">
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <!-- General Pathologist Remarks -->
+                <div class="mb-4">
+                    <label for="general_remarks" class="form-label fw-semibold text-secondary">General Remarks / Diagnostic Summary</label>
+                    <textarea name="general_remarks" id="general_remarks" rows="3" class="form-control rounded-3" placeholder="Add overall clinical observations or pathologists comments here..."></textarea>
+                </div>
+
+                <!-- Submit / Cancel -->
+                <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                    <a href="{% url 'laboratory_dashboard' %}" class="btn btn-light rounded-3 px-4">Cancel</a>
+                    <button type="submit" class="btn btn-success rounded-3 px-4 text-white fw-bold">
+                        <i class="fas fa-check-circle me-1"></i>Draft & Save Results
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+const age = parseInt("{{ order.patient.age }}");
+const gender = "{{ order.patient.gender }}".toLowerCase();
+
+function validateRange(input) {
+    const val = parseFloat(input.value);
+    const badge = document.getElementById('badge_' + input.id.replace('input_', ''));
+    if (!badge) return;
+
+    if (input.value.trim() === '') {
+        badge.innerText = 'No Value';
+        badge.className = 'badge bg-secondary font-size-xs';
+        return;
+    }
+
+    if (isNaN(val)) {
+        const val_str = input.value.toLowerCase().trim();
+        const ref = input.getAttribute('data-ref').toLowerCase().trim();
+        if (ref && ref !== 'nil' && ref !== 'negative' && ref !== 'absent') {
+            if (ref.includes('negative') && val_str.includes('positive')) {
+                badge.innerText = 'Abnormal';
+                badge.className = 'badge bg-warning text-dark';
+                return;
+            }
+            if (ref.includes('nil') && val_str && val_str !== 'nil' && val_str !== 'negative' && val_str !== 'absent' && val_str !== '0') {
+                badge.innerText = 'Abnormal';
+                badge.className = 'badge bg-warning text-dark';
+                return;
+            }
+        }
+        badge.innerText = 'Normal';
+        badge.className = 'badge bg-success';
+        return;
+    }
+
+    // Limits
+    let critMin = parseFloat(input.getAttribute('data-crit-min'));
+    let critMax = parseFloat(input.getAttribute('data-crit-max'));
+    let min = NaN;
+    let max = NaN;
+
+    if (age < 18) {
+        min = parseFloat(input.getAttribute('data-child-min'));
+        max = parseFloat(input.getAttribute('data-child-max'));
+    }
+    
+    if (isNaN(min) && isNaN(max)) {
+        if (gender === 'male') {
+            min = parseFloat(input.getAttribute('data-male-min'));
+            max = parseFloat(input.getAttribute('data-male-max'));
+        } else if (gender === 'female') {
+            min = parseFloat(input.getAttribute('data-female-min'));
+            max = parseFloat(input.getAttribute('data-female-max'));
+        }
+    }
+
+    if (isNaN(min) && isNaN(max)) {
+        min = parseFloat(input.getAttribute('data-min'));
+        max = parseFloat(input.getAttribute('data-max'));
+    }
+
+    if (!isNaN(critMin) && val < critMin) {
+        badge.innerText = 'CRITICAL';
+        badge.className = 'badge bg-danger';
+        return;
+    }
+    if (!isNaN(critMax) && val > critMax) {
+        badge.innerText = 'CRITICAL';
+        badge.className = 'badge bg-danger';
+        return;
+    }
+
+    if ((!isNaN(min) && val < min) || (!isNaN(max) && val > max)) {
+        badge.innerText = 'Abnormal';
+        badge.className = 'badge bg-warning text-dark';
+        return;
+    }
+
+    badge.innerText = 'Normal';
+    badge.className = 'badge bg-success';
+}
+</script>
+{% endblock %}
+{% endblock %}
