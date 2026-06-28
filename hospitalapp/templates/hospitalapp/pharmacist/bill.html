@@ -1,0 +1,294 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="card shadow-lg border-0">
+
+        <div class="card-body p-5">
+
+            <!-- HEADER -->
+
+            <div class="text-center mb-4">
+                {% load static %}
+                <img src="{% static 'hospitalapp/images/logo.png' %}" alt="Asha Hospital Logo" class="mb-3" style="height: 70px; width: auto; background: white; border-radius: 12px; padding: 4px; border: 1px solid #dee2e6;">
+                <h1 class="fw-bold text-success">
+                    ASHA HOSPITAL
+                </h1>
+                <p class="text-muted mb-1">
+                    Thodupuzha P.O, Idukki District, Kerala
+                </p>
+
+                <p class="text-muted">
+
+                    Phone: +91 9876543210
+                </p>
+
+                <hr>
+
+                <h3 class="fw-bold">
+
+                    HOSPITAL MEDICINE BILL
+
+                </h3>
+
+            </div>
+
+            <!-- BILL DETAILS -->
+
+            <div class="row mb-4">
+
+                <div class="col-md-6">
+
+                    <h5>
+
+                        Patient:
+                        {{ prescription.patient.name }}
+
+                    </h5>
+
+                    <h5>
+
+                        Doctor:
+                         {{ prescription.doctor.name }}
+
+                    </h5>
+
+                </div>
+
+                <div class="col-md-6 text-md-end">
+
+                    <h6>
+
+                        Bill Date:
+                        {{ prescription.created_at|date:"d M Y" }}
+
+                    </h6>
+
+                    <h6>
+
+                        Prescription ID:
+                        #{{ prescription.prescription_id }}
+
+                    </h6>
+
+                </div>
+
+            </div>
+
+            <!-- MEDICINE TABLE -->
+
+            <table class="table table-bordered align-middle">
+
+                <thead class="table-primary">
+
+                    <tr>
+
+                        <th>Medicine</th>
+
+                        <th>Quantity</th>
+
+                        <th>Price</th>
+
+                        <th>Total</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for item in bill_items %}
+
+                    <tr>
+
+                        <td>
+                            {{ item.name }}
+                        </td>
+
+                        <td>
+                            {{ item.quantity }}
+                        </td>
+
+                        <td>
+                            ₹{{ item.price }}
+                        </td>
+
+                        <td class="fw-bold">
+
+                            ₹{{ item.subtotal }}
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+            <!-- TOTAL SECTION -->
+
+            <div class="row justify-content-end mt-4">
+
+                <div class="col-md-4">
+
+                    <table class="table table-bordered">
+
+                        <tr>
+
+                            <th>Subtotal</th>
+
+                            <td>
+
+                                ₹{{ subtotal }}
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>
+
+                                GST ({{ gst_percentage }}%)
+
+                            </th>
+
+                            <td>
+
+                                ₹{{ gst_amount }}
+
+                            </td>
+
+                        </tr>
+
+                        <tr class="table-success">
+
+                            <th class="fs-5">
+
+                                Grand Total
+
+                            </th>
+
+                            <th class="fs-5 text-success">
+
+                                ₹{{ total }}
+
+                            </th>
+
+                        </tr>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+            <!-- PAYMENT BUTTON -->
+
+            <div class="text-center mt-5">
+
+                {% if is_admitted %}
+                <div class="alert alert-success border-0 rounded-3 p-4 mb-4 shadow-sm text-start">
+                    <h5 class="fw-bold"><i class="fas fa-link me-2"></i>Linked to Inpatient (IP) Bill</h5>
+                    <p class="mb-0">This patient is currently admitted in the ward (Admission ID: <strong>ADM-{{ admission_id }}</strong>). The grand total of <strong>₹{{ total }}</strong> has been added to their inpatient bill tracker. No immediate online payment is required.</p>
+                </div>
+                <a href="{% url 'manage_prescriptions' %}" class="btn btn-primary btn-lg px-5 py-3">
+                    <i class="fas fa-arrow-left me-2"></i> Return to Prescriptions
+                </a>
+                {% else %}
+                <button id="rzp-button1"
+                        class="btn btn-success btn-lg px-5 py-3">
+
+                    <i class="fas fa-credit-card me-2"></i>
+
+                    Pay Now
+
+                </button>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- RAZORPAY -->
+{% if not is_admitted %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+
+var options = {
+
+    "key": "{{ razorpay_key }}",
+
+    "amount": "{{ payment.amount }}",
+
+    "currency": "INR",
+
+    "name": "Asha Hospital",
+
+    "description": "Medicine Bill Payment",
+
+    "order_id": "{{ payment.id }}",
+
+    "handler": function (response){
+
+        window.location.href =
+        "/payment-success/?order_id=" + response.razorpay_order_id;
+
+    },
+
+    "theme": {
+
+        "color": "#198754"
+
+    }
+
+};
+
+var rzp1 = new Razorpay(options);
+
+document.getElementById('rzp-button1').onclick = function(e){
+
+    rzp1.open();
+
+    e.preventDefault();
+
+}
+
+</script>
+{% endif %}
+
+<style>
+
+.card {
+
+    border-radius: 20px;
+
+}
+
+.table th,
+.table td {
+
+    vertical-align: middle;
+
+}
+
+.btn {
+
+    border-radius: 12px;
+
+    font-weight: 600;
+
+}
+
+</style>
+
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+
+<h3>Prescription #{{ prescription.prescription_id }}</h3>
+
+<div class="card p-3 mt-3">
+
+    <p><b>Patient ID:</b> {{ patient.patient_id }}</p>
+    <p><b>Patient Name:</b> {{ patient.name }}</p>
+
+    <p><b>Doctor:</b> {{ doctor.name }}</p>
+
+    <p><b>Diagnosis:</b> {{ prescription.diagnosis }}</p>
+    
+    <div class="mb-3 mt-3">
+        <label class="form-label fw-bold">Medicines & Instructions:</label>
+        <div class="table-responsive mt-1">
+            <table class="table table-hover align-middle border">
+                <thead class="table-light">
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Dosage</th>
+                        <th>Frequency</th>
+                        <th>Quantity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pm in prescription.prescriptionmedicine_set.all %}
+                    <tr>
+                        <td><strong>{{ pm.medicine.name }}</strong></td>
+                        <td>{{ pm.dosage|default:"—" }}</td>
+                        <td>{{ pm.frequency|default:"—" }}</td>
+                        <td><span class="badge bg-secondary">{{ pm.quantity }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">No medicines prescribed.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <p class="mt-2"><b>Notes:</b> {{ prescription.notes }}</p>
+
+    <p><b>Date:</b> {{ prescription.created_at }}</p>
+
+    <a href="{% url 'dispense_prescription' prescription.prescription_id %}"
+       class="btn btn-success mt-3">
+        Dispense Now
+    </a>
+
+</div>
+
+</div>
+{% endblock %}

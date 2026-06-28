@@ -1,0 +1,177 @@
+{% extends 'hospitalapp/base.html' %}
+{% block title %}Token Management - Asha Hospital{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" style="font-family: 'Outfit', sans-serif;">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <div>
+            <h2 class="fw-bold text-dark mb-1"><i class="fas fa-ticket-alt me-2 text-primary"></i>Token Queue Workbench</h2>
+            <p class="text-muted small mb-0">Generate, prioritize, and track patient pharmacy tokens</p>
+        </div>
+        <div class="d-flex gap-2 mt-2 mt-md-0">
+            <button class="btn btn-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#generateTokenModal">
+                <i class="fas fa-plus me-2"></i>Generate Token
+            </button>
+            <a href="{% url 'pharmacy_dashboard' %}" class="btn btn-outline-secondary btn-sm px-3">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
+        <div class="card-body py-3">
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <span class="text-muted small fw-semibold me-2">Filter Status:</span>
+                <button class="btn btn-outline-primary btn-sm px-3 rounded-pill active" onclick="filterTokens('all')">All Today</button>
+                <button class="btn btn-outline-primary btn-sm px-3 rounded-pill" onclick="filterTokens('Waiting')">Waiting</button>
+                <button class="btn btn-outline-primary btn-sm px-3 rounded-pill" onclick="filterTokens('Called')">Called</button>
+                <button class="btn btn-outline-primary btn-sm px-3 rounded-pill" onclick="filterTokens('Processing')">Processing</button>
+                <button class="btn btn-outline-primary btn-sm px-3 rounded-pill" onclick="filterTokens('Completed')">Completed</button>
+                <button class="btn btn-outline-primary btn-sm px-3 rounded-pill" onclick="filterTokens('Skipped')">Skipped</button>
+                <button class="btn btn-outline-primary btn-sm px-3 rounded-pill" onclick="filterTokens('Cancelled')">Cancelled</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tokens Table -->
+    <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table align-middle table-hover mb-0" id="tokensTable">
+                    <thead class="table-light">
+                        <tr class="text-muted small">
+                            <th scope="col" class="ps-4">Token #</th>
+                            <th scope="col">Patient Name</th>
+                            <th scope="col">MRN Number</th>
+                            <th scope="col">Doctor</th>
+                            <th scope="col">Priority</th>
+                            <th scope="col">Prescription Time</th>
+                            <th scope="col">Status</th>
+                            <th scope="col" class="pe-4">Counter</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for token in tokens %}
+                        <tr class="token-row" data-status="{{ token.status }}">
+                            <td class="ps-4">
+                                <span class="badge bg-dark px-3 py-2 rounded-pill font-monospace" style="font-size: 0.85rem;">{{ token.token_number }}</span>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-dark">{{ token.patient.name }}</div>
+                            </td>
+                            <td><span class="font-monospace text-muted small">PAT-{{ token.patient.patient_id }}</span></td>
+                            <td>{{ token.doctor.name }}</td>
+                            <td>
+                                {% if token.priority_level == 'Emergency' %}
+                                    <span class="badge bg-danger px-2.5 py-1 rounded-pill"><i class="fas fa-heartbeat me-1"></i>Emergency</span>
+                                {% elif token.priority_level == 'Senior Citizen' %}
+                                    <span class="badge bg-warning text-dark px-2.5 py-1 rounded-pill">Senior Citizen</span>
+                                {% elif token.priority_level == 'VIP' %}
+                                    <span class="badge bg-purple text-white px-2.5 py-1 rounded-pill">VIP</span>
+                                {% elif token.priority_level == 'Corporate' %}
+                                    <span class="badge bg-info text-white px-2.5 py-1 rounded-pill">Corporate</span>
+                                {% else %}
+                                    <span class="badge bg-secondary px-2.5 py-1 rounded-pill">Regular</span>
+                                {% endif %}
+                            </td>
+                            <td class="small text-muted">{{ token.created_at|date:"d-M-Y H:i A" }}</td>
+                            <td>
+                                {% if token.status == 'Waiting' %}
+                                    <span class="badge bg-warning-subtle text-warning px-2.5 py-1 rounded"><i class="fas fa-hourglass-half me-1"></i>Waiting</span>
+                                {% elif token.status == 'Called' %}
+                                    <span class="badge bg-primary-subtle text-primary px-2.5 py-1 rounded"><i class="fas fa-bullhorn me-1"></i>Called</span>
+                                {% elif token.status == 'Processing' %}
+                                    <span class="badge bg-info-subtle text-info px-2.5 py-1 rounded"><i class="fas fa-spinner fa-spin me-1"></i>Processing</span>
+                                {% elif token.status == 'Completed' %}
+                                    <span class="badge bg-success-subtle text-success px-2.5 py-1 rounded"><i class="fas fa-check-circle me-1"></i>Completed</span>
+                                {% elif token.status == 'Skipped' %}
+                                    <span class="badge bg-secondary-subtle text-secondary px-2.5 py-1 rounded"><i class="fas fa-forward me-1"></i>Skipped</span>
+                                {% elif token.status == 'Cancelled' %}
+                                    <span class="badge bg-danger-subtle text-danger px-2.5 py-1 rounded"><i class="fas fa-times-circle me-1"></i>Cancelled</span>
+                                {% endif %}
+                            </td>
+                            <td class="pe-4">
+                                {% if token.counter %}
+                                    <span class="fw-semibold text-primary">Counter {{ token.counter.number }}</span>
+                                {% else %}
+                                    <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="fas fa-ticket-alt fs-2 mb-3 d-block text-secondary"></i>
+                                No pharmacy tokens generated today.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Generate Token -->
+<div class="modal fade" id="generateTokenModal" tabindex="-1" aria-labelledby="generateTokenModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 15px 45px rgba(0,0,0,0.1);">
+            <div class="modal-header border-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-dark" id="generateTokenModalLabel"><i class="fas fa-ticket-alt me-2 text-primary"></i>Generate Manual Token</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="modal-body px-4 pb-4">
+                    <div class="mb-3">
+                        <label for="id_patient" class="form-label small fw-semibold text-muted">Patient</label>
+                        {{ form.patient }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_doctor" class="form-label small fw-semibold text-muted">Doctor</label>
+                        {{ form.doctor }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_prescription" class="form-label small fw-semibold text-muted">Prescription</label>
+                        {{ form.prescription }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_priority_level" class="form-label small fw-semibold text-muted">Priority Level</label>
+                        {{ form.priority_level }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_status" class="form-label small fw-semibold text-muted">Queue Status</label>
+                        {{ form.status }}
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Generate Token</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function filterTokens(status) {
+        // Update active class on filter buttons
+        const buttons = document.querySelectorAll('[onclick^="filterTokens"]');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        // Show/hide rows
+        const rows = document.querySelectorAll('.token-row');
+        rows.forEach(row => {
+            if (status === 'all' || row.dataset.status === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}

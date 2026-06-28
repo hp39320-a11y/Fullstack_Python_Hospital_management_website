@@ -1,0 +1,229 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}
+Payment Successful
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-7">
+
+            <div class="card shadow-lg border-0 success-card">
+
+                <div class="card-body p-5 text-center">
+
+                    <!-- SUCCESS ICON -->
+
+                    <div class="success-icon mb-4">
+
+                        <i class="fas fa-check-circle"></i>
+
+                    </div>
+
+                    <!-- TITLE -->
+
+                    <h1 class="fw-bold text-success mb-3">
+
+                        Payment Successful
+
+                    </h1>
+
+                    <!-- MESSAGE -->
+
+                    <p class="text-muted fs-5 mb-4">
+
+                        Your medicine bill payment has been completed successfully.
+
+                    </p>
+
+                    <!-- BILL DETAILS -->
+
+                    <div class="bill-details p-4 mb-4">
+
+                        <div class="row">
+
+                            <div class="col-md-6 text-md-start">
+
+                                <h6 class="text-muted">
+
+                                    Bill ID
+
+                                </h6>
+
+                                <h5 class="fw-bold">
+
+                                    #{{ bill.bill_id }}
+
+                                </h5>
+
+                            </div>
+
+                            <div class="col-md-6 text-md-end">
+
+                                <h6 class="text-muted">
+
+                                    Amount Paid
+
+                                </h6>
+
+                                <h4 class="fw-bold text-success">
+
+                                    ₹{{ bill.total_amount }}
+
+                                </h4>
+
+                            </div>
+
+                        </div>
+
+                        <hr>
+
+                        <div class="row">
+
+                            <div class="col-md-6 text-md-start">
+
+                                <h6 class="text-muted">
+
+                                    Payment Status
+
+                                </h6>
+
+                                <span class="badge bg-success px-3 py-2">
+
+                                    PAID
+
+                                </span>
+
+                            </div>
+
+                            <div class="col-md-6 text-md-end">
+
+                                <h6 class="text-muted">
+
+                                    Payment Date
+
+                                </h6>
+
+                                <h6 class="fw-bold">
+
+                                    {{ bill.created_at|date:"d M Y" }}
+
+                                </h6>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- ACTION BUTTONS -->
+
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+
+                        {% if bill.all_bills %}
+                            {% for b in bill.all_bills %}
+                                <a href="{% url 'download_bill' b.bill_id %}" class="btn btn-success btn-lg px-4">
+                                    <i class="fas fa-download me-2"></i>
+                                    Download Bill #{{ b.bill_id }}
+                                </a>
+                            {% endfor %}
+                        {% elif bill.is_ip %}
+                            <a href="{% url 'download_discharge_summary' bill.admission_id %}" class="btn btn-success btn-lg px-4">
+                                <i class="fas fa-download me-2"></i>
+                                Download Inpatient Bill
+                            </a>
+                        {% else %}
+                            <a href="{% url 'download_bill' bill.bill_id %}" class="btn btn-success btn-lg px-4">
+                                <i class="fas fa-download me-2"></i>
+                                Download Bill
+                            </a>
+                        {% endif %}
+
+                        <!-- BACK -->
+                        {% if user.role == 'receptionist' %}
+                            {% if bill.is_ip %}
+                                <a href="{% url 'admissions_dashboard' %}"
+                                   class="btn btn-outline-primary btn-lg px-4">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Back to Admissions
+                                </a>
+                            {% else %}
+                                <a href="{% url 'receptionist_bills' %}"
+                                   class="btn btn-outline-primary btn-lg px-4">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Back to Billing
+                                </a>
+                            {% endif %}
+                        {% elif user.role == 'patient' %}
+                            <a href="{% url 'patient_bills' %}"
+                               class="btn btn-outline-primary btn-lg px-4">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Back to My Bills
+                            </a>
+                        {% elif user.role == 'pharmacist' %}
+                            <a href="{% url 'manage_prescriptions' %}"
+                               class="btn btn-outline-primary btn-lg px-4">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Back to Prescriptions
+                            </a>
+                        {% else %}
+                            <a href="{% url 'home' %}"
+                               class="btn btn-outline-primary btn-lg px-4">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Back to Home
+                            </a>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+
+.success-card {
+
+    border-radius: 25px;
+
+}
+
+.success-icon i {
+
+    font-size: 100px;
+
+    color: #198754;
+
+}
+
+.bill-details {
+
+    background: #f8f9fa;
+
+    border-radius: 15px;
+
+    border: 1px solid #e9ecef;
+
+}
+
+.btn {
+
+    border-radius: 12px;
+
+    font-weight: 600;
+
+}
+
+</style>
+
+{% endblock %}

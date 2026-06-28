@@ -1,0 +1,84 @@
+{% extends 'hospitalapp/base.html' %}
+{% block title %}Billing Verification - Asha Hospital{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" style="font-family: 'Outfit', sans-serif;">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <div>
+            <h2 class="fw-bold text-dark mb-1"><i class="fas fa-check-double me-2 text-primary"></i>Billing Verification workbench</h2>
+            <p class="text-muted small mb-0">Verify payment transactions, authorize insurance claims, and clear corporate credits</p>
+        </div>
+        <a href="{% url 'pharmacy_dashboard' %}" class="btn btn-outline-secondary btn-sm px-3">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Verification Table -->
+    <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="fw-bold text-dark mb-0">Today's Pharmacy Invoices</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table align-middle table-hover mb-0">
+                    <thead class="table-light">
+                        <tr class="text-muted small">
+                            <th scope="col" class="ps-4">Token</th>
+                            <th scope="col">Patient Name</th>
+                            <th scope="col">MRN</th>
+                            <th scope="col">Prescribed Drugs</th>
+                            <th scope="col">Invoice Total</th>
+                            <th scope="col">Payment Status</th>
+                            <th scope="col" class="pe-4 text-end">Verification Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for token in tokens %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="badge bg-dark px-3 py-2 rounded-pill font-monospace" style="font-size: 0.85rem;">{{ token.token_number }}</span>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-dark">{{ token.patient.name }}</div>
+                            </td>
+                            <td><span class="font-monospace text-muted small">PAT-{{ token.patient.patient_id }}</span></td>
+                            <td class="small text-truncate" style="max-width: 250px;">{{ token.prescription.medicines|default:"No medicines listed" }}</td>
+                            <td>
+                                <strong class="text-dark">Rs. {{ token.bill.total_amount|default:"0.00" }}</strong>
+                            </td>
+                            <td>
+                                {% if token.bill.payment_status == 'Paid' %}
+                                    <span class="badge bg-success-subtle text-success px-2.5 py-1.5 rounded"><i class="fas fa-check-circle me-1"></i>Paid</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger px-2.5 py-1.5 rounded"><i class="fas fa-exclamation-triangle me-1"></i>Unpaid / Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="pe-4 text-end">
+                                {% if not token.bill %}
+                                    <a href="{% url 'generate_bill' prescription_id=token.prescription.prescription_id %}" class="btn btn-warning btn-sm rounded-pill text-dark text-nowrap"><i class="fas fa-file-invoice-dollar me-1"></i>Generate Bill</a>
+                                {% elif token.bill.payment_status != 'Paid' %}
+                                    <form method="POST" class="d-inline-flex gap-1">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="token_id" value="{{ token.token_id }}">
+                                        <button type="submit" name="action" value="mark_paid" class="btn btn-success btn-xs px-2 rounded-start-pill text-nowrap">Mark Cash Paid</button>
+                                        <button type="submit" name="action" value="approve_insurance" class="btn btn-primary btn-xs px-2 text-nowrap">Insurance Appr</button>
+                                        <button type="submit" name="action" value="approve_corporate" class="btn btn-info btn-xs text-white px-2 rounded-end-pill text-nowrap">Corp Credit</button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-success small fw-semibold"><i class="fas fa-check-double me-1"></i>Cleared</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">No pharmacy invoices found for today.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

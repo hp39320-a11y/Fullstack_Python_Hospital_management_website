@@ -1,0 +1,151 @@
+{% extends 'hospitalapp/base.html' %}
+{% block title %}Supervisor Dashboard - Asha Hospital{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" style="font-family: 'Outfit', sans-serif;">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <div>
+            <h2 class="fw-bold text-dark mb-1"><i class="fas fa-user-shield text-warning me-2"></i>Pharmacy Supervisor Console</h2>
+            <p class="text-muted small mb-0">Roster management, operational audits, queue length monitors, and pharmacist compliance logs</p>
+        </div>
+        <a href="{% url 'pharmacy_dashboard' %}" class="btn btn-outline-secondary btn-sm px-3">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Supervisor Roster & Compliance Grid -->
+    <div class="row g-4 mb-4">
+        <!-- Roster and active counters list -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-clipboard-list me-2 text-primary"></i>Active Counter Duty Roster</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover">
+                            <thead>
+                                <tr class="text-muted small">
+                                    <th scope="col">Counter</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Assigned Pharmacist</th>
+                                    <th scope="col">Serving Ticket</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for counter in active_counters %}
+                                <tr>
+                                    <td><strong>Counter {{ counter.number }}</strong> <span class="text-muted small">({{ counter.type }})</span></td>
+                                    <td>
+                                        {% if counter.status == 'Active' %}
+                                            <span class="badge bg-success-subtle text-success px-2 py-1">Active</span>
+                                        {% elif counter.status == 'Busy' %}
+                                            <span class="badge bg-danger-subtle text-danger px-2 py-1">Busy</span>
+                                        {% elif counter.status == 'Break' %}
+                                            <span class="badge bg-warning-subtle text-warning px-2 py-1">Break</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary-subtle text-secondary px-2 py-1">Closed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% with assignment=counter.active_assignment %}
+                                            {% if assignment and counter.status != 'Closed' %}
+                                                <span class="fw-semibold text-dark">{{ assignment.pharmacist.username }}</span>
+                                            {% else %}
+                                                <span class="text-muted italic small">No active pharmacist</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        {% if counter.current_token %}
+                                            <span class="badge bg-primary px-3 py-1.5 rounded-pill font-monospace">{{ counter.current_token.token_number }}</span>
+                                        {% else %}
+                                            <span class="text-muted small">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pharmacist Productivity performance summary -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-stopwatch me-2 text-primary"></i>Pharmacist Dispatch Compliance</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover">
+                            <thead>
+                                <tr class="text-muted small">
+                                    <th scope="col">Pharmacist</th>
+                                    <th scope="col">Total Served</th>
+                                    <th scope="col">Completed</th>
+                                    <th scope="col">Avg Speed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for perf in pharmacist_performance %}
+                                <tr>
+                                    <td><strong class="text-dark">{{ perf.pharmacist.username }}</strong></td>
+                                    <td>{{ perf.total_served }}</td>
+                                    <td><span class="text-success fw-bold">{{ perf.total_completed }}</span></td>
+                                    <td><strong class="text-primary">{{ perf.average_serving_time }} sec</strong> / patient</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">No productivity records logged today.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Audit Logs -->
+    <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="fw-bold text-dark mb-0"><i class="fas fa-history me-2 text-primary"></i>Live Operations Audit Log</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table align-middle table-hover mb-0">
+                    <thead class="table-light">
+                        <tr class="text-muted small">
+                            <th scope="col" class="ps-4">Timestamp</th>
+                            <th scope="col">Action Type</th>
+                            <th scope="col">Activity Description</th>
+                            <th scope="col" class="pe-4">Pharmacist / User</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in audit_logs %}
+                        <tr>
+                            <td class="ps-4 text-muted small font-monospace">{{ log.timestamp|date:"d-M-Y H:i:s" }}</td>
+                            <td>
+                                <span class="badge bg-secondary-subtle text-secondary px-2.5 py-1.5">{{ log.action }}</span>
+                            </td>
+                            <td class="small text-dark">{{ log.details }}</td>
+                            <td class="pe-4 fw-medium text-dark">{{ log.user.username|default:"System Engine" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">No operations audit logs registered today.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

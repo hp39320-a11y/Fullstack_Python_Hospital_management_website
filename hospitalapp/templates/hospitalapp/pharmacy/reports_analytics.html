@@ -1,0 +1,183 @@
+{% extends 'hospitalapp/base.html' %}
+{% block title %}Pharmacy Reports & Analytics - Asha Hospital{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analytics-bar {
+        height: 12px;
+        border-radius: 6px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" style="font-family: 'Outfit', sans-serif;">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <div>
+            <h2 class="fw-bold text-dark mb-1"><i class="fas fa-chart-bar text-primary me-2"></i>Pharmacy Reports & Analytics</h2>
+            <p class="text-muted small mb-0">Daily counter productivity, patient wait-times, peak-hour distributions, and drug consumptions</p>
+        </div>
+        <a href="{% url 'pharmacy_dashboard' %}" class="btn btn-outline-secondary btn-sm px-3">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Wait Time by Priority & Tokens Summary -->
+    <div class="row g-4 mb-4">
+        <!-- Wait Time by Priority -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold text-dark mb-0">Avg Wait Time by Priority</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    {% for aw in avg_wait_priority %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1 small fw-semibold">
+                            <span class="text-muted">{{ aw.priority_level }}</span>
+                            <span class="text-dark">{{ aw.avg_wait_min }} mins</span>
+                        </div>
+                        <div class="progress" style="height: 10px; border-radius: 10px;">
+                            {% if aw.priority_level == 'Emergency' %}
+                                <div class="progress-bar bg-danger" role="progressbar" style="width: {% widthratio aw.avg_wait_min 60 100 %}%; border-radius: 10px;"></div>
+                            {% elif aw.priority_level == 'Senior Citizen' %}
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: {% widthratio aw.avg_wait_min 60 100 %}%; border-radius: 10px;"></div>
+                            {% elif aw.priority_level == 'VIP' %}
+                                <div class="progress-bar bg-purple" role="progressbar" style="width: {% widthratio aw.avg_wait_min 60 100 %}%; border-radius: 10px;"></div>
+                            {% else %}
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {% widthratio aw.avg_wait_min 60 100 %}%; border-radius: 10px;"></div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5 text-muted">No wait time metrics logged today.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Token Status breakdown -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold text-dark mb-0">Today's Token Volume Status</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <ul class="list-group list-group-flush">
+                        {% for status in tokens_by_status %}
+                        <li class="list-group-item px-0 py-2.5 border-light-subtle d-flex justify-content-between align-items-center">
+                            <span class="text-muted fw-semibold small">{{ status.status }}</span>
+                            <span class="badge bg-primary rounded-pill px-3 py-1.5">{{ status.count }} tickets</span>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item px-0 py-5 text-center text-muted">No token logs found for today.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Counter Performance -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px;">
+        <div class="card-header bg-transparent border-0 pt-4 px-4">
+            <h5 class="fw-bold text-dark mb-0">Pharmacist Productivity & Counter Metrics</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table align-middle table-hover mb-0">
+                    <thead class="table-light">
+                        <tr class="text-muted small">
+                            <th scope="col" class="ps-4">Pharmacist</th>
+                            <th scope="col">Counter</th>
+                            <th scope="col">Total Served</th>
+                            <th scope="col">Total Completed</th>
+                            <th scope="col">Total Skipped</th>
+                            <th scope="col" class="pe-4">Avg Serving Speed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for perf in perf_records %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="fw-bold text-dark">{{ perf.pharmacist.username }}</span>
+                            </td>
+                            <td>Counter {{ perf.counter.number }}</td>
+                            <td>{{ perf.total_served }}</td>
+                            <td><span class="text-success fw-bold">{{ perf.total_completed }}</span></td>
+                            <td>{{ perf.total_skipped }}</td>
+                            <td class="pe-4"><strong class="text-primary">{{ perf.average_serving_time }} seconds</strong> / patient</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No productivity performance records registered today.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Medicine Consumption & Peak Hours -->
+    <div class="row g-4">
+        <!-- Medicine Consumption -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-pills me-2 text-primary"></i>Top Medicine Consumption</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light">
+                                <tr class="text-muted small">
+                                    <th scope="col" class="ps-4">Medicine</th>
+                                    <th scope="col">Qty Dispensed</th>
+                                    <th scope="col" class="pe-4 text-end">Total Valuation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for di in dispensed_items %}
+                                <tr>
+                                    <td class="ps-4 fw-semibold text-dark">{{ di.medicine__name }}</td>
+                                    <td>{{ di.total_qty }} units</td>
+                                    <td class="pe-4 text-end text-success fw-bold">Rs. {{ di.total_value|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4 text-muted">No items dispensed today.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Peak Hour Analysis -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-chart-line me-2 text-primary"></i>Queue Peak Hour Analysis</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    {% for hour in hourly_tokens %}
+                    <div class="mb-3 d-flex align-items-center justify-content-between">
+                        <span class="small font-monospace text-muted" style="width: 80px;">Hour: {{ hour.hour }}:00</span>
+                        <div class="progress flex-grow-1 mx-3" style="height: 12px; border-radius: 10px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: {% widthratio hour.count 50 100 %}%; border-radius: 10px;"></div>
+                        </div>
+                        <span class="small fw-semibold text-dark">{{ hour.count }} tokens</span>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5 text-muted">No queue logs recorded today.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
