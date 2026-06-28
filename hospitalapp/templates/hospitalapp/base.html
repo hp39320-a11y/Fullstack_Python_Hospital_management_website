@@ -1,0 +1,482 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" style="scrollbar-gutter: stable;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Asha Hospital HMS{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Outfit Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+        :root {
+            --primary-blue: #0b4c8c;
+            --primary-green: #4caf50;
+            --secondary-white: #ffffff;
+            --bg-light: #f4f7f6;
+            --text-dark: #1e293b;
+            --sidebar-width: 260px;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #06396c 100%);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-bottom: 3px solid var(--primary-green);
+        }
+
+        .navbar-brand {
+            color: var(--secondary-white) !important;
+            font-size: 1.35rem;
+            letter-spacing: 0.5px;
+        }
+
+        .navbar-nav .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            color: var(--secondary-white) !important;
+            opacity: 1;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            height: calc(100vh - 59px);
+            position: fixed;
+            top: 59px;
+            left: 0;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            padding-top: 25px;
+            padding-bottom: 25px;
+            z-index: 100;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.02);
+            overflow-y: auto;
+        }
+
+        .sidebar .nav-link {
+            color: #475569 !important;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            border-radius: 0 50px 50px 0;
+            margin-right: 15px;
+            margin-bottom: 4px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .nav-link:hover, .sidebar .nav-item.active .nav-link {
+            background-color: #f0f5fa;
+            color: var(--primary-blue) !important;
+            font-weight: 600;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+            color: #94a3b8;
+            transition: color 0.3s ease;
+        }
+
+        .sidebar .nav-link:hover i, .sidebar .nav-item.active .nav-link i {
+            color: var(--primary-blue);
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+            margin-top: 59px;
+            min-height: calc(100vh - 59px);
+        }
+
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            background: white;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.07);
+        }
+
+        /* ===== MODAL SHAKE FIX =====
+         * Bootstrap sets overflow:hidden on <body> when a modal opens,
+         * hiding the scrollbar and causing a layout shift. That shift
+         * triggers .card:hover on/off, which translates the card and
+         * drags the fixed-position modal along with it.
+         * Fix 1: scrollbar-gutter:stable on <html> (above) prevents the shift.
+         * Fix 2: disable the card lift while any modal is open.
+         * Fix 3: ensure .modal/.modal-backdrop are never re-positioned
+         *        by a transformed ancestor. ========================================= */
+        body.modal-open .card:hover {
+            transform: none !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04) !important;
+        }
+
+        /* Defensive: break out of any stacking context that might trap the modal */
+        .modal,
+        .modal-backdrop {
+            transform: none !important;
+            will-change: auto;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #06396c 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(11, 76, 140, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(11, 76, 140, 0.3);
+            background: linear-gradient(135deg, #0d5ea6 0%, #0b4c8c 100%);
+        }
+
+        .btn-outline-light {
+            border-width: 2px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 59px;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 59px);
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(2.5px);
+            z-index: 99;
+            transition: opacity 0.25s ease;
+        }
+        
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 59px;
+                left: -265px; /* Hidden off-screen */
+                width: var(--sidebar-width);
+                height: calc(100vh - 59px);
+                z-index: 100;
+                transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
+            }
+            .sidebar.active {
+                left: 0; /* Slide in */
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+        }
+        .hover-text-success:hover {
+            color: var(--primary-green) !important;
+            transition: color 0.2s ease;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid">
+            {% if user.is_authenticated %}
+            <button class="btn btn-outline-light me-2 d-md-none border-0" id="sidebarToggleBtn" type="button" style="font-size: 1.2rem; padding: 0.25rem 0.5rem;">
+                <i class="fas fa-bars"></i>
+            </button>
+            {% endif %}
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+                <img src="{% static 'hospitalapp/images/logo.png' %}" alt="Asha Hospital Logo" class="me-2" style="height: 38px; width: auto; background: white; border-radius: 6px; padding: 2px;">
+                <span class="fw-bold tracking-wide">Asha Hospital</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <span class="nav-link">Welcome, {{ user.username }} ({{ user.get_role_display }})</span>
+                        </li>
+                        <li class="nav-item">
+                            <form action="{% url 'logout' %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link nav-link">Logout</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">About</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'departments' %}">Departments</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'contact' %}">Contact</a></li>
+                        <li class="nav-item"><a class="nav-link btn btn-outline-light ms-2 px-3" href="{% url 'login' %}">Login</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    {% if user.is_authenticated %}
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="sidebar">
+        <ul class="nav flex-column">
+            {% if user.role == 'admin' %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'admin_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'manage_doctors' %}"><i class="fas fa-user-md"></i> Doctors</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'manage_patients' %}"><i class="fas fa-user-injured"></i> Patients</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'manage_appointments' %}"><i class="fas fa-calendar-check"></i> Appointments</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'manage_medicines' %}"><i class="fas fa-pills"></i> Medicines</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'manage_bills' %}"><i class="fas fa-file-invoice-dollar"></i> Bills</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'bed_management' %}"><i class="fas fa-hospital"></i> Bed Management</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'inventory_dashboard' %}"><i class="fas fa-warehouse"></i> Inventory Control</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'manage_nurses' %}"><i class="fas fa-user-nurse"></i> Nurses</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'icu_dashboard' %}"><i class="fas fa-heartbeat"></i> ICU Live Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'admin_manage_lab_tests' %}"><i class="fas fa-microscope"></i> Lab Test Master</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'admin_manage_radiology_tests' %}"><i class="fas fa-radiation"></i> Radiology Test Master</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'add_receptionist' %}"><i class="fas fa-user-tie"></i> Add Receptionist</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'add_pharmacist' %}"><i class="fas fa-capsules"></i> Add Pharmacist</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'add_laboratoryist' %}"><i class="fas fa-flask"></i> Add Laboratoryist</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'add_radiologist' %}"><i class="fas fa-x-ray"></i> Add Radiologist</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'add_nursing_station' %}"><i class="fas fa-clinic-medical"></i> Add Nursing Station</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'manage_staff' %}"><i class="fas fa-users-cog"></i> Manage Staff</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'nursing_station_reports' %}"><i class="fas fa-chart-line"></i> Nursing Station Reports</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'emergency_reports' %}"><i class="fas fa-chart-bar"></i> Emergency Analytics</a></li>
+            {% elif user.role == 'doctor' %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'doctor_dashboard' %}"><i class="fas fa-calendar-day"></i> My Appointments</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'doctor_notifications' %}"><i class="fas fa-bell"></i> Notifications {% if doctor_unread_notifications_count %}<span class="badge bg-danger ms-auto rounded-pill">{{ doctor_unread_notifications_count }}</span>{% endif %}</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'emergency_doctor_workspace' %}"><i class="fas fa-heartbeat"></i> Emergency Workspace</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'specialist_referrals' %}"><i class="fas fa-inbox"></i> Referral Inbox</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'doctor_patients' %}"><i class="fas fa-users"></i> My Patients</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'doctor_search_medicines' %}"><i class="fas fa-search"></i> Search Medicines</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'prescription_history' %}"><i class="fas fa-history"></i> Prescriptions</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'doctor_nursing_requests' %}"><i class="fas fa-hands-helping"></i> Nursing Station Requests</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'icu_dashboard' %}"><i class="fas fa-heartbeat"></i> ICU Live Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'doctor_analytics' %}"><i class="fas fa-chart-pie"></i> Analytics</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'request_inventory_item' %}"><i class="fas fa-paper-plane"></i> Request Inventory</a></li>
+                
+            {% elif user.role == 'patient' %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'patient_dashboard' %}"><i class="fas fa-calendar-plus"></i> Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'patient_prescriptions' %}"><i class="fas fa-prescription"></i> My Prescriptions</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'patient_bills' %}"><i class="fas fa-file-invoice"></i> My Bills</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'patient_lab_results' %}"><i class="fas fa-flask"></i> Lab Results</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'patient_radiology_results' %}"><i class="fas fa-x-ray"></i> Radiology Results</a></li>
+            {% elif user.role == 'pharmacist' or user.role == 'senior_pharmacist' or user.role == 'pharmacy_supervisor' %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'pharmacy_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Pharmacy Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'token_management' %}"><i class="fas fa-ticket-alt"></i> Token Queue</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'counter_management' %}"><i class="fas fa-desktop"></i> Counters</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'billing_verification' %}"><i class="fas fa-check-double"></i> Billing Verify</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'inventory_dashboard' %}"><i class="fas fa-warehouse"></i> Inventory Control</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'pharmacy_reports' %}"><i class="fas fa-chart-bar"></i> Reports & Analytics</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'supervisor_dashboard' %}"><i class="fas fa-user-shield"></i> Supervisor Console</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'request_inventory_item' %}"><i class="fas fa-paper-plane"></i> Request Inventory</a></li>
+            {% elif user.role == 'inventory_manager' or user.role == 'store_keeper' %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'admin_inventory_dashboard' %}"><i class="fas fa-chart-line"></i> Inventory Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'inventory_items' %}"><i class="fas fa-boxes"></i> Item Master</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'inventory_suppliers' %}"><i class="fas fa-truck-loading"></i> Suppliers</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'inventory_purchase' %}"><i class="fas fa-shopping-cart"></i> Purchases</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'inventory_grn' %}"><i class="fas fa-receipt"></i> Goods Receipts (GRN)</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'inventory_expiry' %}"><i class="fas fa-hourglass-half"></i> Expiry Control</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'inventory_issue' %}"><i class="fas fa-clipboard-list"></i> Stock Issues</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'inventory_biomedical' %}"><i class="fas fa-heartbeat"></i> Biomedical Assets</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'inventory_emergency' %}"><i class="fas fa-ambulance"></i> Emergency stock</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'inventory_reports' %}"><i class="fas fa-file-invoice-dollar"></i> Reports</a></li>
+            {% elif user.role == 'receptionist' %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'receptionist_dashboard' %}"><i class="fas fa-user-plus"></i> Register Patient</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'casuality_dashboard' %}"><i class="fas fa-ambulance"></i> Casuality (Emergency)</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'admissions_dashboard' %}"><i class="fas fa-bed"></i> Admissions & IP Bill</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'icu_dashboard' %}"><i class="fas fa-heartbeat"></i> ICU Live Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'ambulance_dashboard' %}"><i class="fas fa-ambulance"></i> Ambulance Management</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'non_staff_dashboard' %}"><i class="fas fa-people-carry-box"></i> Non-Staff & Logs</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'receptionist_bills' %}"><i class="fas fa-file-invoice-dollar"></i> Billing</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'schedule_appointment' %}"><i class="fas fa-calendar-plus"></i> Schedule Appointment</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'manage_appointments' %}"><i class="fas fa-calendar-check"></i> View Appointments</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'receptionist_analytics' %}"><i class="fas fa-chart-pie"></i> Analytics</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'request_inventory_item' %}"><i class="fas fa-paper-plane"></i> Request Inventory</a></li>
+            {% elif user.role == 'nurse' or user.role == 'nursing_supervisor' %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'nurse_dashboard' %}"><i class="fas fa-user-nurse"></i> My Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'nurse_tasks' %}"><i class="fas fa-tasks"></i> Nursing Task Board</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'emergency_triage_dashboard' %}"><i class="fas fa-heartbeat"></i> Emergency Triage</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'nurse_analytics' %}"><i class="fas fa-chart-pie"></i> Analytics</a></li>
+                {% if user.nurse_set.first.is_head_nurse %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'head_nurse_dashboard' %}"><i class="fas fa-user-shield"></i> Head Nurse Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'nursing_station_reports' %}"><i class="fas fa-chart-line"></i> Nursing Station Reports</a></li>
+                {% endif %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'icu_dashboard' %}"><i class="fas fa-heartbeat"></i> ICU Live Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'request_inventory_item' %}"><i class="fas fa-paper-plane"></i> Request Inventory</a></li>
+            
+            {% elif user.role == 'nursing_station' %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'nursing_station_dashboard' %}"><i class="fas fa-satellite-dish"></i> Nursing Station Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'nursing_station_messages' %}"><i class="fas fa-comments"></i> Comms Hub</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'nursing_station_reports' %}"><i class="fas fa-chart-line"></i> Performance Reports</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'request_inventory_item' %}"><i class="fas fa-paper-plane"></i> Request Inventory</a></li>
+            {% elif user.role == 'nursing_superintendent' %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'nursing_superintendent_dashboard' %}"><i class="fas fa-user-shield"></i> Superintendent Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'icu_dashboard' %}"><i class="fas fa-heartbeat"></i> ICU Live Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'nursing_station_reports' %}"><i class="fas fa-chart-line"></i> Performance Reports</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'request_inventory_item' %}"><i class="fas fa-paper-plane"></i> Request Inventory</a></li>
+            {% elif user.role == 'lab_technician' or user.role == 'laboratoryist' or user.role == 'laboratory_supervisor' %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'laboratory_dashboard' %}"><i class="fas fa-chart-line"></i> Overview</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'laboratory_samples' %}"><i class="fas fa-vial"></i> Collect Samples</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'laboratory_pipeline' %}"><i class="fas fa-flask"></i> Active Pipeline</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'laboratory_completed' %}"><i class="fas fa-check-double"></i> Certified Reports</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'request_inventory_item' %}"><i class="fas fa-paper-plane"></i> Request Inventory</a></li>
+            
+            {% elif user.role == 'radiologist' or user.role == 'radiology_technician' or user.role == 'radiology_supervisor' %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'radiology_dashboard' %}"><i class="fas fa-chart-line"></i> Overview</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'radiology_schedule_queue' %}"><i class="fas fa-calendar-alt"></i> Schedule Scans</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'radiology_active_queue' %}"><i class="fas fa-radiation"></i> Active Queue</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'radiology_completed' %}"><i class="fas fa-check-double"></i> Certified Reports</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'request_inventory_item' %}"><i class="fas fa-paper-plane"></i> Request Inventory</a></li>
+            {% endif %}
+
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="{% block content_class %}{% if user.is_authenticated %}main-content{% else %}container mt-5 pt-5{% endif %}{% endblock %}">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    {% if not user.is_authenticated %}
+    <!-- FOOTER -->
+    <footer class="bg-dark text-white pt-5 pb-4 mt-5 border-top border-success border-3">
+        <div class="container text-md-start">
+            <div class="row text-md-start">
+                <!-- Column 1: Hospital Info -->
+                <div class="col-md-3 col-lg-3 col-xl-3 mx-auto mt-3">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="{% static 'hospitalapp/images/logo.png' %}" alt="Asha Hospital Logo" class="me-2" style="height: 45px; width: auto; background: white; border-radius: 6px; padding: 2px;">
+                        <h5 class="text-uppercase mb-0 fw-bold text-success">Asha Hospital</h5>
+                    </div>
+                    <p class="small text-white-50">
+                        Providing patient-centric, high-quality, and accessible clinical diagnostics, surgery, and recovery care to Kerala since 2005.
+                    </p>
+                    <div class="mt-3">
+                        <a href="#" class="text-white me-3 hover-text-success"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-white me-3 hover-text-success"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white me-3 hover-text-success"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-white hover-text-success"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+
+                <!-- Column 2: Services -->
+                <div class="col-md-2 col-lg-2 col-xl-2 mx-auto mt-3">
+                    <h5 class="text-uppercase mb-4 fw-bold text-white small tracking-wider">Our Services</h5>
+                    <ul class="list-unstyled mb-0 small">
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-text-success">Cardiology</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-text-success">Neurology</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-text-success">Orthopedics</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-text-success">Pediatrics</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-text-success">24/7 Pharmacy</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 3: Quick Links -->
+                <div class="col-md-2 col-lg-2 col-xl-2 mx-auto mt-3">
+                    <h5 class="text-uppercase mb-4 fw-bold text-white small tracking-wider">Quick Links</h5>
+                    <ul class="list-unstyled mb-0 small">
+                        <li class="mb-2"><a href="{% url 'home' %}" class="text-white-50 text-decoration-none hover-text-success">Home</a></li>
+                        <li class="mb-2"><a href="{% url 'about' %}" class="text-white-50 text-decoration-none hover-text-success">About Us</a></li>
+                        <li class="mb-2"><a href="{% url 'contact' %}" class="text-white-50 text-decoration-none hover-text-success">Contact</a></li>
+                        <li class="mb-2"><a href="{% url 'login' %}" class="text-white-50 text-decoration-none hover-text-success">Login Portal</a></li>
+                        
+                    </ul>
+                </div>
+
+                <!-- Column 4: Contact -->
+                <div class="col-md-3 col-lg-3 col-xl-3 mx-auto mt-3 small text-white-50">
+                    <h5 class="text-uppercase mb-4 fw-bold text-white small tracking-wider">Contact Us</h5>
+                    <p><i class="fas fa-home me-2 text-success"></i> Thodupuzha P.O, Idukki, Kerala</p>
+                    <p><i class="fas fa-envelope me-2 text-success"></i> info@ashahospital.com</p>
+                    <p><i class="fas fa-phone me-2 text-success"></i> +91 9876543210</p>
+                    <p><i class="fas fa-print me-2 text-success"></i> +91 4862 252525</p>
+                </div>
+            </div>
+
+            <hr class="mb-4 mt-4 border-secondary">
+
+            <div class="row align-items-center">
+                <div class="col-md-7 col-lg-8">
+                    <p class="small text-white-50 mb-0">© 2026 <strong class="text-success">Asha Hospital</strong>. All Rights Reserved.</p>
+                </div>
+                <div class="col-md-5 col-lg-4 text-md-end">
+                    <p class="small text-white-50 mb-0">Designed with Care & Dedication</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    {% endif %}
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+            var sidebar = document.querySelector('.sidebar');
+            var sidebarOverlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebarToggleBtn && sidebar && sidebarOverlay) {
+                function toggleSidebar() {
+                    sidebar.classList.toggle('active');
+                    sidebarOverlay.classList.toggle('active');
+                }
+                
+                sidebarToggleBtn.addEventListener('click', toggleSidebar);
+                sidebarOverlay.addEventListener('click', toggleSidebar);
+                
+                // Close sidebar when clicking any nav link inside it on mobile
+                var navLinks = sidebar.querySelectorAll('.nav-link');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        if (window.innerWidth <= 768) {
+                            sidebar.classList.remove('active');
+                            sidebarOverlay.classList.remove('active');
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
