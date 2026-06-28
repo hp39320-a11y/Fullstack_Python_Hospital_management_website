@@ -1,0 +1,205 @@
+{% extends 'hospitalapp/base.html' %}
+{% block title %}Emergency Patient Triage - Asha Hospital{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-10 col-lg-12">
+            <!-- Header and Case Info -->
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'emergency_triage_dashboard' %}" class="btn btn-outline-secondary rounded-pill me-3 px-3">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </a>
+                <div>
+                    <h2 class="h3 mb-0 fw-bold text-dark">Perform Triage Assessment</h2>
+                    <p class="text-muted mb-0">Patient: <strong class="text-dark">{{ casualty.patient.name }}</strong> | Age/Gender: {{ casualty.patient.age }} yrs / {{ casualty.patient.gender }} | Case Ref: CAS-{{ casualty.id }}</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Vitals Entry Form -->
+                <div class="col-lg-8 col-md-12 mb-4">
+                    <div class="card shadow-sm border-0 rounded-4 p-4">
+                        <h5 class="fw-bold mb-4 text-dark"><i class="fas fa-diagnoses text-primary me-2"></i>Enter Vitals & Clinical Data</h5>
+                        <form method="post" id="triageForm" novalidate>
+                            {% csrf_token %}
+                            
+                            <!-- Chief Complaint and Pain Score -->
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label class="form-label fw-bold">Chief Complaint / Reason for Emergency</label>
+                                    {{ form.chief_complaint }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Pain Score (1 - 10)</label>
+                                    {{ form.pain_score }}
+                                    <div class="form-text">1 = Minimal, 10 = Severe Pain</div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4 text-muted opacity-25">
+
+                            <!-- Vitals fields -->
+                            <h6 class="fw-bold mb-3 text-secondary uppercase fs-7 tracking-wider">Objective Vitals</h6>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">BP Systolic (mmHg)</label>
+                                    {{ form.bp_systolic }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">BP Diastolic (mmHg)</label>
+                                    {{ form.bp_diastolic }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Temperature (°F)</label>
+                                    {{ form.temperature }}
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Oxygen level / SpO2 (%)</label>
+                                    {{ form.oxygen_level }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Heart Rate (bpm)</label>
+                                    {{ form.heart_rate }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Respiratory Rate (breaths/min)</label>
+                                    {{ form.respiratory_rate }}
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Blood Sugar level (mg/dL)</label>
+                                    {{ form.sugar_level }}
+                                    <div class="form-text">Optional</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">GCS Score (3 - 15)</label>
+                                    {{ form.gcs_score }}
+                                    <div class="form-text">Glasgow Coma Scale: 3 = Comatose, 15 = Awake</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Clinical Notes</label>
+                                {{ form.notes }}
+                            </div>
+
+                            <div class="d-grid mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg rounded-pill py-2 shadow-sm border-0">
+                                    <i class="fas fa-check-circle me-2"></i>Submit Triage & Assign Bed
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Live Suggested Zone Preview Card -->
+                <div class="col-lg-4 col-md-12 mb-4">
+                    <div class="card shadow-sm border-0 rounded-4 text-center p-4 sticky-top" style="top: 80px;">
+                        <h5 class="fw-bold text-dark mb-4"><i class="fas fa-eye text-info me-2"></i>Suggested Zone Preview</h5>
+                        
+                        <!-- Dynamic Color Zone Area -->
+                        <div id="zonePreviewBox" class="p-5 rounded-4 mb-4 text-white shadow-sm transition-all bg-secondary">
+                            <span class="fs-8 text-uppercase tracking-wider opacity-75">Calculated Priority</span>
+                            <h3 id="zoneNameText" class="fw-black mb-1 mt-1">NO DATA</h3>
+                            <h5 id="priorityText" class="fw-semibold opacity-90">Please enter vitals</h5>
+                        </div>
+
+                        <!-- Rule reference list -->
+                        <div class="text-start bg-light p-3 rounded-4 mb-3 border">
+                            <h6 class="fw-bold text-dark mb-2 small"><i class="fas fa-info-circle text-primary me-2"></i>Zone Trigger Thresholds:</h6>
+                            <ul class="list-unstyled mb-0 fs-7 text-muted lh-sm">
+                                <li class="mb-2"><span class="badge bg-danger me-1">RED</span> GCS &le; 8, SpO2 &lt; 90%, or BP Systolic &lt; 90</li>
+                                <li class="mb-2"><span class="badge bg-warning me-1" style="background-color: #fd7e14 !important;">ORANGE</span> GCS 9-12 or SpO2 90-94%</li>
+                                <li class="mb-2"><span class="badge bg-warning text-dark me-1" style="background-color: #ffc107 !important;">YELLOW</span> GCS 13-14 or Temp &gt; 102°F</li>
+                                <li><span class="badge bg-success me-1">GREEN</span> Default, stable normal parameters</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .transition-all {
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .fw-black {
+        font-weight: 900;
+        font-size: 2.2rem;
+        letter-spacing: 1.5px;
+    }
+    .fs-8 {
+        font-size: 0.65rem;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const bpSystolicInput = document.getElementById("id_bp_systolic");
+        const tempInput = document.getElementById("id_temperature");
+        const spo2Input = document.getElementById("id_oxygen_level");
+        const gcsInput = document.getElementById("id_gcs_score");
+
+        const zonePreviewBox = document.getElementById("zonePreviewBox");
+        const zoneNameText = document.getElementById("zoneNameText");
+        const priorityText = document.getElementById("priorityText");
+
+        function updateSuggestedZone() {
+            const bp = parseInt(bpSystolicInput.value) || 0;
+            const temp = parseFloat(tempInput.value) || 0.0;
+            const spo2 = parseInt(spo2Input.value) || 0;
+            const gcs = parseInt(gcsInput.value) || 0;
+
+            // If no vitals entered yet, show no data state
+            if (!bp && !temp && !spo2 && !gcs) {
+                zonePreviewBox.className = "p-5 rounded-4 mb-4 text-white shadow-sm transition-all bg-secondary";
+                zoneNameText.innerText = "NO DATA";
+                priorityText.innerText = "Please enter vitals";
+                return;
+            }
+
+            // RED threshold triggers
+            if ((gcs > 0 && gcs <= 8) || (spo2 > 0 && spo2 < 90) || (bp > 0 && bp < 90)) {
+                zonePreviewBox.className = "p-5 rounded-4 mb-4 text-white shadow-sm transition-all bg-danger";
+                zoneNameText.innerText = "RED ZONE";
+                priorityText.innerText = "Priority 1: Immediate Treatment";
+            }
+            // ORANGE threshold triggers
+            else if ((gcs > 0 && gcs <= 12) || (spo2 > 0 && spo2 <= 94)) {
+                zonePreviewBox.className = "p-5 rounded-4 mb-4 text-white shadow-sm transition-all";
+                zonePreviewBox.style.backgroundColor = "#fd7e14"; // Orange color HSL
+                zoneNameText.innerText = "ORANGE ZONE";
+                priorityText.innerText = "Priority 2: Very Urgent (15 min)";
+            }
+            // YELLOW threshold triggers
+            else if ((gcs > 0 && gcs <= 14) || (temp > 102.0)) {
+                zonePreviewBox.className = "p-5 rounded-4 mb-4 text-white shadow-sm transition-all";
+                zonePreviewBox.style.backgroundColor = "#ffc107"; // Yellow color
+                zonePreviewBox.classList.add("text-dark");
+                zonePreviewBox.classList.remove("text-white");
+                zoneNameText.innerText = "YELLOW ZONE";
+                priorityText.innerText = "Priority 3: Urgent (60 min)";
+            }
+            // GREEN default
+            else {
+                zonePreviewBox.className = "p-5 rounded-4 mb-4 text-white shadow-sm transition-all bg-success";
+                zoneNameText.innerText = "GREEN ZONE";
+                priorityText.innerText = "Priority 4: Non-Urgent (120 min)";
+            }
+        }
+
+        // Hook up listeners
+        [bpSystolicInput, tempInput, spo2Input, gcsInput].forEach(input => {
+            if (input) {
+                input.addEventListener("input", updateSuggestedZone);
+            }
+        });
+
+        // Run once initially
+        updateSuggestedZone();
+    });
+</script>
+{% endblock %}

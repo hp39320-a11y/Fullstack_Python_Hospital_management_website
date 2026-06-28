@@ -1,0 +1,279 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Admissions & Inpatient Billing - Asha Hospital HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- PAGE HEADER -->
+    <div class="row align-items-center mb-4 g-3">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-primary">
+                <i class="fas fa-bed me-2"></i>
+                Admissions & Inpatient Billing
+            </h2>
+            <p class="text-muted mb-0">
+                Manage doctor admission requests, allocate beds, oversee live inpatient bills, and process checkout discharges.
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <span class="badge bg-secondary p-2 me-2">Pending Requests: {{ pending_requests.count }}</span>
+            <span class="badge bg-primary p-2">Active Inpatients: {{ active_admissions.count }}</span>
+        </div>
+    </div>
+
+    <!-- PENDING ADMISSION REQUESTS CARD -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:16px;">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+            <h5 class="fw-bold text-danger mb-0">
+                <i class="fa-solid fa-clock-rotate-left me-2"></i>
+                Pending Admission Requests
+            </h5>
+            <p class="text-muted small mb-0 mt-1">Admission recommendations from doctors awaiting ward and bed assignment.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr class="text-muted small uppercase">
+                            <th>Patient Details</th>
+                            <th>Consulting Doctor</th>
+                            <th>Requested Ward</th>
+                            <th>Reason for Admit</th>
+                            <th>Request Date</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in pending_requests %}
+                        <tr>
+                            <td>
+                                <strong>{{ req.patient.name }}</strong><br>
+                                <span class="text-muted small">Age/Gender: {{ req.patient.age }} / {{ req.patient.gender }} | PAT-{{ req.patient.patient_id }}</span>
+                            </td>
+                            <td>{{ req.doctor.name }}</td>
+                            <td>
+                                <span class="badge bg-warning text-dark">{{ req.ward_type }}</span>
+                            </td>
+                            <td>{{ req.reason|default:"Under Observation / General Admission" }}</td>
+                            <td>{{ req.admission_date|date:"d-m-Y H:i" }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'approve_admission' req.admission_id %}" class="btn btn-sm btn-success fw-bold px-3">
+                                    <i class="fas fa-check me-1"></i> Approve
+                                </a>
+                                <a href="{% url 'reject_admission' req.admission_id %}" class="btn btn-sm btn-outline-danger fw-bold px-3 ms-1" onclick="return confirm('Are you sure you want to reject this admission request?');">
+                                    <i class="fas fa-times me-1"></i> Reject
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="fa-solid fa-circle-check fa-2x mb-2 text-success"></i>
+                                <p class="mb-0">No pending admission requests.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTIVE INPATIENTS CARD -->
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+            <h5 class="fw-bold text-primary mb-0">
+                <i class="fa-solid fa-hospital-user me-2"></i>
+                Active Admitted Inpatients
+            </h5>
+            <p class="text-muted small mb-0 mt-1">Currently admitted patients with live accumulated billing amounts.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr class="text-muted small uppercase">
+                            <th>Patient Details</th>
+                            <th>Ward & Bed No.</th>
+                            <th>Attending Doctor</th>
+                            <th>Admitted Since</th>
+                            <th>Live Grand Total</th>
+                            <th>Status</th>
+                            <th class="text-end">Billing Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for adm in active_admissions %}
+                        <tr>
+                            <td>
+                                <strong>{{ adm.patient.name }}</strong><br>
+                                <span class="text-muted small">ID: PAT-{{ adm.patient.patient_id }} | ADM-{{ adm.admission_id }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info-subtle text-info px-2 py-1" style="border-radius: 6px;">
+                                    {{ adm.ward_type }}
+                                </span>
+                                <strong class="text-secondary ms-1">Bed: {{ adm.bed_number|default:"N/A" }}</strong>
+                            </td>
+                            <td>{{ adm.doctor.name }}</td>
+                            <td>{{ adm.admission_date|date:"d-m-Y H:i" }}</td>
+                            <td class="fw-bold text-success">Rs. {{ adm.bill_grand_total }}</td>
+                            <td>
+                                {% if adm.status == 'Ready For Discharge' %}
+                                    <span class="badge bg-warning text-dark pulsing-discharge-badge">
+                                        <i class="fas fa-door-open me-1"></i> Ready For Discharge
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i> Admitted
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group gap-2">
+                                    <a href="{% url 'manage_ip_charges' adm.admission_id %}" class="btn btn-sm btn-outline-primary fw-semibold">
+                                        <i class="fas fa-file-invoice-dollar me-1"></i> Manage Charges
+                                    </a>
+                                    {% if adm.status == 'Ready For Discharge' %}
+                                        <a href="{% url 'discharge_billing' adm.admission_id %}" class="btn btn-sm btn-warning text-dark fw-bold px-3 shadow-sm border-warning">
+                                            <i class="fas fa-credit-card me-1"></i> Pay & Discharge
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'discharge_billing' adm.admission_id %}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-credit-card me-1"></i> Final Bill
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="fa-solid fa-bed-pulse fa-2x mb-3 text-secondary"></i>
+                                <p class="mb-0">No active admitted patients in the hospital wards.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BED ALLOCATION MODAL (TRIP WITH approve_target CONTEXT) -->
+{% if approve_target %}
+<div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="approveModalLabel">
+                    <i class="fas fa-hospital me-2"></i> Approve Admission & Allocate Bed
+                </h5>
+                <a href="{% url 'admissions_dashboard' %}" class="btn-close btn-close-white" aria-label="Close"></a>
+            </div>
+            <form method="POST" action="{% url 'approve_admission' approve_target.admission_id %}">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="alert alert-light border small mb-3">
+                        <div class="mb-1"><strong>Patient:</strong> {{ approve_target.patient.name }}</div>
+                        <div class="mb-1"><strong>Doctor:</strong> {{ approve_target.doctor.name }}</div>
+                        <div class="mb-1"><strong>Requested Ward:</strong> {{ approve_target.ward_type }}</div>
+                        <div class="mb-0"><strong>Reason:</strong> {{ approve_target.reason|default:"General inpatient stay" }}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Select Ward Type</label>
+                        <select name="ward_type" id="wardTypeSelect" class="form-select" required>
+                            <option value="General Ward" {% if approve_target.ward_type == "General Ward" %}selected{% endif %}>General Ward</option>
+                            <option value="Semi Private" {% if approve_target.ward_type == "Semi Private" %}selected{% endif %}>Semi Private</option>
+                            <option value="Private Room" {% if approve_target.ward_type == "Private Room" %}selected{% endif %}>Private Room</option>
+                            <option value="ICU" {% if approve_target.ward_type == "ICU" %}selected{% endif %}>ICU</option>
+                            <option value="Casuality Ward" {% if approve_target.ward_type == "Casuality Ward" %}selected{% endif %}>Casuality Ward</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Select Available Bed</label>
+                        <select name="bed_id" id="bedSelect" class="form-select" required>
+                            {% for bed in available_beds %}
+                                <option value="{{ bed.id }}">{{ bed.bed_number }} ({{ bed.status }})</option>
+                            {% empty %}
+                                <option value="">No beds available in this ward type</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <a href="{% url 'admissions_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-success fw-bold">
+                        <i class="fas fa-check-circle me-1"></i> Assign & Admit
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- EXTRA CSS FOR PULSING OR BADGES -->
+{% block extra_css %}
+<style>
+    .pulsing-discharge-badge {
+        animation: pulse-border 2s infinite;
+        border: 1px solid #ffc107;
+    }
+    @keyframes pulse-border {
+        0% {
+            box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4);
+        }
+        70% {
+            box-shadow: 0 0 0 8px rgba(255, 193, 7, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+        }
+    }
+</style>
+{% endblock %}
+
+<!-- EXTRA JAVASCRIPT FOR DYNAMIC BED FETCH -->
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // If approveTarget is active, show the modal
+    {% if approve_target %}
+    var myModal = new bootstrap.Modal(document.getElementById('approveModal'));
+    myModal.show();
+    {% endif %}
+
+    // Dynamic bed drop down fetching on ward change
+    var wardSelect = document.getElementById('wardTypeSelect');
+    if (wardSelect) {
+        wardSelect.addEventListener('change', function() {
+            var wardType = this.value;
+            var bedSelect = document.getElementById('bedSelect');
+            bedSelect.innerHTML = '<option value="">Loading available beds...</option>';
+            
+            fetch('/api/beds/available/?ward_type=' + encodeURIComponent(wardType))
+                .then(response => response.json())
+                .then(data => {
+                    bedSelect.innerHTML = '';
+                    if (data.beds.length === 0) {
+                        bedSelect.innerHTML = '<option value="">No beds available in this ward</option>';
+                    } else {
+                        data.beds.forEach(bed => {
+                            bedSelect.innerHTML += '<option value="' + bed.id + '">' + bed.bed_number + '</option>';
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to load beds:", err);
+                    bedSelect.innerHTML = '<option value="">Error loading beds</option>';
+                });
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

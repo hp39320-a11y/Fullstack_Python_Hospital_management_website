@@ -1,0 +1,213 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Emergency / Casuality - Asha Hospital HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="fw-bold text-danger"><i class="fas fa-ambulance me-2"></i>Emergency / Casuality Workspace</h2>
+            <p class="text-muted">Register emergency cases quickly and monitor the live treatment queue.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Register Emergency Patient Form -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-danger text-white py-3">
+                    <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Quick Emergency Entry</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" action="{% url 'casuality_dashboard' %}">
+                        {% csrf_token %}
+                        
+                        <!-- Existing vs New Patient Selection -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Patient Option</label>
+                            <select name="patient_option" id="patientOption" class="form-select" onchange="togglePatientSource()">
+                                <option value="existing">Select Existing Patient</option>
+                                <option value="new">Register New Patient On-the-fly</option>
+                            </select>
+                        </div>
+
+                        <!-- Existing Patient Dropdown -->
+                        <div id="existingPatientSection" class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Select Patient</label>
+                            <select name="existing_patient_id" id="existing_patient_id" class="form-select select-search">
+                                <option value="">-- Choose Patient --</option>
+                                {% for patient in patients %}
+                                <option value="{{ patient.patient_id }}">PAT-{{ patient.patient_id }} | {{ patient.name }} ({{ patient.phone }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- New Patient Form Fields -->
+                        <div id="newPatientSection" style="display: none;">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-secondary">Patient Name</label>
+                                <input type="text" name="name" class="form-control" placeholder="Enter full name">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold small text-secondary">Age</label>
+                                    <input type="number" name="age" class="form-control" min="0" max="120" placeholder="Age">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold small text-secondary">Gender</label>
+                                    <select name="gender" class="form-select">
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-secondary">Phone Number</label>
+                                <input type="text" name="phone" class="form-control" placeholder="Mobile number">
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Emergency Details -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Assigned Doctor</label>
+                            <select name="doctor_id" class="form-select" required>
+                                <option value="">-- Assign Doctor --</option>
+                                {% for doctor in doctors %}
+                                <option value="{{ doctor.doctor_id }}">{{ doctor.name }} ({{ doctor.specialization }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Priority Level</label>
+                            <select name="priority" class="form-select" required>
+                                <option value="Low">Low Priority (Green)</option>
+                                <option value="Medium" selected>Medium Priority (Yellow)</option>
+                                <option value="High">High Priority (Orange)</option>
+                                <option value="Critical">Critical Priority (Red)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Emergency Reason / Type</label>
+                            <textarea name="emergency_reason" class="form-control" rows="3" placeholder="Reason for emergency (e.g. Cardiac Arrest, Road Accident, High Fever)" required></textarea>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-danger w-100 py-2 fw-bold">
+                                <i class="fas fa-heartbeat me-2"></i>Admit to Casuality
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Casuality Live Queue -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0"><i class="fas fa-list-ol me-2"></i>Live Casuality Queue</h5>
+                    <span class="badge bg-danger px-3 py-2 fs-6">{{ queue.count }} Active Cases</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Token</th>
+                                    <th>Patient</th>
+                                    <th>Priority</th>
+                                    <th>Doctor</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                    <th class="text-end pe-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for case in queue %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-danger">CAS-{{ case.id }}</td>
+                                    <td>
+                                        <div class="fw-bold">{{ case.patient.name }}</div>
+                                        <small class="text-muted">ID: PAT-{{ case.patient.patient_id }} | {{ case.patient.age }} yrs / {{ case.patient.gender }}</small>
+                                    </td>
+                                    <td>
+                                        {% if case.priority == 'Critical' %}
+                                        <span class="badge bg-danger px-2.5 py-1.5 fs-7"><i class="fas fa-exclamation-triangle me-1"></i>Critical</span>
+                                        {% elif case.priority == 'High' %}
+                                        <span class="badge bg-warning text-dark px-2.5 py-1.5 fs-7"><i class="fas fa-exclamation-circle me-1"></i>High</span>
+                                        {% elif case.priority == 'Medium' %}
+                                        <span class="badge bg-info text-dark px-2.5 py-1.5 fs-7"><i class="fas fa-info-circle me-1"></i>Medium</span>
+                                        {% else %}
+                                        <span class="badge bg-success px-2.5 py-1.5 fs-7"><i class="fas fa-check-circle me-1"></i>Low</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="fw-semibold">{{ case.doctor.name }}</td>
+                                    <td>{{ case.emergency_reason|truncatechars:35 }}</td>
+                                    <td>
+                                        {% if case.status == 'Pending' %}
+                                        <span class="badge bg-secondary">Pending</span>
+                                        {% elif case.status == 'Under Emergency Care' %}
+                                        <span class="badge bg-primary">Under Emergency Care</span>
+                                        {% elif case.status == 'Stabilized' %}
+                                        <span class="badge bg-info text-dark">Stabilized</span>
+                                        {% elif case.status == 'Referred' %}
+                                        <span class="badge bg-warning text-dark">Referred</span>
+                                        {% elif case.status == 'Admitted' %}
+                                        <span class="badge bg-purple text-white" style="background-color: #6f42c1;">Admitted</span>
+                                        {% else %}
+                                        <span class="badge bg-success">Discharged</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                Update Status
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item" href="{% url 'update_casuality_status' case.id 'Pending' %}">Pending</a></li>
+                                                <li><a class="dropdown-item" href="{% url 'update_casuality_status' case.id 'Under Emergency Care' %}">Under Emergency Care</a></li>
+                                                <li><a class="dropdown-item" href="{% url 'update_casuality_status' case.id 'Stabilized' %}">Stabilized</a></li>
+                                                <li><a class="dropdown-item" href="{% url 'update_casuality_status' case.id 'Discharged' %}">Discharged</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                        <h5>No active emergency cases. Clean queue!</h5>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePatientSource() {
+    var option = document.getElementById('patientOption').value;
+    if (option === 'existing') {
+        document.getElementById('existingPatientSection').style.display = 'block';
+        document.getElementById('newPatientSection').style.display = 'none';
+        document.getElementById('existing_patient_id').required = true;
+    } else {
+        document.getElementById('existingPatientSection').style.display = 'none';
+        document.getElementById('newPatientSection').style.display = 'block';
+        document.getElementById('existing_patient_id').required = false;
+    }
+}
+// Run once on load
+togglePatientSource();
+</script>
+{% endblock %}
