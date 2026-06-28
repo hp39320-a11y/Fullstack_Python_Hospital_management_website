@@ -1,0 +1,512 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Head Nurse Portal — Asha Hospital HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="fw-bold text-primary"><i class="fas fa-user-shield me-2"></i>Head Nurse Ward Dashboard</h2>
+            <p class="text-muted">Ward Supervisor Workspace for <strong>{{ nurse.assigned_ward }}</strong>.</p>
+        </div>
+    </div>
+
+    <!-- Ward Information Summary Dashboard Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2 col-6">
+            <div class="card border-0 shadow-sm bg-primary text-white">
+                <div class="card-body">
+                    <small class="text-uppercase fw-bold opacity-75 small">Total Inpatients</small>
+                    <h2 class="fw-bold mb-0 mt-1">{{ ward_admissions.count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card border-0 shadow-sm bg-danger text-white">
+                <div class="card-body">
+                    <small class="text-uppercase fw-bold opacity-75 small">Critical Patients</small>
+                    <h2 class="fw-bold mb-0 mt-1">{{ critical_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card border-0 shadow-sm bg-success text-white">
+                <div class="card-body">
+                    <small class="text-uppercase fw-bold opacity-75 small">Nurses on Duty</small>
+                    <h2 class="fw-bold mb-0 mt-1">{{ todays_shifts.count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card border-0 shadow-sm bg-info text-white">
+                <div class="card-body">
+                    <small class="text-uppercase fw-bold opacity-75 small">Bed Occupancy</small>
+                    <h2 class="fw-bold mb-0 mt-1">{{ occupied_beds }} / {{ total_beds }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card border-0 shadow-sm bg-light text-dark">
+                <div class="card-body">
+                    <small class="text-uppercase fw-bold opacity-75 small">Available Beds</small>
+                    <h2 class="fw-bold mb-0 mt-1 text-success">{{ available_beds }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card border-0 shadow-sm bg-warning text-dark">
+                <div class="card-body">
+                    <small class="text-uppercase fw-bold opacity-75 small">Active Alerts</small>
+                    <h2 class="fw-bold mb-0 mt-1">{{ ward_alerts.count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Patient Assignment Form -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-dark text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-hand-holding-medical me-2"></i>Assign Patients to Nurses</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="assign_patient">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Select Nurse (assigned to this ward)</label>
+                            <select name="nurse_id" class="form-select" required>
+                                <option value="" disabled selected>Select Staff Nurse</option>
+                                {% for n in ward_nurses %}
+                                <option value="{{ n.nurse_id }}">{{ n.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Select Patient (Active Admissions in {{ nurse.assigned_ward }})</label>
+                            <select name="admission_id" class="form-select" required>
+                                <option value="" disabled selected>Select Inpatient</option>
+                                {% for adm in ward_admissions %}
+                                <option value="{{ adm.admission_id }}">Bed {{ adm.bed_number }} — {{ adm.patient.name }} (ID: PAT-{{ adm.patient.patient_id }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Assignment Notes / Clinical Instructions</label>
+                            <textarea name="notes" class="form-control" rows="3" placeholder="e.g. Needs vital checks every hour, check oxygen post lunch..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary fw-bold w-100"><i class="fas fa-link me-1"></i>Confirm Assignment</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shift Allocation / Scheduling -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-dark text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-calendar-alt me-2"></i>Schedule Nurse Shifts</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="schedule_shift">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Select Nurse</label>
+                            <select name="nurse_id" class="form-select" required>
+                                <option value="" disabled selected>Choose Nurse</option>
+                                {% for n in ward_nurses %}
+                                <option value="{{ n.nurse_id }}">{{ n.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-secondary">Shift Date</label>
+                                <input type="date" name="shift_date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-secondary">Shift Type / Starting Shift</label>
+                                <select name="shift_type" class="form-select" required>
+                                    <option value="Morning">Morning Shift (06:00 - 14:00)</option>
+                                    <option value="Evening">Evening Shift (14:00 - 22:00)</option>
+                                    <option value="Night">Night Shift (22:00 - 06:00)</option>
+                                    <option value="Off">Off Duty / Remove Shift</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="allocate_one_week" id="allocate_one_week">
+                            <label class="form-check-label fw-bold small text-secondary" for="allocate_one_week">
+                                Allocate for one week (7 consecutive days starting from this date)
+                            </label>
+                        </div>
+                        
+                        <!-- Weekly Pattern Selector -->
+                        <div class="mb-3" id="weekly_pattern_container" style="display: none;">
+                            <label class="form-label fw-bold small text-secondary">Weekly Shift Pattern</label>
+                            <select name="weekly_pattern" id="weekly_pattern" class="form-select">
+                                <option value="same_shift">Same Shift for Full Week (e.g. all Morning)</option>
+                                <option value="rotating_shift">Rotating Shift Pattern (Morning → Evening → Night → Morning → ...)</option>
+                                <option value="rotating_shift_off">Rotating Shift with Off (Morning → Evening → Night → Off → ...)</option>
+                                <option value="custom">Custom Shift for Each Day</option>
+                            </select>
+                        </div>
+
+                        <!-- Custom Shift Grid -->
+                        <div id="custom_shifts_container" class="mb-3 border rounded p-3 bg-light animate__animated animate__fadeIn" style="display: none; border-color: #dee2e6!important;">
+                            <h6 class="fw-bold text-secondary mb-3 small"><i class="fas fa-tasks me-1"></i>Configure Shifts for Each Day</h6>
+                            <div class="row g-2">
+                                {% for i in "0123456" %}
+                                <div class="col-md-4 col-6 mb-2">
+                                    <label class="form-label fw-bold small text-secondary mb-1" id="label_day_{{ forloop.counter0 }}">Day {{ forloop.counter }}</label>
+                                    <select name="day_{{ forloop.counter0 }}_shift" class="form-select form-select-sm">
+                                        <option value="Morning">Morning</option>
+                                        <option value="Evening">Evening</option>
+                                        <option value="Night">Night</option>
+                                        <option value="Off">Off</option>
+                                    </select>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success fw-bold w-100"><i class="fas fa-calendar-plus me-1"></i>Allocate Shift</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Duty Roster & Shifts Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <style>
+                #rosterTabs .nav-link {
+                    border: none;
+                    background: transparent;
+                    opacity: 0.85;
+                    margin-bottom: -1px;
+                }
+                #rosterTabs .nav-link.active {
+                    border: none;
+                    background-color: rgba(255, 255, 255, 0.2);
+                    color: #fff !important;
+                    opacity: 1;
+                    border-radius: 6px;
+                }
+            </style>
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-secondary text-white py-2 d-flex justify-content-between align-items-center flex-wrap g-2">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-calendar-alt me-2"></i>Duty Roster & Shift Schedules</h5>
+                    <ul class="nav nav-tabs card-header-tabs border-bottom-0" id="rosterTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link text-white active fw-semibold" id="today-tab" data-bs-toggle="tab" data-bs-target="#today-shifts" type="button" role="tab" aria-selected="true">Today's Shifts</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link text-white fw-semibold" id="weekly-tab" data-bs-toggle="tab" data-bs-target="#weekly-roster" type="button" role="tab" aria-selected="false">Weekly Grid Roster</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link text-white fw-semibold" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-shifts" type="button" role="tab" aria-selected="false">All Allocated Shifts</button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body p-0">
+                    <div class="tab-content" id="rosterTabsContent">
+                        <!-- Tab 1: Today's Shifts -->
+                        <div class="tab-pane fade show active" id="today-shifts" role="tabpanel" aria-labelledby="today-tab">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-4">Nurse</th>
+                                            <th>Shift Type</th>
+                                            <th>Attendance Status</th>
+                                            <th>Check-In Time</th>
+                                            <th>Check-Out Time</th>
+                                            <th class="text-end pe-4">Manual Override / Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for sh in todays_shifts %}
+                                        <tr>
+                                            <td class="ps-4 fw-bold text-dark">{{ sh.nurse.name }}</td>
+                                            <td>
+                                                {% if sh.shift_type == 'Morning' %}
+                                                <span class="badge bg-primary">Morning</span>
+                                                {% elif sh.shift_type == 'Evening' %}
+                                                <span class="badge bg-warning text-dark">Evening</span>
+                                                {% elif sh.shift_type == 'Night' %}
+                                                <span class="badge bg-dark">Night</span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">{{ sh.shift_type }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if sh.attendance_status == 'Present' %}
+                                                <span class="badge bg-success">Present</span>
+                                                {% elif sh.attendance_status == 'Late' %}
+                                                <span class="badge bg-warning text-dark">Late</span>
+                                                {% elif sh.attendance_status == 'Off' %}
+                                                <span class="badge bg-light text-secondary">Off</span>
+                                                {% else %}
+                                                <span class="badge bg-danger">Absent</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ sh.check_in|date:"H:i"|default:"—" }}</td>
+                                            <td>{{ sh.check_out|date:"H:i"|default:"—" }}</td>
+                                            <td class="text-end pe-4">
+                                                <div class="d-inline-flex align-items-center gap-2">
+                                                    <form method="post" class="d-inline">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="action" value="update_shift_details">
+                                                        <input type="hidden" name="shift_id" value="{{ sh.id }}">
+                                                        <div class="input-group input-group-sm">
+                                                            <select name="shift_type" class="form-select form-select-sm" style="border-radius: 6px 0 0 6px;">
+                                                                <option value="Morning" {% if sh.shift_type == 'Morning' %}selected{% endif %}>Morning</option>
+                                                                <option value="Evening" {% if sh.shift_type == 'Evening' %}selected{% endif %}>Evening</option>
+                                                                <option value="Night" {% if sh.shift_type == 'Night' %}selected{% endif %}>Night</option>
+                                                            </select>
+                                                            <select name="attendance_status" class="form-select form-select-sm">
+                                                                <option value="Present" {% if sh.attendance_status == 'Present' %}selected{% endif %}>Present</option>
+                                                                <option value="Late" {% if sh.attendance_status == 'Late' %}selected{% endif %}>Late</option>
+                                                                <option value="Absent" {% if sh.attendance_status == 'Absent' %}selected{% endif %}>Absent</option>
+                                                                <option value="Off" {% if sh.attendance_status == 'Off' %}selected{% endif %}>Off</option>
+                                                            </select>
+                                                            <button type="submit" class="btn btn-dark" style="border-radius: 0 6px 6px 0;"><i class="fas fa-save"></i></button>
+                                                        </div>
+                                                    </form>
+                                                    <form method="post" class="d-inline" onsubmit="return confirm('Delete this shift?');">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="action" value="delete_shift">
+                                                        <input type="hidden" name="shift_id" value="{{ sh.id }}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 6px;"><i class="fas fa-trash"></i></button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4 text-muted">No nursing shifts scheduled for today.</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab 2: Weekly Grid Roster -->
+                        <div class="tab-pane fade p-4" id="weekly-roster" role="tabpanel" aria-labelledby="weekly-tab">
+                            <h6 class="fw-bold mb-3"><i class="fas fa-calendar-week text-primary me-2"></i>Weekly Ward Duty Roster (Next 7 Days)</h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle text-center mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="text-start" style="min-width: 150px;">Nurse</th>
+                                            {% for d in date_list %}
+                                            <th>
+                                                <div class="small text-muted">{{ d|date:"D" }}</div>
+                                                <div class="fw-bold">{{ d|date:"d M" }}</div>
+                                            </th>
+                                            {% endfor %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for row in weekly_roster %}
+                                        <tr>
+                                            <td class="text-start fw-semibold">{{ row.nurse.name }}</td>
+                                            {% for day in row.shifts %}
+                                            <td>
+                                                {% if day.shift %}
+                                                    {% if day.shift.shift_type == 'Morning' %}
+                                                    <span class="badge bg-primary d-block py-2 mb-1" title="Morning Shift (06:00 - 14:00)">Morning</span>
+                                                    {% elif day.shift.shift_type == 'Evening' %}
+                                                    <span class="badge bg-warning text-dark d-block py-2 mb-1" title="Evening Shift (14:00 - 22:00)">Evening</span>
+                                                    {% elif day.shift.shift_type == 'Night' %}
+                                                    <span class="badge bg-dark d-block py-2 mb-1" title="Night Shift (22:00 - 06:00)">Night</span>
+                                                    {% endif %}
+                                                    
+                                                    <span class="small text-muted d-block" style="font-size: 0.75rem;">Status: {{ day.shift.attendance_status }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-light text-secondary d-block py-2" title="No shift scheduled">Off</span>
+                                                {% endif %}
+                                            </td>
+                                            {% endfor %}
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="8" class="text-center py-4 text-muted">No nurses assigned to this ward.</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tab 3: All Allocated Shifts -->
+                        <div class="tab-pane fade" id="all-shifts" role="tabpanel" aria-labelledby="all-tab">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-4">Nurse</th>
+                                            <th>Shift Date</th>
+                                            <th>Shift Type</th>
+                                            <th>Attendance Status</th>
+                                            <th>Check-In Time</th>
+                                            <th>Check-Out Time</th>
+                                            <th class="text-end pe-4">Manual Override / Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for sh in all_allocated_shifts %}
+                                        <tr>
+                                            <td class="ps-4 fw-bold text-dark">{{ sh.nurse.name }}</td>
+                                            <td class="fw-semibold text-secondary">{{ sh.shift_date|date:"d-m-Y (D)" }}</td>
+                                            <td>
+                                                {% if sh.shift_type == 'Morning' %}
+                                                <span class="badge bg-primary">Morning</span>
+                                                {% elif sh.shift_type == 'Evening' %}
+                                                <span class="badge bg-warning text-dark">Evening</span>
+                                                {% elif sh.shift_type == 'Night' %}
+                                                <span class="badge bg-dark">Night</span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">{{ sh.shift_type }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if sh.attendance_status == 'Present' %}
+                                                <span class="badge bg-success">Present</span>
+                                                {% elif sh.attendance_status == 'Late' %}
+                                                <span class="badge bg-warning text-dark">Late</span>
+                                                {% elif sh.attendance_status == 'Off' %}
+                                                <span class="badge bg-light text-secondary">Off</span>
+                                                {% else %}
+                                                <span class="badge bg-danger">Absent</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ sh.check_in|date:"H:i"|default:"—" }}</td>
+                                            <td>{{ sh.check_out|date:"H:i"|default:"—" }}</td>
+                                            <td class="text-end pe-4">
+                                                <div class="d-inline-flex align-items-center gap-2">
+                                                    <form method="post" class="d-inline">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="action" value="update_shift_details">
+                                                        <input type="hidden" name="shift_id" value="{{ sh.id }}">
+                                                        <div class="input-group input-group-sm">
+                                                            <select name="shift_type" class="form-select form-select-sm" style="border-radius: 6px 0 0 6px;">
+                                                                <option value="Morning" {% if sh.shift_type == 'Morning' %}selected{% endif %}>Morning</option>
+                                                                <option value="Evening" {% if sh.shift_type == 'Evening' %}selected{% endif %}>Evening</option>
+                                                                <option value="Night" {% if sh.shift_type == 'Night' %}selected{% endif %}>Night</option>
+                                                            </select>
+                                                            <select name="attendance_status" class="form-select form-select-sm">
+                                                                <option value="Present" {% if sh.attendance_status == 'Present' %}selected{% endif %}>Present</option>
+                                                                <option value="Late" {% if sh.attendance_status == 'Late' %}selected{% endif %}>Late</option>
+                                                                <option value="Absent" {% if sh.attendance_status == 'Absent' %}selected{% endif %}>Absent</option>
+                                                                <option value="Off" {% if sh.attendance_status == 'Off' %}selected{% endif %}>Off</option>
+                                                            </select>
+                                                            <button type="submit" class="btn btn-dark" style="border-radius: 0 6px 6px 0;"><i class="fas fa-save"></i></button>
+                                                        </div>
+                                                    </form>
+                                                    <form method="post" class="d-inline" onsubmit="return confirm('Delete this shift?');">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="action" value="delete_shift">
+                                                        <input type="hidden" name="shift_id" value="{{ sh.id }}">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 6px;"><i class="fas fa-trash"></i></button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4 text-muted">No nursing shifts scheduled.</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const allocateCheckbox = document.getElementById('allocate_one_week');
+    const weeklyPatternContainer = document.getElementById('weekly_pattern_container');
+    const weeklyPatternSelect = document.getElementById('weekly_pattern');
+    const customShiftsContainer = document.getElementById('custom_shifts_container');
+    const shiftDateInput = document.querySelector('input[name="shift_date"]');
+    const shiftTypeSelect = document.querySelector('select[name="shift_type"]');
+
+    function updateLabels() {
+        const startDateVal = shiftDateInput.value;
+        if (!startDateVal) return;
+        
+        // Simple manual parsing to avoid timezone shift issues
+        const parts = startDateVal.split('-');
+        if (parts.length !== 3) return;
+        
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        
+        let currentDate = new Date(year, month, day);
+        for (let i = 0; i < 7; i++) {
+            let label = document.getElementById('label_day_' + i);
+            if (label) {
+                const dayName = days[currentDate.getDay()];
+                const dateNum = String(currentDate.getDate()).padStart(2, '0');
+                const monthName = months[currentDate.getMonth()];
+                label.innerText = `${dayName}, ${dateNum} ${monthName}`;
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+    }
+
+    function toggleFormSections() {
+        const isWeekly = allocateCheckbox.checked;
+        if (isWeekly) {
+            weeklyPatternContainer.style.display = 'block';
+            if (weeklyPatternSelect.value === 'custom') {
+                customShiftsContainer.style.display = 'block';
+                updateLabels();
+            } else {
+                customShiftsContainer.style.display = 'none';
+            }
+        } else {
+            weeklyPatternContainer.style.display = 'none';
+            customShiftsContainer.style.display = 'none';
+        }
+    }
+
+    weeklyPatternSelect.addEventListener('change', function() {
+        if (weeklyPatternSelect.value === 'custom') {
+            const currentShift = shiftTypeSelect.value;
+            // Preset custom day dropdowns to match the current shift selection if they aren't 'Off'
+            const presetVal = (currentShift === 'Off') ? 'Off' : currentShift;
+            for (let i = 0; i < 7; i++) {
+                const selectEl = document.querySelector(`select[name="day_${i}_shift"]`);
+                if (selectEl) {
+                    selectEl.value = presetVal;
+                }
+            }
+        }
+        toggleFormSections();
+    });
+
+    allocateCheckbox.addEventListener('change', toggleFormSections);
+    shiftDateInput.addEventListener('change', updateLabels);
+    
+    // Initial execution
+    toggleFormSections();
+});
+</script>
+{% endblock %}

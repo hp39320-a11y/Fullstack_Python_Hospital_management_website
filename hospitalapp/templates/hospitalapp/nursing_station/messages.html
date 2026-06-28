@@ -1,0 +1,119 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Nursing Comms Hub — Asha Hospital HMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header Section -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-primary"><i class="fas fa-comments me-2 animate-bounce"></i>Nursing Station Communication Hub</h2>
+            <p class="text-muted">Direct messaging channel between Doctors, Nurses, and the Central Nursing Station.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if request.user.role == 'nursing_station' %}
+            <a href="{% url 'nursing_station_dashboard' %}" class="btn btn-outline-primary fw-semibold">
+                <i class="fas fa-chevron-left me-1"></i> Back to Dashboard
+            </a>
+            {% elif request.user.role == 'doctor' %}
+            <a href="{% url 'doctor_dashboard' %}" class="btn btn-outline-primary fw-semibold">
+                <i class="fas fa-chevron-left me-1"></i> Back to Dashboard
+            </a>
+            {% elif request.user.role == 'nurse' %}
+            <a href="{% url 'nurse_dashboard' %}" class="btn btn-outline-success fw-semibold">
+                <i class="fas fa-chevron-left me-1"></i> Back to Dashboard
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- New Message Card -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-dark text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-paper-plane me-2"></i>Send Message</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Recipient User</label>
+                            {{ form.receiver }}
+                            {% if form.receiver.errors %}
+                            <div class="text-danger small mt-1">{{ form.receiver.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Urgency Category</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                            <div class="text-danger small mt-1">{{ form.category.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Message Content</label>
+                            {{ form.message }}
+                            {% if form.message.errors %}
+                            <div class="text-danger small mt-1">{{ form.message.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 mt-2">
+                            <i class="fas fa-location-arrow me-1"></i> Dispatch Message
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages History Feed -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-secondary text-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-inbox me-2"></i>Message Center Logs</h5>
+                    <span class="badge bg-light text-dark fw-bold">{{ messages_list.count }} messages logged</span>
+                </div>
+                <div class="card-body p-3" style="max-height: 550px; overflow-y: auto;">
+                    {% for msg in messages_list %}
+                    <div class="card border-0 shadow-sm mb-3 
+                        {% if msg.category == 'Emergency' %}border-start border-4 border-danger bg-danger-subtle
+                        {% elif msg.category == 'Urgent' %}border-start border-4 border-warning bg-warning-subtle
+                        {% else %}border-start border-4 border-primary bg-light
+                        {% endif %}">
+                        <div class="card-body py-3 px-3">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap g-2 mb-2">
+                                <div>
+                                    <span class="fw-bold text-dark"><i class="fas fa-user-circle me-1"></i>{{ msg.sender.username }}</span>
+                                    <i class="fas fa-arrow-right mx-1 text-muted small"></i>
+                                    <span class="text-secondary small fw-semibold">To: {{ msg.receiver.username }}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if msg.category == 'Emergency' %}
+                                    <span class="badge bg-danger text-white"><i class="fas fa-exclamation-circle me-1"></i>Emergency</span>
+                                    {% elif msg.category == 'Urgent' %}
+                                    <span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle me-1"></i>Urgent</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary text-white">Normal</span>
+                                    {% endif %}
+                                    <small class="text-muted font-monospace">{{ msg.created_at|date:"h:i A (d M)" }}</small>
+                                </div>
+                            </div>
+                            <p class="mb-0 text-dark-emphasis fw-medium">"{{ msg.message }}"</p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-comments-slash fa-3x mb-3 text-secondary-50"></i>
+                        <p class="mb-0 fw-semibold">No messages recorded in the comms channel.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

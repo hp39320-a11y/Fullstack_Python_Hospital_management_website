@@ -1,0 +1,121 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th class="ps-4">Req ID</th>
+                <th>Patient</th>
+                <th>Requested Task</th>
+                <th>Doctor</th>
+                <th>Workflow Status</th>
+                <th>Requested At</th>
+                <th class="pe-4 text-end">Dispatch Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in reqs %}
+            <tr>
+                <td class="ps-4 fw-bold text-secondary">#{{ r.id }}</td>
+                <td>
+                    {% if r.patient %}
+                    <div class="fw-bold text-dark">{{ r.patient.name }}</div>
+                    <small class="text-muted">ID: PAT-{{ r.patient.patient_id }}</small>
+                    {% else %}
+                    <span class="text-muted">— (General Support)</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="fw-semibold text-primary"><i class="fas fa-stethoscope me-1 text-secondary"></i>{{ r.request_type }}</span>
+                    {% if r.notes %}
+                    <small class="text-muted d-block text-truncate" style="max-width: 180px;" title="{{ r.notes }}"><em>"{{ r.notes }}"</em></small>
+                    {% endif %}
+                </td>
+                <td><small class="fw-bold">{{ r.doctor.name }}</small></td>
+                <td>
+                    {% if r.status == 'Pending' %}
+                    <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1 animate-pulse"></i>Pending</span>
+                    {% elif r.status == 'Assigned' %}
+                    <span class="badge bg-info text-white"><i class="fas fa-user-tag me-1"></i>Assigned</span>
+                    {% elif r.status == 'Accepted' %}
+                    <span class="badge bg-primary text-white"><i class="fas fa-thumbs-up me-1"></i>Accepted</span>
+                    {% elif r.status == 'In Progress' %}
+                    <span class="badge bg-secondary text-white"><i class="fas fa-spinner fa-spin me-1"></i>In Progress</span>
+                    {% elif r.status == 'Completed' %}
+                    <span class="badge bg-success text-white"><i class="fas fa-check-circle me-1"></i>Completed</span>
+                    {% else %}
+                    <span class="badge bg-danger text-white"><i class="fas fa-times-circle me-1"></i>Cancelled</span>
+                    {% endif %}
+                </td>
+                <td>{{ r.created_at|date:"h:i A" }}</td>
+                <td class="pe-4 text-end">
+                    <div class="d-inline-flex gap-2">
+                        {% if r.status == 'Pending' %}
+                        <!-- Assign Nurse Modal Trigger -->
+                        <button type="button" class="btn btn-sm btn-success fw-bold px-3" data-bs-toggle="modal" data-bs-target="#assignModal{{ r.id }}">
+                            <i class="fas fa-user-plus me-1"></i> Dispatch Nurse
+                        </button>
+                        {% endif %}
+                        
+                        {% if r.status != 'Completed' and r.status != 'Rejected' %}
+                        <!-- Cancel Action -->
+                        <form method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this assistance request?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="cancel_request">
+                            <input type="hidden" name="request_id" value="{{ r.id }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancel Request">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+
+                    <!-- ASSIGN NURSE MODAL -->
+                    {% if r.status == 'Pending' %}
+                    <div class="modal fade" id="assignModal{{ r.id }}" tabindex="-1" aria-hidden="true" style="text-align: left;">
+                        <div class="modal-dialog text-dark">
+                            <div class="modal-content">
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="assign_nurse">
+                                    <input type="hidden" name="request_id" value="{{ r.id }}">
+                                    <div class="modal-header bg-success text-white">
+                                        <h5 class="modal-title fw-bold"><i class="fas fa-user-check me-2"></i>Dispatch Nurse to Task</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <p class="text-secondary small">Select an available nurse from the roster to handle: <strong>{{ r.request_type }}</strong>{% if r.patient %} for patient <strong>{{ r.patient.name }}</strong>{% endif %}.</p>
+                                            <label class="form-label fw-bold text-dark small">Select Staff Nurse</label>
+                                            <select name="nurse_id" class="form-select" required>
+                                                <option value="" disabled selected>Select Available Nurse</option>
+                                                {% for nav in available_nurses %}
+                                                <option value="{{ nav.nurse.nurse_id }}">{{ nav.nurse.name }} ({{ nav.nurse.assigned_ward }})</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold text-dark small">Dispatch Instructions / Remarks</label>
+                                            <textarea name="notes" class="form-control" rows="2" placeholder="e.g. Carry ECG machine, report to OPD Room 2..."></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-success btn-sm fw-bold">Dispatch Nurse</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center py-5 text-muted">
+                    <i class="fas fa-folder-open fa-2x mb-3 text-secondary-50"></i>
+                    <p class="mb-0 fw-semibold">No active requests found in this category.</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

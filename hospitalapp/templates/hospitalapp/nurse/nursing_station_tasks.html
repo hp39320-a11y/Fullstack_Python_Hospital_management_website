@@ -1,0 +1,202 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Assigned Tasks — Asha Hospital HMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header Section -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-success"><i class="fas fa-tasks me-2"></i>Nursing Station Task Board</h2>
+            <p class="text-muted">Accept, update, or complete clinical procedures assigned to you by the Central Nursing Station.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'nurse_dashboard' %}" class="btn btn-outline-secondary fw-semibold">
+                <i class="fas fa-chevron-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Active Tasks Feed -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-clipboard-list me-2"></i>My Task Queue</h5>
+            <span class="badge bg-success fw-bold">{{ assignments.count }} tasks assigned</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Assignment ID</th>
+                            <th>Request Detail</th>
+                            <th>Patient / Location</th>
+                            <th>Doctor Instructions</th>
+                            <th>Status</th>
+                            <th>Timestamps</th>
+                            <th class="pe-4 text-end">Workflow Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assign in assignments %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-secondary">#ASN-{{ assign.id }}</td>
+                            <td>
+                                <div class="fw-bold text-dark fs-6">{{ assign.request.request_type }}</div>
+                                <small class="text-muted">Request #{{ assign.request.id }}</small>
+                            </td>
+                            <td>
+                                {% if assign.request.patient %}
+                                <div class="fw-semibold">{{ assign.request.patient.name }}</div>
+                                {% else %}
+                                <span class="text-muted small">— (General Support)</span>
+                                {% endif %}
+                                <div>
+                                    {% if assign.request.patient_type == 'OP' %}
+                                    <span class="badge bg-success-subtle text-success px-2">OPD</span>
+                                    {% elif assign.request.patient_type == 'IP' %}
+                                    <span class="badge bg-primary-subtle text-primary px-2">Inpatient</span>
+                                    {% elif assign.request.patient_type == 'ICU' %}
+                                    <span class="badge bg-danger-subtle text-danger px-2">ICU</span>
+                                    {% else %}
+                                    <span class="badge bg-warning-subtle text-warning px-2">Emergency</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if assign.notes %}
+                                <div class="small fw-semibold text-secondary">Coordination: {{ assign.notes }}</div>
+                                {% endif %}
+                                {% if assign.request.notes %}
+                                <div class="small text-muted italic">Doctor: "{{ assign.request.notes }}"</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if assign.status == 'Assigned' %}
+                                <span class="badge bg-warning text-dark"><i class="fas fa-bell me-1"></i>New Assignment</span>
+                                {% elif assign.status == 'Accepted' %}
+                                <span class="badge bg-primary text-white"><i class="fas fa-thumbs-up me-1"></i>Accepted</span>
+                                {% elif assign.status == 'In Progress' %}
+                                <span class="badge bg-secondary text-white"><i class="fas fa-spinner fa-spin me-1"></i>In Progress</span>
+                                {% elif assign.status == 'Completed' %}
+                                <span class="badge bg-success text-white"><i class="fas fa-check-circle me-1"></i>Completed</span>
+                                {% else %}
+                                <span class="badge bg-danger text-white"><i class="fas fa-times-circle me-1"></i>Rejected / Cancelled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="small text-muted">Assigned: {{ assign.assigned_at|date:"h:i A (d M)" }}</div>
+                                {% if assign.accepted_at %}
+                                <div class="small text-primary">Accepted: {{ assign.accepted_at|date:"h:i A" }}</div>
+                                {% endif %}
+                                {% if assign.completed_at %}
+                                <div class="small text-success">Done: {{ assign.completed_at|date:"h:i A" }} ({{ assign.duration }} mins)</div>
+                                {% endif %}
+                            </td>
+                            <td class="pe-4 text-end">
+                                <div class="d-inline-flex gap-2">
+                                    {% if assign.status == 'Assigned' %}
+                                    <!-- Accept Action -->
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="accept">
+                                        <input type="hidden" name="assignment_id" value="{{ assign.id }}">
+                                        <button type="submit" class="btn btn-sm btn-success fw-bold">
+                                            <i class="fas fa-check me-1"></i> Accept
+                                        </button>
+                                    </form>
+                                    <!-- Reject Modal Trigger -->
+                                    <button type="button" class="btn btn-sm btn-outline-danger fw-bold" data-bs-toggle="modal" data-bs-target="#rejectModal{{ assign.id }}">
+                                        <i class="fas fa-times me-1"></i> Reject
+                                    </button>
+                                    {% elif assign.status == 'Accepted' %}
+                                    <!-- Start Action -->
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="start">
+                                        <input type="hidden" name="assignment_id" value="{{ assign.id }}">
+                                        <button type="submit" class="btn btn-sm btn-primary fw-bold">
+                                            <i class="fas fa-play me-1"></i> Start Work
+                                        </button>
+                                    </form>
+                                    {% elif assign.status == 'In Progress' %}
+                                    <!-- Complete Modal Trigger -->
+                                    <button type="button" class="btn btn-sm btn-success fw-bold px-3" data-bs-toggle="modal" data-bs-target="#completeModal{{ assign.id }}">
+                                        <i class="fas fa-check-double me-1"></i> Mark Done
+                                    </button>
+                                    {% else %}
+                                    <span class="text-muted small">—</span>
+                                    {% endif %}
+                                </div>
+
+                                <!-- REJECT MODAL -->
+                                <div class="modal fade" id="rejectModal{{ assign.id }}" tabindex="-1" aria-hidden="true" style="text-align: left;">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form method="post">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="reject">
+                                                <input type="hidden" name="assignment_id" value="{{ assign.id }}">
+                                                <div class="modal-header bg-danger text-white">
+                                                    <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Reject Task Assignment</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p class="text-secondary small">Rejecting this task will return the patient's request to the Central Nursing Station queue for reassignment.</p>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold text-dark small">Reason for Rejection</label>
+                                                        <textarea name="reject_reason" class="form-control" rows="3" required placeholder="e.g. Currently in emergency duty, critical patient priority..."></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-danger btn-sm fw-bold">Confirm Rejection</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- COMPLETE MODAL -->
+                                <div class="modal fade" id="completeModal{{ assign.id }}" tabindex="-1" aria-hidden="true" style="text-align: left;">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form method="post">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="complete">
+                                                <input type="hidden" name="assignment_id" value="{{ assign.id }}">
+                                                <div class="modal-header bg-success text-white">
+                                                    <h5 class="modal-title fw-bold"><i class="fas fa-check-circle me-2"></i>Complete Task</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-bold text-dark small">Clinical Notes / Administration Findings</label>
+                                                        <textarea name="completion_notes" class="form-control" rows="3" required placeholder="e.g. Vitals checked BP 120/80, blood drawn successfully..."></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-success btn-sm fw-bold">Submit Completion</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="fas fa-check-circle fa-2x mb-3 text-secondary"></i>
+                                <p class="mb-0 fw-semibold">No tasks assigned from Central Nursing Station.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

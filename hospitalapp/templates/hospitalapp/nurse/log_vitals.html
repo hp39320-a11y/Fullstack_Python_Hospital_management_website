@@ -1,0 +1,76 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Log Patient Vitals — Asha Hospital HMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 600px;">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-success text-white py-3">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-heartbeat me-2"></i>Log Vitals & Condition</h5>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="card-body">
+                <p class="text-muted">Enter live vitals parameters for <strong>{{ admission.patient.name }}</strong> (Bed: {{ admission.bed_number }}).</p>
+                <hr>
+
+                <!-- BP -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-secondary">Blood Pressure (mmHg)</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted small fw-semibold">Systolic</span>
+                        <input type="number" name="bp_systolic" class="form-control" placeholder="e.g. 120" required>
+                        <span class="input-group-text bg-light text-muted small fw-semibold">Diastolic</span>
+                        <input type="number" name="bp_diastolic" class="form-control" placeholder="e.g. 80" required>
+                    </div>
+                </div>
+
+                <!-- Temp & O2 -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small text-secondary">Temperature (°F)</label>
+                        <input type="number" step="0.1" name="temperature" class="form-control" placeholder="e.g. 98.6" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small text-secondary">Oxygen Level (SpO2 %)</label>
+                        <input type="number" name="oxygen_level" class="form-control" placeholder="e.g. 98" min="0" max="100" required>
+                    </div>
+                </div>
+
+                <!-- HR & Sugar -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small text-secondary">Heart Rate (Pulse bpm)</label>
+                        <input type="number" name="heart_rate" class="form-control" placeholder="e.g. 72" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small text-secondary">Sugar Level (mg/dL - Optional)</label>
+                        <input type="number" name="sugar_level" class="form-control" placeholder="e.g. 110">
+                    </div>
+                </div>
+
+                <!-- Resp Rate -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-secondary">Respiratory Rate (breaths/min)</label>
+                    <input type="number" name="respiratory_rate" class="form-control" placeholder="e.g. 18" required>
+                </div>
+
+                <!-- Condition -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-secondary">Current Condition Status</label>
+                    <select name="patient_condition" class="form-select" required>
+                        {% for val, label in conditions %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Setting condition status to "Critical" will trigger an automatic emergency ward alert.</div>
+                </div>
+            </div>
+            <div class="card-footer bg-light py-3 d-flex justify-content-between">
+                <a href="{% url 'nurse_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-success fw-bold"><i class="fas fa-save me-1"></i>Save Vitals</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

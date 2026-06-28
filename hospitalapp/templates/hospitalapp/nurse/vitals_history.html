@@ -1,0 +1,166 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Clinical History — Asha Hospital HMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Styling for premium nav tabs */
+    .nav-tabs {
+        border-bottom: 2px solid #e2e8f0;
+    }
+    .nav-tabs .nav-link {
+        color: #64748b !important;
+        border: none;
+        border-bottom: 3px solid transparent;
+        border-radius: 0;
+        padding: 12px 20px;
+        transition: all 0.3s ease;
+        background: transparent !important;
+    }
+    .nav-tabs .nav-link:hover {
+        color: var(--primary-blue) !important;
+        border-bottom-color: #cbd5e1;
+    }
+    .nav-tabs .nav-link.active {
+        color: var(--primary-blue) !important;
+        background-color: transparent !important;
+        border: none;
+        border-bottom: 3px solid var(--primary-blue);
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-primary"><i class="fas fa-file-medical-alt me-2"></i>Clinical & Vitals History</h2>
+            <p class="text-muted">Inpatient: <strong>{{ admission.patient.name }}</strong> (ID: PAT-{{ admission.patient.patient_id }} | Bed: {{ admission.bed_number }})</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="javascript:history.back()" class="btn btn-outline-secondary fw-bold"><i class="fas fa-arrow-left me-1"></i>Back</a>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" id="clinicalTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active fw-bold" id="vitals-tab" data-bs-toggle="tab" data-bs-target="#vitalsContent" type="button"><i class="fas fa-heartbeat me-2"></i>Vitals Log</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notesContent" type="button"><i class="fas fa-sticky-note me-2"></i>Nursing Notes</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold" id="meds-tab" data-bs-toggle="tab" data-bs-target="#medsContent" type="button"><i class="fas fa-pills me-2"></i>Medicine Log</button>
+        </li>
+    </ul>
+
+    <!-- Tab Contents -->
+    <div class="tab-content bg-white p-4 rounded shadow-sm" id="clinicalTabsContent">
+        <!-- Vitals content -->
+        <div class="tab-pane fade show active" id="vitalsContent" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date / Time</th>
+                            <th>Recorded By</th>
+                            <th>Blood Pressure</th>
+                            <th>Temperature</th>
+                            <th>SpO2 (O2)</th>
+                            <th>Heart Rate</th>
+                            <th>Sugar Level</th>
+                            <th>Respiratory Rate</th>
+                            <th>Condition</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for v in vitals %}
+                        <tr>
+                            <td class="fw-bold">{{ v.recorded_at|date:"d-m-Y H:i" }}</td>
+                            <td>Nurse {{ v.recorded_by.name }}</td>
+                            <td class="fw-bold">{{ v.bp_systolic }}/{{ v.bp_diastolic }} mmHg</td>
+                            <td>{{ v.temperature }} °F</td>
+                            <td class="fw-semibold text-primary">{{ v.oxygen_level }}%</td>
+                            <td class="text-danger">{{ v.heart_rate }} bpm</td>
+                            <td>{% if v.sugar_level %}{{ v.sugar_level }} mg/dL{% else %}—{% endif %}</td>
+                            <td>{{ v.respiratory_rate }} breaths/min</td>
+                            <td>
+                                {% if v.patient_condition == 'Stable' %}
+                                <span class="badge bg-success">Stable</span>
+                                {% elif v.patient_condition == 'Observation' %}
+                                <span class="badge bg-warning text-dark">Observation</span>
+                                {% elif v.patient_condition == 'Serious' %}
+                                <span class="badge bg-orange text-white" style="background:#ea580c !important;">Serious</span>
+                                {% else %}
+                                <span class="badge bg-danger">Critical</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4 text-muted">No vitals logs recorded for this patient.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Notes content -->
+        <div class="tab-pane fade" id="notesContent" role="tabpanel">
+            <div class="row g-3">
+                {% for note in notes %}
+                <div class="col-12">
+                    <div class="card border-light bg-light">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-1"><i class="fas fa-user-nurse me-2 text-primary"></i>Nurse {{ note.nurse.name }}</h6>
+                            <small class="text-muted d-block mb-2">{{ note.created_at|date:"d-m-Y H:i" }}</small>
+                            <p class="mb-0 text-dark" style="white-space: pre-line;">{{ note.note_text }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-4 text-muted">
+                    No nursing notes logged for this patient.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Meds content -->
+        <div class="tab-pane fade" id="medsContent" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Administration Time</th>
+                            <th>Administered By</th>
+                            <th>Medicine</th>
+                            <th>Dosage</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for med in meds %}
+                        <tr>
+                            <td class="fw-bold">{{ med.administered_at|date:"d-m-Y H:i" }}</td>
+                            <td>Nurse {{ med.nurse.name }}</td>
+                            <td class="fw-bold text-success">{{ med.medicine_name }}</td>
+                            <td><span class="badge bg-secondary">{{ med.dosage }}</span></td>
+                            <td>{{ med.notes|default:"—" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No medications administered yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

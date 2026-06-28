@@ -1,0 +1,76 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Medication Audit Logs - Asha HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary"><i class="fa-solid fa-history me-2"></i>Medication Administration Audit Logs</h2>
+            <p class="text-muted mb-0">Complete historical logs of all medications administered in your ward.</p>
+        </div>
+        <a href="{% url 'nurse_dashboard' %}" class="btn btn-outline-secondary" style="border-radius: 10px; font-weight: 500;">
+            <i class="fa fa-arrow-left me-2"></i>Back to Nurse Dashboard
+        </a>
+    </div>
+
+    <!-- Audit Logs Card -->
+    <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr class="text-muted small uppercase" style="border-bottom: 2px solid #f1f5f9;">
+                            <th>Date & Time</th>
+                            <th>Patient Name</th>
+                            <th>Medicine Administered</th>
+                            <th>Dosage / Qty</th>
+                            <th>Administered By</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr style="border-bottom: 1px solid #f8fafc;">
+                            <td>
+                                <strong>{{ log.administered_at|date:"d M Y" }}</strong>
+                                <div class="text-muted small">{{ log.administered_at|date:"h:i A" }}</div>
+                            </td>
+                            <td>
+                                <h6 class="mb-0 fw-semibold text-dark">{{ log.admission.patient.name }}</h6>
+                                <small class="text-muted">Bed: {{ log.admission.bed_number }} | ADM-{{ log.admission.admission_id }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary-subtle text-primary px-3 py-2" style="font-weight: 600; border-radius: 6px;">
+                                    <i class="fa-solid fa-pills me-1"></i>{{ log.medicine_name }}
+                                </span>
+                            </td>
+                            <td>
+                                <div>{{ log.dosage }}</div>
+                                {% if log.quantity > 1 %}
+                                <small class="text-muted">(Qty: {{ log.quantity }})</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong class="text-secondary">{{ log.nurse.name }}</strong>
+                            </td>
+                            <td>
+                                <span class="text-muted small italic">{{ log.notes|default:"—" }}</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="fa-solid fa-folder-open fa-2x mb-3 text-secondary"></i>
+                                <p class="mb-0">No medication administration logs found for your assigned patients.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
