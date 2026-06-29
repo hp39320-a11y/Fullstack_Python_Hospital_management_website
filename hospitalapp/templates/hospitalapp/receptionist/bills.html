@@ -1,0 +1,210 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Billing & Invoicing - CarePlus HMS{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h2 class="fw-bold text-primary">Billing & Invoicing</h2>
+        <button type="submit" form="payment-form" id="pay-selected-btn" class="btn btn-success" style="display: none;">
+            <i class="fas fa-credit-card me-2"></i>Pay Selected Bills
+        </button>
+
+    </div>
+
+    <form id="payment-form" method="POST" action="{% url 'pay_multiple_bills' %}">
+        {% csrf_token %}
+        <!-- TABLE CARD -->
+        <div class="card shadow-sm border-0">
+
+            <div class="card-body p-0">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover mb-0 align-middle">
+
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4" style="width: 40px;">
+                                    <input type="checkbox" id="select-all-bills" class="form-check-input">
+                                </th>
+                                <th>Bill #</th>
+                                <th>Patient</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Generated Date</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for bill in bills %}
+
+                            <tr>
+
+                                <!-- CHECKBOX -->
+                                <td class="ps-4">
+                                    {% if bill.payment_status == 'Pending' %}
+                                        <input type="checkbox" name="bill_ids" value="{{ bill.bill_id }}" data-patient-id="{{ bill.patient.patient_id }}" class="bill-checkbox form-check-input">
+                                    {% endif %}
+                                </td>
+
+                                <!-- BILL ID -->
+                                <td class="text-muted">
+                                    {{ bill.bill_id }}
+                                </td>
+
+                                <!-- PATIENT -->
+                                <td class="fw-bold">
+                                    {{ bill.patient.name }}
+                                </td>
+
+                                <!-- BILL TYPE -->
+                                <td>
+                                    {{ bill.bill_type }}
+                                </td>
+
+                                <!-- AMOUNT -->
+                                <td class="text-primary fw-bold">
+                                    ₹{{ bill.total_amount }}
+                                </td>
+
+                                <!-- STATUS -->
+                                <td>
+                                    <span class="badge rounded-pill
+                                        {% if bill.payment_status == 'Paid' %}
+                                            bg-success
+                                        {% else %}
+                                            bg-warning
+                                        {% endif %}">
+                                        {{ bill.payment_status }}
+                                    </span>
+                                </td>
+
+                                <!-- DATE -->
+                                <td>
+                                    {{ bill.created_at|date:"M d, Y" }}
+                                </td>
+
+                                <!-- ACTIONS -->
+                                <td class="text-end pe-4">
+
+                                    <!-- PAY NOW -->
+                                    {% if bill.payment_status == "Pending" %}
+
+                                        <a href="{% url 'create_payment' bill.bill_id %}"
+                                           class="btn btn-sm btn-success">
+                                            Pay Now
+                                        </a>
+
+                                    {% else %}
+
+                                        <span class="text-success fw-bold small">
+                                            Paid ✔
+                                        </span>
+
+                                    {% endif %}
+
+                                    <!-- PDF DOWNLOAD -->
+                                    <a href="{% url 'download_bill' bill.bill_id %}"
+                                       class="btn btn-sm btn-outline-secondary ms-2">
+                                        Print
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('select-all-bills');
+    const billCheckboxes = document.querySelectorAll('.bill-checkbox');
+    const payBtn = document.getElementById('pay-selected-btn');
+
+    function updatePayButtonVisibility() {
+        const checkedBoxes = document.querySelectorAll('.bill-checkbox:checked');
+        if (checkedBoxes.length > 0) {
+            payBtn.style.display = 'inline-block';
+        } else {
+            payBtn.style.display = 'none';
+        }
+    }
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            let selectedPatientId = null;
+            let multiplePatientsFound = false;
+
+            if (this.checked) {
+                // Check if all pending bills are for the same patient
+                billCheckboxes.forEach(cb => {
+                    const patientId = cb.getAttribute('data-patient-id');
+                    if (selectedPatientId === null) {
+                        selectedPatientId = patientId;
+                    } else if (selectedPatientId !== patientId) {
+                        multiplePatientsFound = true;
+                    }
+                });
+
+                if (multiplePatientsFound) {
+                    alert("Cannot select bills of multiple patients together.");
+                    this.checked = false;
+                    return;
+                }
+            }
+
+            billCheckboxes.forEach(cb => {
+                cb.checked = this.checked;
+            });
+            updatePayButtonVisibility();
+        });
+    }
+
+    billCheckboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+            if (this.checked) {
+                const checkedBoxes = document.querySelectorAll('.bill-checkbox:checked');
+                let targetPatientId = this.getAttribute('data-patient-id');
+                for (let box of checkedBoxes) {
+                    if (box.getAttribute('data-patient-id') !== targetPatientId) {
+                        alert("Cannot pay bills of multiple patients together.");
+                        this.checked = false;
+                        return;
+                    }
+                }
+            }
+            updatePayButtonVisibility();
+
+            // Update select-all state
+            if (selectAllCheckbox) {
+                const allChecked = Array.from(billCheckboxes).every(c => c.checked);
+                selectAllCheckbox.checked = allChecked && billCheckboxes.length > 0;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

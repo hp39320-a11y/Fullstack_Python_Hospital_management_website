@@ -1,0 +1,197 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Final Bill & Discharge - Asha Hospital HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <a href="{% url 'admissions_dashboard' %}" class="btn btn-outline-secondary btn-sm mb-2">
+                <i class="fas fa-arrow-left me-1"></i> Back to Admissions
+            </a>
+            <h2 class="fw-bold text-danger"><i class="fas fa-door-open me-2"></i>Final Checkout & Discharge</h2>
+            <p class="text-muted">Generate final invoice, apply discount, and accept payment for ADM-{{ admission.admission_id }}.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Billing Details and Summary -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-file-invoice me-2"></i>Itemized Final Invoice</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Charge Category</th>
+                                    <th>Description</th>
+                                    <th class="text-end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for charge in charges %}
+                                <tr>
+                                    <td class="ps-4">
+                                        {% if charge.charge_type == 'Room Charge' %}
+                                        <span class="badge bg-info text-dark">Room Charge</span>
+                                        {% elif charge.charge_type == 'Doctor Visit' %}
+                                        <span class="badge bg-primary">Doctor Visit</span>
+                                        {% elif charge.charge_type == 'Nursing Charge' %}
+                                        <span class="badge bg-success">Nursing</span>
+                                        {% elif charge.charge_type == 'Procedure Charge' %}
+                                        <span class="badge bg-warning text-dark">Procedure</span>
+                                        {% elif charge.charge_type == 'Pharmacy Bill' %}
+                                        <span class="badge bg-secondary">Pharmacy</span>
+                                        {% elif charge.charge_type == 'Emergency Charge' %}
+                                        <span class="badge bg-danger">Emergency</span>
+                                        {% elif charge.charge_type == 'Laboratory Charge' %}
+                                        <span class="badge bg-warning text-dark"><i class="fas fa-flask me-1"></i>Laboratory</span>
+                                        {% elif charge.charge_type == 'Radiology Charge' %}
+                                        <span class="badge bg-info text-dark"><i class="fas fa-radiation me-1"></i>Radiology</span>
+                                        {% else %}
+                                        <span class="badge bg-dark">{{ charge.charge_type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ charge.description }}</td>
+                                    <td class="text-end pe-4 fw-semibold">Rs. {{ charge.amount }}</td>
+                                </tr>
+                                {% endfor %}
+                                <tr class="table-light border-top">
+                                    <td colspan="2" class="text-end fw-bold">Subtotal:</td>
+                                    <td class="text-end pe-4 fw-bold">Rs. {{ bill.subtotal }}</td>
+                                </tr>
+                                <tr class="table-light">
+                                    <td colspan="2" class="text-end fw-bold text-secondary">GST (18%):</td>
+                                    <td class="text-end pe-4 fw-bold text-secondary">Rs. {{ bill.gst }}</td>
+                                </tr>
+                                {% if bill.discount > 0 %}
+                                <tr class="table-light text-danger">
+                                    <td colspan="2" class="text-end fw-bold">Discount Applied:</td>
+                                    <td class="text-end pe-4 fw-bold">- Rs. {{ bill.discount }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr class="table-success border-top">
+                                    <td colspan="2" class="text-end fw-bold fs-5">Grand Total Payable:</td>
+                                    <td class="text-end pe-4 fw-bold fs-5 text-success">Rs. {{ bill.grand_total }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checkout Actions & Discount Panel -->
+        <div class="col-lg-4 mb-4">
+            <!-- Apply Discount Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-percent me-2"></i>Apply Discount</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" action="{% url 'apply_discharge_discount' admission.admission_id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Discount Amount (Rs.)</label>
+                            <input type="number" name="discount" class="form-control" min="0" max="{{ bill.subtotal }}" step="0.01" value="{{ bill.discount }}" placeholder="Enter discount amount" required>
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary w-100 py-2 fw-bold">
+                            Update Bill with Discount
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Complete Payment & Discharge Card -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-danger text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-credit-card me-2"></i>Secure Checkout</h5>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <div class="mb-4">
+                        <span class="text-muted small d-block">TOTAL AMOUNT DUE</span>
+                        <h2 class="fw-bold text-success mt-1">₹{{ bill.grand_total }}</h2>
+                    </div>
+
+                    <!-- Razorpay Checkout Trigger -->
+                    <button id="pay-btn" class="btn btn-success btn-lg w-100 py-3 fw-bold shadow mb-3">
+                        <i class="fas fa-shield-alt me-2"></i> Pay & Discharge Patient
+                    </button>
+
+                    <div class="p-3 bg-light rounded-3 text-start small mb-3">
+                        <div class="fw-bold mb-1"><i class="fas fa-info-circle text-primary me-1"></i>Admission Summary</div>
+                        <div><strong>Patient:</strong> {{ admission.patient.name }}</div>
+                        <div><strong>Doctor:</strong>  {{ admission.doctor.name }}</div>
+                        <div><strong>Ward Type:</strong> {{ admission.ward_type }}</div>
+                        <div><strong>Bed Number:</strong> {{ admission.bed_number }}</div>
+                    </div>
+
+                    <a href="{% url 'download_discharge_summary' admission.admission_id %}" class="btn btn-outline-secondary w-100 py-2 fw-bold">
+                        <i class="fas fa-file-pdf me-2"></i>Draft Discharge Summary
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Razorpay Script Integration -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+var options = {
+    "key": "{{ razorpay_key }}",
+    "amount": "{{ amount_paisa }}",
+    "currency": "INR",
+    "name": "Asha Hospital Management System",
+    "description": "Final Inpatient Discharge Bill - ADM-{{ admission.admission_id }}",
+    "image": "https://cdn-icons-png.flaticon.com/512/809/809957.png",
+    "order_id": "{{ order_id }}",
+    "handler": function (response) {
+        // Send payment signature details to verification view
+        fetch("{% url 'verify_ip_payment' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                admission_id: "{{ admission.admission_id }}"
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                // Redirect to success page or download the PDF
+                window.location.href = data.redirect_url;
+            } else {
+                alert("Payment verification failed. Please contact support.");
+            }
+        })
+        .catch(error => {
+            console.log(error);
+            alert("An error occurred during payment verification.");
+        });
+    },
+    "prefill": {
+        "name": "{{ admission.patient.name }}",
+        "email": "{{ admission.patient.email }}",
+        "contact": "{{ admission.patient.phone }}"
+    },
+    "theme": {
+        "color": "#dc3545"
+    }
+};
+
+var rzp = new Razorpay(options);
+document.getElementById('pay-btn').onclick = function(e){
+    rzp.open();
+    e.preventDefault();
+}
+</script>
+{% endblock %}

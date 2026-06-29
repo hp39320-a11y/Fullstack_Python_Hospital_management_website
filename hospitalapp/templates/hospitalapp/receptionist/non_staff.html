@@ -1,0 +1,572 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Non-Staff & Facilities Logs — Asha Hospital HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-primary"><i class="fas fa-people-carry-box me-2"></i>Non-Staff & Facility Log Workspace</h2>
+            <p class="text-muted">Manage cleaning, laundry, security, and maintenance rosters alongside daily logs.</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <div class="btn-group shadow-sm">
+                <button class="btn btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#addStaffModal">
+                    <i class="fas fa-user-plus me-1"></i>Register Staff
+                </button>
+                <button class="btn btn-dark fw-bold" data-bs-toggle="modal" data-bs-target="#allocateShiftModal">
+                    <i class="fas fa-calendar-alt me-1"></i>Roster Shift
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs for Logs -->
+    <ul class="nav nav-pills mb-4 gap-2" id="facilityTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active fw-bold px-4 py-2" id="staff-tab" data-bs-toggle="tab" data-bs-target="#staffContent" type="button"><i class="fas fa-users-cog me-2"></i>Roster & Attendance</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold px-4 py-2" id="cleaning-tab" data-bs-toggle="tab" data-bs-target="#cleaningContent" type="button"><i class="fas fa-soap me-2"></i>Cleaning Logs</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold px-4 py-2" id="security-tab" data-bs-toggle="tab" data-bs-target="#securityContent" type="button"><i class="fas fa-shield-alt me-2"></i>Security & Visitors</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold px-4 py-2" id="laundry-tab" data-bs-toggle="tab" data-bs-target="#laundryContent" type="button"><i class="fas fa-shirt me-2"></i>Laundry Logs</button>
+        </li>
+    </ul>
+
+    <!-- Tab Contents -->
+    <div class="tab-content bg-white p-4 rounded shadow-sm" id="facilityTabsContent">
+        
+        <!-- 1. Roster and Attendance -->
+        <div class="tab-pane fade show active" id="staffContent" role="tabpanel">
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-user-clock me-2 text-primary"></i>Daily Shifts & Roster</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Staff Name</th>
+                                    <th>Department</th>
+                                    <th>Shift Date</th>
+                                    <th>Shift Type</th>
+                                    <th>Attendance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sh in shifts %}
+                                <tr>
+                                    <td class="fw-bold">{{ sh.staff.name }}</td>
+                                    <td><span class="badge bg-secondary">{{ sh.staff.role }}</span></td>
+                                    <td>{{ sh.shift_date|date:"d-m-Y" }}</td>
+                                    <td><span class="badge bg-dark">{{ sh.shift_type }}</span></td>
+                                    <td>
+                                        {% if sh.attendance_status == 'Present' %}
+                                        <span class="text-success"><i class="fas fa-check-circle me-1"></i>Present</span>
+                                        {% elif sh.attendance_status == 'Late' %}
+                                        <span class="text-warning"><i class="fas fa-clock me-1"></i>Late</span>
+                                        {% elif sh.attendance_status == 'Off' %}
+                                        <span class="text-muted"><i class="fas fa-calendar-times me-1"></i>Off</span>
+                                        {% else %}
+                                        <span class="text-danger"><i class="fas fa-times-circle me-1"></i>Absent</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">No shifts rostered for today. Use "Roster Shift" to schedule.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-address-book me-2 text-primary"></i>Non-Staff Fleet</h5>
+                    <div class="list-group">
+                        {% for member in staff %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <h6 class="mb-1 fw-bold">{{ member.name }}</h6>
+                                <span class="badge bg-info text-dark">{{ member.role }}</span>
+                            </div>
+                            <small class="text-muted d-block"><i class="fas fa-phone me-1"></i>{{ member.phone }}</small>
+                            <small class="text-dark fw-semibold">Salary: Rs. {{ member.salary }}</small>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-3 text-muted">No staff registered.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Cleaning Logs -->
+        <div class="tab-pane fade" id="cleaningContent" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0"><i class="fas fa-soap me-2 text-primary"></i>Sanitation Logs</h5>
+                <button class="btn btn-sm btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#logCleaningModal">
+                    <i class="fas fa-plus me-1"></i>Log Cleaning Task
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Logged At</th>
+                            <th>Area Name</th>
+                            <th>Cleaner</th>
+                            <th>Status</th>
+                            <th>Completed At</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in cleaning %}
+                        <tr>
+                            <td class="small">{{ log.logged_at|date:"d-m-Y H:i" }}</td>
+                            <td class="fw-bold">{{ log.area_name }}</td>
+                            <td>{{ log.cleaner.name }}</td>
+                            <td>
+                                {% if log.status == 'Pending' %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                                {% else %}
+                                <span class="badge bg-success">Sanitized / Clean</span>
+                                {% endif %}
+                            </td>
+                            <td class="small">{{ log.completed_at|date:"d-m-Y H:i"|default:"—" }}</td>
+                            <td class="text-end">
+                                {% if log.status == 'Pending' %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="complete_cleaning">
+                                    <input type="hidden" name="log_id" value="{{ log.id }}">
+                                    <button type="submit" class="btn btn-sm btn-success fw-bold"><i class="fas fa-check me-1"></i>Complete</button>
+                                </form>
+                                {% else %}
+                                <span class="text-muted small">Completed</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No cleaning logs registered.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 3. Security & Visitors -->
+        <div class="tab-pane fade" id="securityContent" role="tabpanel">
+            <div class="row g-4">
+                <div class="col-lg-7 border-end">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-door-open me-2 text-primary"></i>Visitor Access Log</h5>
+                        <button class="btn btn-sm btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#logVisitorModal">
+                            <i class="fas fa-plus me-1"></i>Record Visitor Entry
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Visitor Details</th>
+                                    <th>Purpose</th>
+                                    <th>In / Out</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for v in visitors %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ v.visitor_name }}</div>
+                                        <small class="text-muted">Contact: {{ v.visitor_phone }} | Visiting: {{ v.patient_name }}</small>
+                                    </td>
+                                    <td>{{ v.purpose }}</td>
+                                    <td>
+                                        <div class="small fw-semibold text-success">In: {{ v.entry_time|date:"H:i" }}</div>
+                                        {% if v.exit_time %}
+                                        <div class="small text-danger">Out: {{ v.exit_time|date:"H:i" }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        {% if not v.exit_time %}
+                                        <form method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="log_visitor_exit">
+                                            <input type="hidden" name="log_id" value="{{ v.id }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger fw-bold"><i class="fas fa-sign-out-alt me-1"></i>Mark Exit</button>
+                                        </form>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Checked Out</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">No visitors logged today.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0 text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Security Incidents</h5>
+                        <button class="btn btn-sm btn-danger fw-bold" data-bs-toggle="modal" data-bs-target="#logIncidentModal">
+                            <i class="fas fa-plus me-1"></i>Report Incident
+                        </button>
+                    </div>
+                    <div class="list-group">
+                        {% for inc in incidents %}
+                        <div class="list-group-item border-start border-danger border-3 mb-2">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <h6 class="mb-1 fw-bold text-danger">{{ inc.title }}</h6>
+                                {% if inc.is_resolved %}
+                                <span class="badge bg-success">Resolved</span>
+                                {% else %}
+                                <span class="badge bg-danger animate-pulse">Critical / Open</span>
+                                {% endif %}
+                            </div>
+                            <p class="mb-1 small text-dark">{{ inc.description }}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                                <small class="text-muted">By: {{ inc.reported_by }} · {{ inc.created_at|date:"H:i" }}</small>
+                                {% if not inc.is_resolved %}
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="resolve_incident">
+                                    <input type="hidden" name="incident_id" value="{{ inc.id }}">
+                                    <button type="submit" class="btn btn-xs btn-outline-success py-0 px-2 fw-bold" style="font-size: 0.75rem;">Resolve</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-3 text-muted">No security incidents logged.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Laundry Logs -->
+        <div class="tab-pane fade" id="laundryContent" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0"><i class="fas fa-tshirt me-2 text-primary"></i>Laundry Services</h5>
+                <button class="btn btn-sm btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#logLaundryModal">
+                    <i class="fas fa-plus me-1"></i>New Laundry Batch
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Received At</th>
+                            <th>Item Type</th>
+                            <th>Quantity</th>
+                            <th>Status</th>
+                            <th>Completed At</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in laundry %}
+                        <tr>
+                            <td class="small">{{ item.received_at|date:"d-m-Y H:i" }}</td>
+                            <td class="fw-bold">{{ item.item_type }}</td>
+                            <td><span class="badge bg-dark px-3 py-1">{{ item.quantity }}</span></td>
+                            <td>
+                                {% if item.status == 'Pending' %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                                {% elif item.status == 'Washing' %}
+                                <span class="badge bg-info text-dark">Washing</span>
+                                {% else %}
+                                <span class="badge bg-success">Completed / Clean</span>
+                                {% endif %}
+                            </td>
+                            <td class="small">{{ item.completed_at|date:"d-m-Y H:i"|default:"—" }}</td>
+                            <td class="text-end">
+                                {% if item.status == 'Pending' %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="update_laundry">
+                                    <input type="hidden" name="log_id" value="{{ item.id }}">
+                                    <input type="hidden" name="status" value="Washing">
+                                    <button type="submit" class="btn btn-sm btn-info text-dark fw-bold">Start Washing</button>
+                                </form>
+                                {% elif item.status == 'Washing' %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="update_laundry">
+                                    <input type="hidden" name="log_id" value="{{ item.id }}">
+                                    <input type="hidden" name="status" value="Completed">
+                                    <button type="submit" class="btn btn-sm btn-success fw-bold">Mark Clean</button>
+                                </form>
+                                {% else %}
+                                <span class="text-muted small">Done</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No laundry logs recorded.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Add Staff Modal -->
+<div class="modal fade" id="addStaffModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-user-plus me-2"></i>Register Non-Staff Employee</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_staff">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Full Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Somadasan Nair" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Roster Department / Role</label>
+                        <select name="role" class="form-select" required>
+                            {% for val, label in non_staff_roles %}
+                            <option value="{{ val }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Contact Phone</label>
+                        <input type="text" name="phone" class="form-control" placeholder="e.g. 9876543210" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Monthly Salary (Rs.)</label>
+                        <input type="number" name="salary" class="form-control" placeholder="e.g. 15000" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-bold">Register Staff</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Roster Shift Modal -->
+<div class="modal fade" id="allocateShiftModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-calendar-alt me-2"></i>Roster Employee Shift</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="allocate_shift">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Select Staff Member</label>
+                        <select name="staff_id" class="form-select" required>
+                            <option value="" disabled selected>Choose Staff</option>
+                            {% for member in staff %}
+                            <option value="{{ member.id }}">{{ member.name }} ({{ member.role }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-secondary">Shift Date</label>
+                            <input type="date" name="shift_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-secondary">Shift Type</label>
+                            <select name="shift_type" class="form-select" required>
+                                <option value="Morning">Morning Shift (06:00 - 14:00)</option>
+                                <option value="Evening">Evening Shift (14:00 - 22:00)</option>
+                                <option value="Night">Night Shift (22:00 - 06:00)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Default Status</label>
+                        <select name="attendance_status" class="form-select">
+                            <option value="Present">Present</option>
+                            <option value="Late">Late</option>
+                            <option value="Off">Off-Duty</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-dark fw-bold">Roster Shift</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Log Cleaning Task Modal -->
+<div class="modal fade" id="logCleaningModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-soap me-2"></i>Log Sanitation Activity</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="log_cleaning">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Area / Room Location</label>
+                        <input type="text" name="area_name" class="form-control" placeholder="e.g. Room 104, ICU Ward A, Casualty Hall" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Assign Cleaner</label>
+                        <select name="cleaner_id" class="form-select" required>
+                            <option value="" disabled selected>Select Cleaning Staff</option>
+                            {% for member in staff %}
+                                {% if member.role == 'Cleaning' %}
+                                <option value="{{ member.id }}">{{ member.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-bold">Log Sanitation Job</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Record Visitor Entry Modal -->
+<div class="modal fade" id="logVisitorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-door-open me-2"></i>Visitor Gate Entry Log</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="log_visitor">
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-secondary">Visitor's Name</label>
+                            <input type="text" name="visitor_name" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-secondary">Visitor's Phone</label>
+                            <input type="text" name="visitor_phone" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Purpose of Visit</label>
+                        <input type="text" name="purpose" class="form-control" placeholder="e.g. Visiting admitted patient" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Patient to Visit (Name / Bed)</label>
+                        <input type="text" name="patient_name" class="form-control" placeholder="e.g. John Doe (Bed ICU-02)" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-bold">Log Gate Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Report Incident Modal -->
+<div class="modal fade" id="logIncidentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Report Security / Facility Incident</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="log_incident">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Incident Title / Hazard</label>
+                        <input type="text" name="title" class="form-control border-danger text-danger" placeholder="e.g. Water leak in ward corridor, unauthorized visitor" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Detailed Description</label>
+                        <textarea name="description" class="form-control" rows="4" placeholder="Detail the event, area location, or security risk..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Reported By</label>
+                        <input type="text" name="reported_by" class="form-control" placeholder="e.g. Security Officer Ramachandran" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger fw-bold">LOG CRITICAL INCIDENT</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- New Laundry Batch Modal -->
+<div class="modal fade" id="logLaundryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-tshirt me-2"></i>Record Laundry Intake</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="log_laundry">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Item Type</label>
+                        <select name="item_type" class="form-select" required>
+                            {% for val, label in laundry_items %}
+                            <option value="{{ val }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Quantity / Piece Count</label>
+                        <input type="number" name="quantity" class="form-control" placeholder="e.g. 15" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-bold">Confirm Laundry Intake</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
