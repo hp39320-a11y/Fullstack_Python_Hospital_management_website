@@ -1,0 +1,79 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}My Lab Results - CarePlus HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-0">Laboratory Results</h2>
+            <p class="text-muted mb-0">View and download your laboratory test reports.</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Order ID</th>
+                            <th>Date Ordered</th>
+                            <th>Prescribed By</th>
+                            <th>Tests Requested</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in lab_orders %}
+                        <tr>
+                            <td class="ps-4 fw-semibold text-primary">LAB-{{ order.id }}</td>
+                            <td>{{ order.created_at|date:"M d, Y, h:i A" }}</td>
+                            <td>
+                                {% if order.ordered_by %}
+                                    {{ order.ordered_by.name }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% for item in order.items.all %}
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1 rounded-pill me-1 mb-1">{{ item.test.name }}</span>
+                                {% empty %}
+                                    <span class="text-muted">No tests listed</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill {% if order.status == 'Verified' %}bg-success{% elif order.status == 'Result Entered' or order.status == 'Processing' %}bg-info{% else %}bg-warning{% endif %}">
+                                    {{ order.status }}
+                                </span>
+                            </td>
+                            <td class="text-end pe-4">
+                                {% if order.status == 'Verified' %}
+                                    <a href="{% url 'print_lab_report' order.id %}" target="_blank" class="btn btn-sm btn-outline-primary me-2">
+                                        <i class="fas fa-print me-1"></i>Print View
+                                    </a>
+                                    <a href="{% url 'download_lab_report_pdf' order.id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-download me-1"></i>Download PDF
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted small">Result Pending</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="fas fa-flask fa-3x mb-3 text-secondary-50"></i>
+                                <p class="mb-0">No laboratory results or orders found.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

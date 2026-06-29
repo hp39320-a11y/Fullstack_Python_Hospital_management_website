@@ -1,0 +1,115 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}My Bills - CarePlus HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-primary mb-0">Billing History</h2>
+        <button type="submit" form="payment-form" id="pay-selected-btn" class="btn btn-success" style="display: none;">
+            <i class="fas fa-credit-card me-2"></i>Pay Selected Bills
+        </button>
+    </div>
+
+    <form id="payment-form" method="POST" action="{% url 'pay_multiple_bills' %}">
+        {% csrf_token %}
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4" style="width: 40px;">
+                                    <input type="checkbox" id="select-all-bills" class="form-check-input">
+                                </th>
+                                <th>Bill #</th>
+                                <th>Date</th>
+                                <th>Doctor Seen</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bill in bills %}
+                            <tr>
+                                <td class="ps-4">
+                                    {% if bill.payment_status == 'Pending' %}
+                                        <input type="checkbox" name="bill_ids" value="{{ bill.bill_id }}" class="bill-checkbox form-check-input">
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted">{{ bill.bill_id }}</td>
+                                <td>{{ bill.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if bill.consulting_doctor %}
+                                        {{ bill.consulting_doctor.name }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td class="fw-bold">₹{{ bill.total_amount }}</td>
+                                <td>
+                                    <span class="badge rounded-pill {% if bill.payment_status == 'Paid' %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ bill.payment_status }}
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    {% if bill.payment_status == 'Pending' %}
+                                        <a href="{% url 'create_payment' bill.bill_id %}" class="btn btn-sm btn-primary">Pay Now</a>
+                                    {% else %}
+                                        <span class="text-success fw-bold me-2 small">Paid ✔</span>
+                                    {% endif %}
+                                    <a href="{% url 'download_bill' bill.bill_id %}" class="btn btn-sm btn-outline-secondary">Download</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">No bills found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectAll = document.getElementById('select-all-bills');
+        const checkboxes = document.querySelectorAll('.bill-checkbox');
+        const payBtn = document.getElementById('pay-selected-btn');
+
+        function togglePayButton() {
+            const checkedCount = document.querySelectorAll('.bill-checkbox:checked').length;
+            if (checkedCount > 0) {
+                payBtn.style.display = 'inline-block';
+            } else {
+                payBtn.style.display = 'none';
+            }
+        }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                checkboxes.forEach(cb => {
+                    cb.checked = selectAll.checked;
+                });
+                togglePayButton();
+            });
+        }
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', function() {
+                togglePayButton();
+                const allChecked = Array.from(checkboxes).every(c => c.checked);
+                if (selectAll) {
+                    selectAll.checked = allChecked;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
