@@ -1,0 +1,971 @@
+{% extends 'hospitalapp/base.html' %}
+{% load static %}
+
+{% block title %}Asha Hospital - Care | Compassion | Commitment{% endblock %}
+
+{% block content_class %}w-100 p-0 m-0{% endblock %}
+
+{% block content %}
+<!-- LIVE ANNOUNCEMENT TICKER — directly under navbar -->
+<div class="marquee-wrapper py-2 text-white"
+    style="background: linear-gradient(135deg, #0b4c8c 0%, #4caf50 100%); font-weight: 500; font-size: 0.92rem; margin-top: 59px;">
+    <marquee behavior="scroll" direction="left" scrollamount="5" onmouseover="this.stop();" onmouseout="this.start();"
+        class="py-1">
+        <span class="mx-4"><i class="fas fa-bullhorn text-warning me-2"></i> <strong>Latest Update:</strong> Online
+            outpatient appointment bookings are now live! Book your consultation easily today.</span>
+        <span class="mx-4">|</span>
+        <span class="mx-4"><i class="fas fa-phone-alt text-white me-2"></i> <strong>24/7 Helpline:</strong> Emergency
+            care and ambulance dispatch are fully active. Call +91 9876543210.</span>
+        <span class="mx-4">|</span>
+        <span class="mx-4"><i class="fas fa-user-md text-white me-2"></i> <strong>Specialist Care:</strong> Top medical
+            consulting teams are available on-call for pedeatric, general medicine,dentistry, Cardiology, Neurology, and
+            Orthopedics.</span>
+    </marquee>
+</div>
+
+<!-- HERO SECTION — PURE CINEMATIC VIDEO & BANNERS SLIDESHOW -->
+<div class="hero-section mb-5 position-relative overflow-hidden"
+    style="border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; background: #0a1628;">
+
+    <!-- Video Player -->
+    <video id="heroVideo" autoplay muted playsinline
+        class="hero-media" style="display: block; transition: opacity 1.2s ease-in-out;">
+        <source src="{% static 'hospitalapp/videos/hospital_intro.mp4' %}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Carousel Slideshow -->
+    <div id="heroCarousel" class="carousel slide carousel-fade w-100 opacity-0 d-none" data-bs-ride="carousel" data-bs-interval="4000" style="transition: opacity 1.2s ease-in-out;">
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <img src="{% static 'hospitalapp/images/banner1.jpeg' %}" class="d-block w-100 hero-media" alt="Banner 1">
+            </div>
+            <div class="carousel-item">
+                <img src="{% static 'hospitalapp/images/banner2.jpeg' %}" class="d-block w-100 hero-media" alt="Banner 2">
+            </div>
+            <div class="carousel-item">
+                <img src="{% static 'hospitalapp/images/banner3.jpeg' %}" class="d-block w-100 hero-media" alt="Banner 3">
+            </div>
+            <div class="carousel-item">
+                <img src="{% static 'hospitalapp/images/banner4.jpeg' %}" class="d-block w-100 hero-media" alt="Banner 4">
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+
+    <!-- Pagination Dots (outside carousel, hidden initially) -->
+    <div id="heroDots" class="hero-dots d-none"
+        style="position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 20; gap: 10px;">
+        <button type="button" data-slide="0" class="hero-dot active" aria-label="Banner 1"></button>
+        <button type="button" data-slide="1" class="hero-dot" aria-label="Banner 2"></button>
+        <button type="button" data-slide="2" class="hero-dot" aria-label="Banner 3"></button>
+        <button type="button" data-slide="3" class="hero-dot" aria-label="Banner 4"></button>
+    </div>
+</div>
+
+<div class="container py-3">
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card bg-white border-0 shadow-sm rounded-4 p-4 h-100 border-start border-primary border-4">
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary-subtle text-primary p-3 rounded-3 me-3">
+                        <i class="fas fa-phone-alt fa-lg"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1 text-muted small uppercase">Emergency Line</h6>
+                        <h5 class="fw-bold text-dark mb-0">+91 9876543210</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-white border-0 shadow-sm rounded-4 p-4 h-100 border-start border-success border-4">
+                <div class="d-flex align-items-center">
+                    <div class="bg-success-subtle text-success p-3 rounded-3 me-3">
+                        <i class="fas fa-clock fa-lg"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1 text-muted small uppercase">Opening Hours</h6>
+                        <h5 class="fw-bold text-dark mb-0">24 Hours / 7 Days</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-white border-0 shadow-sm rounded-4 p-4 h-100 border-start border-warning border-4">
+                <div class="d-flex align-items-center">
+                    <div class="bg-warning-subtle text-warning p-3 rounded-3 me-3">
+                        <i class="fas fa-map-marker-alt fa-lg"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1 text-muted small uppercase">Location</h6>
+                        <h5 class="fw-bold text-dark mb-0">Thodupuzha, Kerala</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- EMERGENCY BOOKING SECTION -->
+    <!-- ============================================================ -->
+    <div class="rounded-5 mb-5 overflow-hidden position-relative"
+        style="background: linear-gradient(135deg, #c0392b 0%, #8e1a1a 100%); box-shadow: 0 20px 60px rgba(192,57,43,0.4);">
+        <!-- background decoration -->
+        <div class="position-absolute"
+            style="width:400px;height:400px;background:rgba(255,255,255,0.05);border-radius:50%;top:-150px;right:-100px;filter:blur(30px);">
+        </div>
+        <div class="position-absolute"
+            style="width:200px;height:200px;background:rgba(255,255,255,0.06);border-radius:50%;bottom:-80px;left:-60px;filter:blur(20px);">
+        </div>
+
+        <div class="row g-0 position-relative z-1">
+            <!-- Left: Info Panel -->
+            <div class="col-lg-5 p-5 d-flex flex-column justify-content-center" style="color:white;">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="bg-white bg-opacity-25 p-3 rounded-3">
+                        <i class="fas fa-ambulance fa-2x text-white"></i>
+                    </div>
+                    <div>
+                        <div class="badge bg-white text-danger fw-bold px-3 py-2 rounded-pill mb-1">24 / 7 Emergency
+                        </div>
+                        <h3 class="fw-bold mb-0 text-white">Emergency Response Booking</h3>
+                    </div>
+                </div>
+                <p class="text-white-50 mb-4" style="font-size:0.95rem;">Need an ambulance or immediate hospital care?
+                    Fill the quick form — our dispatch team will respond within minutes.</p>
+
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                            style="width:42px;height:42px;flex-shrink:0;">
+                            <i class="fas fa-bolt text-warning"></i>
+                        </div>
+                        <span class="text-white-75 small">Immediate ambulance dispatch for critical cases</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                            style="width:42px;height:42px;flex-shrink:0;">
+                            <i class="fas fa-user-md text-info"></i>
+                        </div>
+                        <span class="text-white-75 small">Emergency doctors on standby round the clock</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                            style="width:42px;height:42px;flex-shrink:0;">
+                            <i class="fas fa-phone-volume text-success"></i>
+                        </div>
+                        <span class="text-white-75 small">Helpline: <strong class="text-white">+91
+                                9876543210</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Booking Form -->
+            <div class="col-lg-7 p-5">
+                <div class="card border-0 rounded-4 shadow-lg p-4">
+                    <h5 class="fw-bold text-danger mb-1"><i class="fas fa-first-aid me-2"></i>Quick Emergency Request
+                    </h5>
+                    <p class="text-muted small mb-4">Fill in the details below. Our team will call you back immediately.
+                    </p>
+                    <form id="emergencyHomeForm" action="tel:+919876543210">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-secondary">Full Name</label>
+                                <input type="text" class="form-control" placeholder="e.g. Anjali Rajan" required
+                                    id="em_name">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-secondary">Contact Number</label>
+                                <input type="tel" class="form-control" placeholder="e.g. 9876543210" required
+                                    id="em_phone">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold small text-secondary">Pickup / Current Location</label>
+                                <input type="text" class="form-control" placeholder="e.g. Near Bus Stand, Thodupuzha"
+                                    required id="em_location">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-secondary">Emergency Type</label>
+                                <select class="form-select" id="em_type">
+                                    <option value="">Select Type</option>
+                                    <option>Accident / Trauma</option>
+                                    <option>Chest Pain / Heart Attack</option>
+                                    <option>Stroke / Head Injury</option>
+                                    <option>Breathing Difficulty</option>
+                                    <option>Fracture / Bone Injury</option>
+                                    <option>Severe Burns</option>
+                                    <option>Other Emergency</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-secondary">Priority Level</label>
+                                <select class="form-select" id="em_priority">
+                                    <option value="Critical">🔴 Critical — Life Threatening</option>
+                                    <option value="High">🟠 High — Urgent Care Needed</option>
+                                    <option value="Medium">🟡 Medium — Moderate Condition</option>
+                                    <option value="Low">🟢 Low — Stable / Mild</option>
+                                </select>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <button type="button" id="emergencySubmitBtn"
+                                    class="btn btn-danger btn-lg w-100 fw-bold rounded-3 py-3 shadow-sm"
+                                    style="letter-spacing:0.5px;">
+                                    <i class="fas fa-paper-plane me-2"></i>Send Emergency Request
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+
+
+    <div id="services" class="text-center mb-5 py-3">
+        <span class="text-success fw-bold text-uppercase tracking-wider small">Our Services</span>
+        <h2 class="fw-bold text-dark mt-2 mb-4 display-6">Comprehensive Clinical Care</h2>
+        <p class="text-muted mx-auto" style="max-width: 600px;">
+            Asha Hospital provides high-quality multi-specialty diagnostics, consultancies, treatment, and critical
+            recovery services.
+        </p>
+
+        <div class="row g-4 mt-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm hover-translate p-4 h-100 text-center rounded-4 d-flex flex-column">
+                    <div class="service-icon-bg bg-primary-subtle text-primary mx-auto mb-3 d-flex align-items-center justify-content-center"
+                        style="width: 70px; height: 70px; border-radius: 50%;">
+                        <i class="fas fa-heartbeat fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Cardiology</h5>
+                    <p class="text-muted small mb-3">Advanced diagnostic lab and specialized cardiologists for heart
+                        health.</p>
+                    <a 
+                        class="choose-btn mt-auto mx-auto d-flex align-items-center justify-content-center"
+                        style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #0b4c8c, #0d5ea6); color: white; text-decoration: none; box-shadow: 0 4px 15px rgba(11,76,140,0.3); transition: all 0.3s ease;">
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm hover-translate p-4 h-100 text-center rounded-4 d-flex flex-column">
+                    <div class="service-icon-bg bg-success-subtle text-success mx-auto mb-3 d-flex align-items-center justify-content-center"
+                        style="width: 70px; height: 70px; border-radius: 50%;">
+                        <i class="fas fa-brain fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Neurology</h5>
+                    <p class="text-muted small mb-3">Specialized treatment and surgeries for neuro-cognitive medical
+                        needs.</p>
+                    <a 
+                        class="choose-btn mt-auto mx-auto d-flex align-items-center justify-content-center"
+                        style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #2e7d32, #4caf50); color: white; text-decoration: none; box-shadow: 0 4px 15px rgba(76,175,80,0.3); transition: all 0.3s ease;">
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm hover-translate p-4 h-100 text-center rounded-4 d-flex flex-column">
+                    <div class="service-icon-bg bg-warning-subtle text-warning mx-auto mb-3 d-flex align-items-center justify-content-center"
+                        style="width: 70px; height: 70px; border-radius: 50%;">
+                        <i class="fas fa-bone fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Orthopedics</h5>
+                    <p class="text-muted small mb-3">Bone care, joint replacement surgeries, and trauma therapy
+                        services.</p>
+                    <a 
+                        class="choose-btn mt-auto mx-auto d-flex align-items-center justify-content-center"
+                        style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #e65100, #ff9800); color: white; text-decoration: none; box-shadow: 0 4px 15px rgba(255,152,0,0.3); transition: all 0.3s ease;">
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm hover-translate p-4 h-100 text-center rounded-4 d-flex flex-column">
+                    <div class="service-icon-bg bg-danger-subtle text-danger mx-auto mb-3 d-flex align-items-center justify-content-center"
+                        style="width: 70px; height: 70px; border-radius: 50%;">
+                        <i class="fas fa-capsules fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">24/7 Pharmacy</h5>
+                    <p class="text-muted small mb-3">Fully stocked in-house pharmacy for prompt medicine disbursement.
+                    </p>
+                    <a 
+                        class="choose-btn mt-auto mx-auto d-flex align-items-center justify-content-center"
+                        style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #c0392b, #e74c3c); color: white; text-decoration: none; box-shadow: 0 4px 15px rgba(192,57,43,0.3); transition: all 0.3s ease;">
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== OUR DOCTORS SLIDESHOW ==================== -->
+    <div id="doctors" class="mb-5 py-4 position-relative">
+        <div class="text-center mb-4">
+            <span class="text-success fw-bold text-uppercase tracking-wider small">Our Specialists</span>
+            <h2 class="fw-bold text-dark mt-2 mb-3 display-6">Meet Our Expert Doctors</h2>
+            <p class="text-muted mx-auto" style="max-width: 600px;">
+                Our team of dedicated professionals and department heads are committed to providing top-tier medical
+                care.
+            </p>
+        </div>
+
+        <!-- Slider Wrapper -->
+        <div class="position-relative px-md-5">
+            <!-- Prev Button -->
+            <button
+                class="slider-btn prev-btn shadow-sm rounded-circle d-none d-md-flex align-items-center justify-content-center position-absolute start-0 top-50 translate-middle-y z-3"
+                style="left: -10px !important;" aria-label="Previous slide">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <!-- Doctor Cards Track -->
+            <div class="doctor-slider-track py-3">
+
+                <!-- Doctor Card 1 -->
+                <div class="doctor-slide-card flex-shrink-0">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-relative"
+                        style="height: 270px;">
+                        <img src="{% static 'hospitalapp/images/doctor1.jpeg' %}" alt="Doctor 1" class="w-100 h-100"
+                            style="object-fit: cover; object-position: center top;">
+                    </div>
+                </div>
+
+                <!-- Doctor Card 2 -->
+                <div class="doctor-slide-card flex-shrink-0">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-relative"
+                        style="height: 270px;">
+                        <img src="{% static 'hospitalapp/images/doctor2.jpeg' %}" alt="Doctor 2" class="w-100 h-100"
+                            style="object-fit: cover; object-position: center top;">
+                    </div>
+                </div>
+
+                <!-- Doctor Card 3 -->
+                <div class="doctor-slide-card flex-shrink-0">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-relative"
+                        style="height: 270px;">
+                        <img src="{% static 'hospitalapp/images/doctor3.jpeg' %}" alt="Doctor 3" class="w-100 h-100"
+                            style="object-fit: cover; object-position: center top;">
+                    </div>
+                </div>
+
+                <!-- Doctor Card 4 -->
+                <div class="doctor-slide-card flex-shrink-0">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-relative"
+                        style="height: 270px;">
+                        <img src="{% static 'hospitalapp/images/doctor4.jpeg' %}" alt="Doctor 4" class="w-100 h-100"
+                            style="object-fit: cover; object-position: center top;">
+                    </div>
+                </div>
+
+                <!-- Doctor Card 5 -->
+                <div class="doctor-slide-card flex-shrink-0">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-relative"
+                        style="height: 270px;">
+                        <img src="{% static 'hospitalapp/images/doctor5.jpeg' %}" alt="Doctor 5" class="w-100 h-100"
+                            style="object-fit: cover; object-position: center top;">
+                    </div>
+                </div>
+
+                <!-- Doctor Card 6 -->
+                <div class="doctor-slide-card flex-shrink-0">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-relative"
+                        style="height: 270px;">
+                        <img src="{% static 'hospitalapp/images/doctor6.jpeg' %}" alt="Doctor 6" class="w-100 h-100"
+                            style="object-fit: cover; object-position: center top;">
+                    </div>
+                </div>
+
+                <!-- Doctor Card 7 -->
+                <div class="doctor-slide-card flex-shrink-0">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-relative"
+                        style="height: 270px;">
+                        <img src="{% static 'hospitalapp/images/doctor7.jpeg' %}" alt="Doctor 7" class="w-100 h-100"
+                            style="object-fit: cover; object-position: center top;">
+                    </div>
+                </div>
+
+                <!-- Doctor Card 8 -->
+                <div class="doctor-slide-card flex-shrink-0">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-relative"
+                        style="height: 270px;">
+                        <img src="{% static 'hospitalapp/images/doctor8.jpeg' %}" alt="Doctor 8" class="w-100 h-100"
+                            style="object-fit: cover; object-position: center top;">
+                    </div>
+                </div>
+
+                <!-- Doctor Card 9 -->
+                <div class="doctor-slide-card flex-shrink-0">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-relative"
+                        style="height: 270px;">
+                        <img src="{% static 'hospitalapp/images/doctor9.jpeg' %}" alt="Doctor 9" class="w-100 h-100"
+                            style="object-fit: cover; object-position: center top;">
+                    </div>
+                </div>
+
+                <!-- Doctor Card 10 -->
+                <div class="doctor-slide-card flex-shrink-0">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-relative"
+                        style="height: 270px;">
+                        <img src="{% static 'hospitalapp/images/doctor10.jpeg' %}" alt="Doctor 10" class="w-100 h-100"
+                            style="object-fit: cover; object-position: center top;">
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Next Button -->
+            <button
+                class="slider-btn next-btn shadow-sm rounded-circle d-none d-md-flex align-items-center justify-content-center position-absolute end-0 top-50 translate-middle-y z-3"
+                style="right: -10px !important;" aria-label="Next slide">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== WHY CHOOSE US — STATS ==================== -->
+    <div class="mb-5 py-5 rounded-5 position-relative overflow-hidden"
+        style="background: linear-gradient(135deg, #0b4c8c 0%, #064a7a 50%, #023b62 100%);">
+        <!-- Decorative circles -->
+        <div class="position-absolute"
+            style="width:300px;height:300px;background:rgba(255,255,255,0.04);border-radius:50%;top:-100px;left:-80px;">
+        </div>
+        <div class="position-absolute"
+            style="width:200px;height:200px;background:rgba(76,175,80,0.08);border-radius:50%;bottom:-60px;right:-50px;">
+        </div>
+
+        <div class="text-center mb-5 position-relative z-1">
+            <span
+                class="badge bg-white bg-opacity-10 text-white px-3 py-2 rounded-pill fw-bold small mb-3 d-inline-block">
+                <i class="fas fa-award me-1 text-warning"></i> Why Choose Us
+            </span>
+            <h2 class="fw-bold text-white mt-2 display-6">Trusted by Thousands Across Kerala</h2>
+            <p class="text-white-50 mx-auto" style="max-width: 550px;">Numbers that speak for our commitment to
+                excellence in patient care and clinical outcomes.</p>
+        </div>
+
+        <div class="row g-4 px-4 position-relative z-1">
+            <div class="col-lg-3 col-md-6">
+                <div class="text-center p-4 rounded-4"
+                    style="background: rgba(255,255,255,0.07); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);">
+                    <div class="bg-success bg-opacity-25 d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                        style="width:64px;height:64px;">
+                        <i class="fas fa-user-md fa-xl text-success"></i>
+                    </div>
+                    <h2 class="fw-bold text-white mb-1 counter" data-target="50">0</h2>
+                    <p class="text-white-50 mb-0 small fw-bold text-uppercase">Expert Doctors</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="text-center p-4 rounded-4"
+                    style="background: rgba(255,255,255,0.07); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);">
+                    <div class="bg-info bg-opacity-25 d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                        style="width:64px;height:64px;">
+                        <i class="fas fa-procedures fa-xl text-info"></i>
+                    </div>
+                    <h2 class="fw-bold text-white mb-1 counter" data-target="25000">0</h2>
+                    <p class="text-white-50 mb-0 small fw-bold text-uppercase">Patients Treated</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="text-center p-4 rounded-4"
+                    style="background: rgba(255,255,255,0.07); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);">
+                    <div class="bg-warning bg-opacity-25 d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                        style="width:64px;height:64px;">
+                        <i class="fas fa-hospital fa-xl text-warning"></i>
+                    </div>
+                    <h2 class="fw-bold text-white mb-1 counter" data-target="20">0</h2>
+                    <p class="text-white-50 mb-0 small fw-bold text-uppercase">Years of Service</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="text-center p-4 rounded-4"
+                    style="background: rgba(255,255,255,0.07); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);">
+                    <div class="bg-danger bg-opacity-25 d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                        style="width:64px;height:64px;">
+                        <i class="fas fa-star fa-xl text-danger"></i>
+                    </div>
+                    <h2 class="fw-bold text-white mb-1"><span class="counter" data-target="98">0</span>%</h2>
+                    <p class="text-white-50 mb-0 small fw-bold text-uppercase">Patient Satisfaction</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== PATIENT TESTIMONIALS ==================== -->
+    <div class="mb-5 py-4">
+        <div class="text-center mb-4">
+            <span class="text-success fw-bold text-uppercase tracking-wider small">Testimonials</span>
+            <h2 class="fw-bold text-dark mt-2 mb-3 display-6">What Our Patients Say</h2>
+            <p class="text-muted mx-auto" style="max-width: 600px;">
+                Hear from the families and patients who have trusted us with their care.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100 position-relative">
+                    <div class="position-absolute top-0 end-0 mt-3 me-3">
+                        <i class="fas fa-quote-right fa-2x" style="color: rgba(11,76,140,0.08);"></i>
+                    </div>
+                    <div class="d-flex text-warning mb-3 small">
+                        <i class="fas fa-star me-1"></i><i class="fas fa-star me-1"></i><i
+                            class="fas fa-star me-1"></i><i class="fas fa-star me-1"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-muted mb-4" style="font-size: 0.95rem;">"The emergency team at Asha Hospital
+                        responded within minutes when my father had a cardiac episode. The doctors and nurses were
+                        incredibly professional and caring. We are forever grateful."</p>
+                    <div class="d-flex align-items-center mt-auto">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                            style="width:45px;height:45px;flex-shrink:0;">AR</div>
+                        <div class="ms-3">
+                            <h6 class="fw-bold mb-0 small">Anjali Rajan</h6>
+                            <span class="text-muted" style="font-size:0.8rem;">Cardiology Patient's Family</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100 position-relative">
+                    <div class="position-absolute top-0 end-0 mt-3 me-3">
+                        <i class="fas fa-quote-right fa-2x" style="color: rgba(11,76,140,0.08);"></i>
+                    </div>
+                    <div class="d-flex text-warning mb-3 small">
+                        <i class="fas fa-star me-1"></i><i class="fas fa-star me-1"></i><i
+                            class="fas fa-star me-1"></i><i class="fas fa-star me-1"></i><i
+                            class="fas fa-star-half-alt"></i>
+                    </div>
+                    <p class="text-muted mb-4" style="font-size: 0.95rem;">"My knee replacement surgery was done here
+                        and the orthopedic team was outstanding. From pre-op to rehabilitation, they made every step
+                        smooth and painless. Highly recommended!"</p>
+                    <div class="d-flex align-items-center mt-auto">
+                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                            style="width:45px;height:45px;flex-shrink:0;">KM</div>
+                        <div class="ms-3">
+                            <h6 class="fw-bold mb-0 small">Kumar Menon</h6>
+                            <span class="text-muted" style="font-size:0.8rem;">Orthopedics Patient</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100 position-relative">
+                    <div class="position-absolute top-0 end-0 mt-3 me-3">
+                        <i class="fas fa-quote-right fa-2x" style="color: rgba(11,76,140,0.08);"></i>
+                    </div>
+                    <div class="d-flex text-warning mb-3 small">
+                        <i class="fas fa-star me-1"></i><i class="fas fa-star me-1"></i><i
+                            class="fas fa-star me-1"></i><i class="fas fa-star me-1"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-muted mb-4" style="font-size: 0.95rem;">"The pediatric care for my daughter was
+                        exceptional. Dr. Priya and the nursing staff treated her with so much warmth. The 24/7 pharmacy
+                        was also a lifesaver during late-night emergencies."</p>
+                    <div class="d-flex align-items-center mt-auto">
+                        <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                            style="width:45px;height:45px;flex-shrink:0;">SN</div>
+                        <div class="ms-3">
+                            <h6 class="fw-bold mb-0 small">Suresh Nair</h6>
+                            <span class="text-muted" style="font-size:0.8rem;">Pediatrics Patient's Father</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== BOOK APPOINTMENT CTA ==================== -->
+    <div class="mb-5 rounded-5 overflow-hidden position-relative"
+        style="background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%); box-shadow: 0 15px 40px rgba(76,175,80,0.3);">
+        <div class="position-absolute"
+            style="width:250px;height:250px;background:rgba(255,255,255,0.06);border-radius:50%;top:-80px;right:-60px;">
+        </div>
+        <div class="position-absolute"
+            style="width:150px;height:150px;background:rgba(255,255,255,0.04);border-radius:50%;bottom:-40px;left:-30px;">
+        </div>
+
+        <div class="row g-0 p-5 position-relative z-1">
+            <div class="col-lg-8 d-flex flex-column justify-content-center">
+                <h3 class="fw-bold text-white mb-2">Ready to Schedule Your Visit?</h3>
+                <p class="text-white-75 mb-0" style="font-size: 1.05rem;">Book an appointment online with our top
+                    specialists. No wait, no hassle — your health is just a click away.</p>
+            </div>
+            <div class="col-lg-4 d-flex align-items-center justify-content-lg-end justify-content-start mt-4 mt-lg-0">
+                <a href="{% url 'login' %}" class="btn btn-lg fw-bold rounded-pill px-5 py-3 shadow"
+                    style="background: white; color: #2e7d32; letter-spacing: 0.5px; transition: all 0.3s ease;">
+                    <i class="fas fa-calendar-check me-2"></i>Book Appointment
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div><!-- end container -->
+
+<style>
+    .hero-media {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    .backdrop-blur {
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    .hover-grow {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hover-grow:hover {
+        transform: scale(1.03);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .hover-translate {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .hover-translate:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .service-icon-bg {
+        transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .hover-translate:hover .service-icon-bg {
+        transform: rotate(5deg) scale(1.05);
+    }
+
+    @keyframes pulse-red {
+
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.5);
+        }
+
+        50% {
+            box-shadow: 0 0 0 15px rgba(192, 57, 43, 0);
+        }
+    }
+
+    #emergencySubmitBtn {
+        animation: pulse-red 2s infinite;
+    }
+
+    #emergencySubmitBtn:hover {
+        animation: none;
+        transform: scale(1.02);
+        box-shadow: 0 8px 25px rgba(192, 57, 43, 0.5) !important;
+        transition: all 0.2s ease;
+    }
+
+    /* Our Doctors Slider Styles */
+    .doctor-slider-track {
+        display: flex;
+        gap: 24px;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .doctor-slider-track::-webkit-scrollbar {
+        display: none;
+    }
+
+    .slider-btn {
+        width: 48px;
+        height: 48px;
+        background-color: white;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        color: #0b4c8c;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .slider-btn:hover {
+        background-color: #0b4c8c;
+        border-color: #0b4c8c;
+        color: white !important;
+    }
+
+    .slider-btn i {
+        transition: transform 0.2s ease;
+    }
+
+    .slider-btn:hover i {
+        transform: scale(1.1);
+    }
+
+    .doctor-slide-card {
+        width: 320px;
+        max-width: 80vw;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .doctor-slide-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .counter {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Hero Pagination Dots — custom, outside Bootstrap carousel */
+    .hero-dots {
+        position: absolute;
+        bottom: 25px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .hero-dots.d-none {
+        display: none !important;
+    }
+
+    .hero-dots.show-dots {
+        display: flex !important;
+    }
+
+    .hero-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background-color: rgba(11, 76, 140, 0.35);
+        border: 2px solid #0b4c8c;
+        padding: 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+
+    .hero-dot.active {
+        width: 16px;
+        height: 16px;
+        background-color: #0b4c8c;
+        border-color: #0b4c8c;
+        box-shadow: 0 2px 10px rgba(11, 76, 140, 0.5);
+    }
+</style>
+
+<!-- Emergency Confirmation Toast -->
+<div id="emergencyToast" class="position-fixed bottom-0 end-0 m-4 p-4 rounded-4 shadow-lg text-white d-none"
+    style="background: linear-gradient(135deg, #c0392b, #922b21); z-index: 9999; max-width: 380px; border-left: 5px solid #fff;">
+    <div class="d-flex align-items-start gap-3">
+        <div class="bg-white bg-opacity-25 rounded-circle p-2">
+            <i class="fas fa-check-circle fa-lg text-white"></i>
+        </div>
+        <div>
+            <div class="fw-bold fs-6 mb-1">Emergency Request Sent!</div>
+            <p class="mb-2 small text-white-75">Our team will call <strong id="toastPhone"></strong> within minutes.
+                Stay calm and stay on the line.</p>
+            <div class="d-flex gap-2">
+                <a href="tel:+919876543210" class="btn btn-sm btn-white bg-white text-danger fw-bold rounded-pill px-3">
+                    <i class="fas fa-phone me-1"></i> Call Now
+                </a>
+                <button onclick="document.getElementById('emergencyToast').classList.add('d-none')"
+                    class="btn btn-sm btn-outline-light rounded-pill px-3">Dismiss</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('emergencySubmitBtn').addEventListener('click', function () {
+        const name = document.getElementById('em_name').value.trim();
+        const phone = document.getElementById('em_phone').value.trim();
+        const location = document.getElementById('em_location').value.trim();
+
+        if (!name || !phone || !location) {
+            // Trigger native validation
+            document.getElementById('em_name').reportValidity();
+            document.getElementById('em_phone').reportValidity();
+            document.getElementById('em_location').reportValidity();
+            return;
+        }
+
+        // Show toast
+        document.getElementById('toastPhone').textContent = phone;
+        const toast = document.getElementById('emergencyToast');
+        toast.classList.remove('d-none');
+        toast.style.animation = 'slideInRight 0.4s ease forwards';
+
+        // Auto hide after 10 seconds
+        setTimeout(() => toast.classList.add('d-none'), 10000);
+
+        // Reset form
+        document.getElementById('em_name').value = '';
+        document.getElementById('em_phone').value = '';
+        document.getElementById('em_location').value = '';
+    });
+
+    // Video ended event to slide into banners
+    document.addEventListener('DOMContentLoaded', function () {
+        const video = document.getElementById('heroVideo');
+        const carousel = document.getElementById('heroCarousel');
+        const heroDots = document.getElementById('heroDots');
+
+        if (video && carousel) {
+            video.addEventListener('ended', function () {
+                // Hide video, show carousel in its place
+                video.style.display = 'none';
+                carousel.classList.remove('d-none');
+                setTimeout(() => {
+                    carousel.classList.remove('opacity-0');
+                    carousel.classList.add('opacity-100');
+
+                    // Show pagination dots
+                    if (heroDots) {
+                        heroDots.classList.remove('d-none');
+                        heroDots.classList.add('show-dots');
+                    }
+
+                    // Initialize Bootstrap carousel
+                    const bsCarousel = new bootstrap.Carousel(carousel, {
+                        interval: 4000,
+                        ride: 'carousel'
+                    });
+                    bsCarousel.cycle();
+
+                    // Wire up custom dots
+                    if (heroDots) {
+                        const dots = heroDots.querySelectorAll('.hero-dot');
+                        dots.forEach(dot => {
+                            dot.addEventListener('click', function () {
+                                const slideIndex = parseInt(this.getAttribute('data-slide'));
+                                bsCarousel.to(slideIndex);
+                            });
+                        });
+
+                        // Update active dot on slide change
+                        carousel.addEventListener('slid.bs.carousel', function (e) {
+                            dots.forEach(d => d.classList.remove('active'));
+                            dots[e.to].classList.add('active');
+                        });
+                    }
+                }, 50);
+            });
+        }
+    });
+
+    // Doctors auto-playing slider script
+    document.addEventListener('DOMContentLoaded', function () {
+        const track = document.querySelector('.doctor-slider-track');
+        const prevBtn = document.querySelector('.prev-btn');
+        const nextBtn = document.querySelector('.next-btn');
+
+        if (track && prevBtn && nextBtn) {
+            const scrollAmount = 504; // Card width 480px + gap 24px
+            let autoScrollInterval;
+
+            const startAutoScroll = () => {
+                autoScrollInterval = setInterval(() => {
+                    const maxScrollLeft = track.scrollWidth - track.clientWidth;
+                    if (track.scrollLeft >= maxScrollLeft - 5) {
+                        // Smoothly scroll back to the start
+                        track.scrollTo({ left: 0, behavior: 'smooth' });
+                    } else {
+                        track.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                    }
+                }, 3000); // Auto scroll every 3 seconds
+            };
+
+            const stopAutoScroll = () => {
+                clearInterval(autoScrollInterval);
+            };
+
+            prevBtn.addEventListener('click', function () {
+                stopAutoScroll();
+                track.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                startAutoScroll();
+            });
+
+            nextBtn.addEventListener('click', function () {
+                stopAutoScroll();
+                track.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                startAutoScroll();
+            });
+
+            // Pause auto scroll on user hover/touch
+            track.addEventListener('mouseenter', stopAutoScroll);
+            track.addEventListener('mouseleave', startAutoScroll);
+            track.addEventListener('touchstart', stopAutoScroll);
+            track.addEventListener('touchend', startAutoScroll);
+
+            startAutoScroll();
+        }
+    });
+
+    // Animated counters — triggered on scroll into view
+    document.addEventListener('DOMContentLoaded', function () {
+        const counters = document.querySelectorAll('.counter');
+        let hasAnimated = false;
+
+        const animateCounters = () => {
+            counters.forEach(counter => {
+                const target = +counter.getAttribute('data-target');
+                const duration = 2000; // ms
+                const stepTime = 30;
+                const steps = duration / stepTime;
+                const increment = target / steps;
+                let current = 0;
+
+                const updateCounter = () => {
+                    current += increment;
+                    if (current < target) {
+                        counter.textContent = Math.ceil(current).toLocaleString();
+                        setTimeout(updateCounter, stepTime);
+                    } else {
+                        counter.textContent = target.toLocaleString();
+                    }
+                };
+                updateCounter();
+            });
+        };
+
+        // Use IntersectionObserver to trigger animation when visible
+        const statsSection = document.querySelector('.counter');
+        if (statsSection) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !hasAnimated) {
+                        hasAnimated = true;
+                        animateCounters();
+                        observer.disconnect();
+                    }
+                });
+            }, { threshold: 0.3 });
+            observer.observe(statsSection.closest('.row'));
+        }
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,521 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Nursing Superintendent Dashboard - Asha Hospital{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- HEADER SECTION -->
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-primary mb-1">
+                <i class="fas fa-user-shield me-2 text-success"></i>
+                Nursing Superintendent Portal
+            </h2>
+            <p class="text-muted mb-0">Oversee nursing allocations, duty rosters, ward assignments, and departmental communications.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addNurseModal">
+                <i class="fas fa-user-nurse me-2"></i> Register New Nurse
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI STATS CARDS -->
+    <div class="row g-3 mb-4">
+        <!-- Total Nurses -->
+        <div class="col-6 col-lg-3">
+            <div class="card h-100 border-start border-primary border-4 py-2">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small text-uppercase fw-semibold d-block mb-1">Total Nurses</span>
+                            <h3 class="fw-bold mb-0 text-dark">{{ total_nurses }}</h3>
+                        </div>
+                        <div class="bg-primary-subtle text-primary rounded-circle p-3">
+                            <i class="fas fa-users-cog fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Head Nurses -->
+        <div class="col-6 col-lg-3">
+            <div class="card h-100 border-start border-success border-4 py-2">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small text-uppercase fw-semibold d-block mb-1">Head Nurses</span>
+                            <h3 class="fw-bold mb-0 text-success">{{ head_nurses_count }}</h3>
+                        </div>
+                        <div class="bg-success-subtle text-success rounded-circle p-3">
+                            <i class="fas fa-award fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Requests -->
+        <div class="col-6 col-lg-3">
+            <div class="card h-100 border-start border-warning border-4 py-2">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small text-uppercase fw-semibold d-block mb-1">Active Station Requests</span>
+                            <h3 class="fw-bold mb-0 text-warning">{{ active_requests_count }}</h3>
+                        </div>
+                        <div class="bg-warning-subtle text-warning rounded-circle p-3">
+                            <i class="fas fa-satellite-dish fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bed Occupancy -->
+        <div class="col-6 col-lg-3">
+            <div class="card h-100 border-start border-danger border-4 py-2">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-muted small text-uppercase fw-semibold d-block mb-1">Bed Occupancy</span>
+                            <h3 class="fw-bold mb-0 text-danger">{{ occupied_beds }} / {{ total_beds }}</h3>
+                        </div>
+                        <div class="bg-danger-subtle text-danger rounded-circle p-3">
+                            <i class="fas fa-bed fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN INTERACTIVE SECTION -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-3">
+            <ul class="nav nav-tabs card-header-tabs" id="superintendentTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-semibold" id="nuses-tab" data-bs-toggle="tab" data-bs-target="#nurses-pane" type="button" role="tab">
+                        <i class="fas fa-user-nurse me-2 text-primary"></i> Nurses Directory
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-semibold" id="requests-tab" data-bs-toggle="tab" data-bs-target="#requests-pane" type="button" role="tab">
+                        <i class="fas fa-clinic-medical me-2 text-success"></i> Station Procedures
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-semibold" id="shifts-tab" data-bs-toggle="tab" data-bs-target="#shifts-pane" type="button" role="tab">
+                        <i class="fas fa-calendar-alt me-2 text-warning"></i> Duty Roster
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-semibold" id="comms-tab" data-bs-toggle="tab" data-bs-target="#comms-pane" type="button" role="tab">
+                        <i class="fas fa-bullhorn me-2 text-danger"></i> Communications
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="card-body p-4">
+            <div class="tab-content" id="superintendentTabContent">
+                
+                <!-- TAB 1: NURSES DIRECTORY -->
+                <div class="tab-pane fade show active" id="nurses-pane" role="tabpanel" tabindex="0">
+                    <div class="row align-items-center mb-3">
+                        <div class="col-md-6">
+                            <h5 class="fw-bold mb-0">Hospital Nursing Staff</h5>
+                        </div>
+                        <div class="col-md-6 mt-2 mt-md-0">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                                <input type="text" id="nurseSearchInput" class="form-control border-start-0" placeholder="Search nurses by name, ward, or qualification..." onkeyup="filterNurseTable()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" id="nursesTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Qualification</th>
+                                    <th>Assigned Ward</th>
+                                    <th>Rank / Status</th>
+                                    <th>Contact</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for n in nurses %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar bg-success-subtle text-success fw-bold rounded-circle p-2 me-2 text-center" style="width: 38px; height: 38px; line-height: 22px;">
+                                                {{ n.name|slice:":1" }}
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-semibold mb-0">{{ n.name }}</h6>
+                                                <small class="text-muted">Username: {{ n.user.username }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ n.qualification }}</td>
+                                    <td>
+                                        <span class="badge bg-info-subtle text-info fw-semibold px-2 py-1">
+                                            {{ n.assigned_ward }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if n.is_head_nurse %}
+                                            <span class="badge bg-success px-2 py-1"><i class="fas fa-award me-1"></i> Head Nurse</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary px-2 py-1">Regular Nurse</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="small text-dark"><i class="fas fa-phone me-1 text-muted"></i> {{ n.phone }}</div>
+                                        <div class="small text-muted"><i class="fas fa-envelope me-1 text-muted"></i> {{ n.email }}</div>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex gap-2">
+                                            <!-- Ward Assignment Trigger -->
+                                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="openAssignWardModal('{{ n.nurse_id }}', '{{ n.name }}', '{{ n.assigned_ward }}')" title="Assign Ward">
+                                                <i class="fas fa-exchange-alt"></i> Ward
+                                            </button>
+                                            
+                                            <!-- Promotion Form -->
+                                            <form method="POST" action="" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="toggle_head_nurse">
+                                                <input type="hidden" name="nurse_id" value="{{ n.nurse_id }}">
+                                                <button type="submit" class="btn {% if n.is_head_nurse %}btn-outline-danger{% else %}btn-outline-success{% endif %} btn-sm fw-semibold" onclick="return confirm('Are you sure you want to change head nurse status for {{ n.name }}?')">
+                                                    {% if n.is_head_nurse %}
+                                                        <i class="fas fa-angle-double-down"></i> Demote
+                                                    {% else %}
+                                                        <i class="fas fa-angle-double-up"></i> Promote
+                                                    {% endif %}
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">No nurses registered in the system.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 2: STATION PROCEDURES -->
+                <div class="tab-pane fade" id="requests-pane" role="tabpanel" tabindex="0">
+                    <h5 class="fw-bold mb-3">All Active & Historical Nursing Tasks</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Patient</th>
+                                    <th>Procedure Type</th>
+                                    <th>Patient Type</th>
+                                    <th>Doctor</th>
+                                    <th>Request Status</th>
+                                    <th>Created At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in procedures %}
+                                <tr>
+                                    <td class="fw-bold text-muted">#{{ p.id }}</td>
+                                    <td>
+                                        <h6 class="fw-semibold mb-0">{{ p.patient.name }}</h6>
+                                        <small class="text-muted">Age: {{ p.patient.age }} | Gender: {{ p.patient.gender }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="fw-semibold text-primary">{{ p.request_type }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary-subtle text-secondary px-2 py-1">{{ p.patient_type }}</span>
+                                    </td>
+                                    <td>Dr. {{ p.doctor.name }}</td>
+                                    <td>
+                                        {% if p.status == 'Pending' %}
+                                            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i> Pending</span>
+                                        {% elif p.status == 'Assigned' %}
+                                            <span class="badge bg-info text-white"><i class="fas fa-user-tag me-1"></i> Assigned</span>
+                                        {% elif p.status == 'Accepted' or p.status == 'In Progress' %}
+                                            <span class="badge bg-primary text-white"><i class="fas fa-spinner fa-spin me-1"></i> In Progress</span>
+                                        {% elif p.status == 'Completed' %}
+                                            <span class="badge bg-success text-white"><i class="fas fa-check-circle me-1"></i> Completed</span>
+                                        {% else %}
+                                            <span class="badge bg-danger text-white"><i class="fas fa-times-circle me-1"></i> {{ p.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="small text-muted">{{ p.created_at|date:"M d, Y h:i A" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">No nursing station requests logged yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 3: DUTY ROSTER -->
+                <div class="tab-pane fade" id="shifts-pane" role="tabpanel" tabindex="0">
+                    <div class="row align-items-center mb-4 bg-light p-3 rounded-3 g-3">
+                        <div class="col-md-8">
+                            <h5 class="fw-bold mb-1">Roster shifts for: {{ shift_date }}</h5>
+                            <p class="text-muted small mb-0">Select a date below to filter currently scheduled active duties.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <form method="GET" action="" class="d-flex align-items-center gap-2">
+                                <input type="date" name="shift_date" class="form-control" value="{{ shift_date|date:'Y-m-d' }}">
+                                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nurse</th>
+                                    <th>Ward</th>
+                                    <th>Shift Type</th>
+                                    <th>Attendance Status</th>
+                                    <th>Check In</th>
+                                    <th>Check Out</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in shifts %}
+                                <tr>
+                                    <td class="fw-semibold text-dark">{{ s.nurse.name }}</td>
+                                    <td>
+                                        <span class="badge bg-info-subtle text-info">{{ s.nurse.assigned_ward }}</span>
+                                    </td>
+                                    <td>
+                                        {% if s.shift_type == 'Morning' %}
+                                            <span class="badge bg-warning-subtle text-warning fw-semibold"><i class="fas fa-sun me-1"></i> Morning</span>
+                                        {% elif s.shift_type == 'Evening' %}
+                                            <span class="badge bg-orange-subtle text-orange fw-semibold"><i class="fas fa-cloud-sun me-1"></i> Evening</span>
+                                        {% else %}
+                                            <span class="badge bg-dark text-white fw-semibold"><i class="fas fa-moon me-1"></i> Night</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if s.attendance_status == 'Present' %}
+                                            <span class="badge bg-success text-white">Present</span>
+                                        {% elif s.attendance_status == 'Absent' %}
+                                            <span class="badge bg-danger text-white">Absent</span>
+                                        {% elif s.attendance_status == 'Late' %}
+                                            <span class="badge bg-warning text-dark">Late</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary text-white">Off</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="small text-muted">{% if s.check_in %}{{ s.check_in|date:"h:i A" }}{% else %}--{% endif %}</td>
+                                    <td class="small text-muted">{% if s.check_out %}{{ s.check_out|date:"h:i A" }}{% else %}--{% endif %}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">No nurse shifts rostered on this date.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 4: COMMUNICATIONS -->
+                <div class="tab-pane fade" id="comms-pane" role="tabpanel" tabindex="0">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-7">
+                            <div class="card border border-light shadow-sm p-4">
+                                <h5 class="fw-bold mb-3"><i class="fas fa-bullhorn text-danger me-2"></i>Send Broadcast Announcement</h5>
+                                <p class="text-muted small">Send communications, urgent alerts, or instructions directly to the specific Nursing Station Comms Hub.</p>
+                                
+                                <form method="POST" action="">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="send_message">
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Target Nursing Station</label>
+                                        <select name="receiver_id" class="form-select" required>
+                                            <option value="" disabled selected>-- Select Target Station --</option>
+                                            {% for st in nursing_stations %}
+                                                <option value="{{ st.user_id }}">{{ st.username }} (Nursing Station)</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Alert Category</label>
+                                        <select name="category" class="form-select" required>
+                                            <option value="Normal" selected>Normal Announcement</option>
+                                            <option value="Urgent">Urgent Alert</option>
+                                            <option value="Emergency">🚨 EMERGENCY BROADCAST</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Message Content</label>
+                                        <textarea name="message" class="form-control" rows="5" placeholder="Enter broadcast text or policy update here..." required></textarea>
+                                    </div>
+
+                                    <div class="text-end">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-paper-plane me-2"></i> Dispatch Message
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: ADD NURSE -->
+<div class="modal fade" id="addNurseModal" tabindex="-1" aria-labelledby="addNurseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="addNurseModalLabel"><i class="fas fa-user-nurse me-2"></i> Register New Nurse</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_nurse">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Username</label>
+                            <input type="text" name="username" class="form-control" placeholder="e.g. nurse_jane" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="Default: Pass1234" value="Pass1234" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">Full Name</label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Jane Doe" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">Email</label>
+                            <input type="email" name="email" class="form-control" placeholder="e.g. jane@ashahospital.com" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Phone Number</label>
+                            <input type="text" name="phone" class="form-control" placeholder="e.g. 9876543210" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Qualification</label>
+                            <input type="text" name="qualification" class="form-control" placeholder="e.g. B.Sc Nursing" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">Initial Assigned Ward</label>
+                            <select name="assigned_ward" class="form-select" required>
+                                {% for key, val in ward_choices %}
+                                    <option value="{{ key }}">{{ val }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" name="is_head_nurse" id="isHeadNurseSwitch">
+                                <label class="form-check-label fw-semibold" for="isHeadNurseSwitch">Designate as Head Nurse</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top p-3">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: EDIT WARD ASSIGNMENT -->
+<div class="modal fade" id="assignWardModal" tabindex="-1" aria-labelledby="assignWardModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="assignWardModalLabel"><i class="fas fa-exchange-alt me-2"></i> Transfer Ward</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="assign_ward">
+                <input type="hidden" name="nurse_id" id="assign_ward_nurse_id">
+                
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-1">Transfer Nurse</small>
+                        <h6 class="fw-bold" id="assign_ward_nurse_name">--</h6>
+                    </div>
+                    <div>
+                        <label class="form-label fw-semibold">Select Target Ward</label>
+                        <select name="assigned_ward" id="assign_ward_select" class="form-select" required>
+                            {% for key, val in ward_choices %}
+                                <option value="{{ key }}">{{ val }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="modal-footer bg-light border-top p-3">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Transfer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterNurseTable() {
+    const filter = document.getElementById("nurseSearchInput").value.toLowerCase().trim();
+    const table = document.getElementById("nursesTable");
+    const trs = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+    
+    for (let i = 0; i < trs.length; i++) {
+        const tr = trs[i];
+        if (tr.cells.length < 5) continue; // skip empty list text
+        
+        const nameText = tr.cells[0].textContent.toLowerCase();
+        const qualText = tr.cells[1].textContent.toLowerCase();
+        const wardText = tr.cells[2].textContent.toLowerCase();
+        const rankText = tr.cells[3].textContent.toLowerCase();
+        
+        if (nameText.includes(filter) || qualText.includes(filter) || wardText.includes(filter) || rankText.includes(filter)) {
+            tr.style.display = "";
+        } else {
+            tr.style.display = "none";
+        }
+    }
+}
+
+function openAssignWardModal(id, name, currentWard) {
+    document.getElementById('assign_ward_nurse_id').value = id;
+    document.getElementById('assign_ward_nurse_name').textContent = name;
+    document.getElementById('assign_ward_select').value = currentWard;
+    
+    const modal = new bootstrap.Modal(document.getElementById('assignWardModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}
+Payment Successful
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-7">
+
+            <div class="card shadow-lg border-0 success-card">
+
+                <!-- HEADER -->
+                <div class="success-header text-center py-4">
+
+                    <i class="fas fa-check-circle success-icon"></i>
+
+                    <h2 class="fw-bold mt-3 mb-1">
+                        Payment Successful
+                    </h2>
+
+                    <p class="mb-0">
+                        Your payment has been completed successfully
+                    </p>
+
+                </div>
+
+                <div class="card-body p-5 text-center">
+
+                    <!-- BILL DETAILS -->
+                    <div class="bill-box mb-4">
+
+                        <div class="row">
+
+                            <div class="col-6 text-start">
+
+                                <h6 class="text-muted">Bill ID</h6>
+
+                                <h4 class="fw-bold">
+                                    #{{ bill.bill_id }}
+                                </h4>
+
+                            </div>
+
+                            <div class="col-6 text-end">
+
+                                <h6 class="text-muted">Amount Paid</h6>
+
+                                <h3 class="fw-bold text-success">
+                                    ₹{{ bill.total_amount }}
+                                </h3>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- MESSAGE -->
+                    <div class="alert alert-success border-0 shadow-sm">
+
+                        <i class="fas fa-shield-check me-2"></i>
+
+                        Payment recorded successfully in hospital system.
+
+                    </div>
+
+                    <!-- BUTTONS -->
+                    <div class="d-flex justify-content-center gap-3 flex-wrap mt-4">
+
+                        <!-- DOWNLOAD BILL -->
+                        <a href="{% url 'download_bill' bill.bill_id %}"
+                           class="btn btn-success btn-lg px-4">
+
+                            <i class="fas fa-download me-2"></i>
+                            Download Bill
+
+                        </a>
+
+                        <!-- BACK BUTTON -->
+                        {% if user.role == 'receptionist' %}
+                            <a href="{% url 'receptionist_bills' %}"
+                               class="btn btn-outline-primary btn-lg px-4">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Back to Billing
+                            </a>
+                        {% elif user.role == 'patient' %}
+                            <a href="{% url 'patient_bills' %}"
+                               class="btn btn-outline-primary btn-lg px-4">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Back to My Bills
+                            </a>
+                        {% else %}
+                            <a href="{% url 'home' %}"
+                               class="btn btn-outline-primary btn-lg px-4">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Back to Home
+                            </a>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+
+.success-card {
+    border-radius: 25px;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.success-header {
+    background: linear-gradient(135deg, #198754, #20c997);
+    color: white;
+}
+
+.success-icon {
+    font-size: 90px;
+    animation: pop 0.5s ease;
+}
+
+.bill-box {
+    background: linear-gradient(135deg, #f8fbff, #eef7ff);
+    border-radius: 18px;
+    padding: 30px;
+    border: 1px solid #dbe8ff;
+}
+
+.btn {
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.alert {
+    border-radius: 12px;
+}
+
+@keyframes pop {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+</style>
+
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'hospitalapp/base.html' %}
+{% load static %}
+
+{% block title %}About Us - Asha Hospital{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- About Header -->
+    <div class="text-center mb-5">
+        <span class="text-success fw-bold text-uppercase tracking-wider small">Our Story</span>
+        <h1 class="display-5 fw-bold text-dark mt-2">About Asha Hospital</h1>
+        <p class="lead text-muted mx-auto" style="max-width: 600px;">Serving our community with care, compassion, and commitment since 2005.</p>
+    </div>
+    
+    <!-- Hero Block -->
+    <div class="row align-items-center mb-5 g-5">
+        <div class="col-lg-6">
+            <div class="position-relative">
+                <img src="https://img.freepik.com/free-photo/doctor-working-with-laptop-hospital_23-2148213962.jpg" alt="Asha Hospital Medical Team" class="img-fluid rounded-4 shadow-lg border border-5 border-white">
+                <!-- Float Info -->
+                <div class="position-absolute bg-success text-white p-3 rounded-4 shadow-md text-center" style="bottom: -20px; right: 20px;">
+                    <h3 class="fw-bold mb-0">18+</h3>
+                    <span class="small text-white-50">Years of Care</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <h2 class="fw-bold text-dark mb-4"><i class="fas fa-heartbeat text-success me-2"></i>Our Mission & Vision</h2>
+            <p class="text-muted" style="line-height: 1.8;">
+                At Asha Hospital, our mission is to provide high-quality healthcare services through a patient-centered approach. We leverage state-of-the-art medical technology to ensure precise diagnostics and treatments, enabling patients to recover comfortably and return to their loved ones.
+            </p>
+            <p class="text-muted" style="line-height: 1.8;">
+                Our vision is to build a healthy and thriving community in Kerala. With our integrated digital management platform, we streamline patient registration, billing, appointments, and pharmacy operations so our doctors and nurses can focus on what matters most: patient health and recovery.
+            </p>
+        </div>
+    </div>
+
+    <!-- Core Values Section -->
+    <div class="py-4 text-center">
+        <h3 class="fw-bold text-dark mb-5">Our Core Pillars</h3>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-4 h-100 rounded-4">
+                    <div class="bg-primary-subtle text-primary mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; border-radius: 50%;">
+                        <i class="fas fa-hands-helping fa-lg"></i>
+                    </div>
+                    <h5 class="fw-bold">Compassionate Care</h5>
+                    <p class="text-muted small mb-0">We treat every patient like a family member, with deep empathy and listening ears.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-4 h-100 rounded-4">
+                    <div class="bg-success-subtle text-success mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; border-radius: 50%;">
+                        <i class="fas fa-user-md fa-lg"></i>
+                    </div>
+                    <h5 class="fw-bold">Expert Specialists</h5>
+                    <p class="text-muted small mb-0">Our clinical teams are highly trained in multiple medical disciplines and critical care.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-4 h-100 rounded-4">
+                    <div class="bg-warning-subtle text-warning mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; border-radius: 50%;">
+                        <i class="fas fa-microscope fa-lg"></i>
+                    </div>
+                    <h5 class="fw-bold">Advanced Technology</h5>
+                    <p class="text-muted small mb-0">From modern operation theaters to fully integrated digital record systems.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

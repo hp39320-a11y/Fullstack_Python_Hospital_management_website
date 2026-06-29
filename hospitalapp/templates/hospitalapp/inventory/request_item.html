@@ -1,0 +1,185 @@
+{% extends 'hospitalapp/base.html' %}
+
+{% block title %}Request Inventory Item - CarePlus HMS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 header-container">
+        <div>
+            <h2 class="fw-bold text-primary mb-1"><i class="fas fa-paper-plane me-2"></i>Request Inventory Items</h2>
+            <p class="text-muted mb-0">Submit stock requisitions to the Store Keeper / Central Store.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-bold">
+                <i class="fas fa-user me-1"></i>{{ request.user.get_role_display }}
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Requisition Form -->
+        <div class="col-lg-5 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-gradient-req text-white py-3 px-4">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-plus-circle me-2"></i>New Requisition</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-bold">Select Item <span class="text-danger">*</span></label>
+                            <select name="item" class="form-select rounded-3" required id="item-select">
+                                <option value="">Choose item...</option>
+                                {% for item in items %}
+                                <option value="{{ item.id }}" data-stock="{{ item.current_stock }}">
+                                    {{ item.name }} ({% if item.current_stock > 0 %}Available: {{ item.current_stock }}{% else %}Out of Stock{% endif %})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-bold">Quantity Required <span class="text-danger">*</span></label>
+                            <input type="number" name="quantity" class="form-control rounded-3" value="1" min="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-bold">Department <span class="text-danger">*</span></label>
+                            <select name="department" class="form-select rounded-3" required>
+                                <option value="" disabled>Select Department...</option>
+                                <option value="Laboratory" {% if request.user.role == 'lab_technician' or request.user.role == 'laboratoryist' or request.user.role == 'laboratory_supervisor' %}selected{% endif %}>Laboratory</option>
+                                <option value="Radiology" {% if request.user.role == 'radiologist' or request.user.role == 'radiology_technician' or request.user.role == 'radiology_supervisor' %}selected{% endif %}>Radiology</option>
+                                <option value="Casualty" {% if request.user.role == 'receptionist' %}selected{% endif %}>Casualty</option>
+                                <option value="Wards" {% if request.user.role == 'nurse' or request.user.role == 'nursing_station' or request.user.role == 'nursing_superintendent' or request.user.role == 'nursing_supervisor' %}selected{% endif %}>Wards</option>
+                                <option value="ICU">ICU</option>
+                                <option value="Pharmacy" {% if request.user.role == 'pharmacist' or request.user.role == 'senior_pharmacist' or request.user.role == 'pharmacy_supervisor' %}selected{% endif %}>Pharmacy</option>
+                            </select>
+                        </div>
+
+                        <!-- Info Box -->
+                        <div class="alert alert-info border-0 rounded-3 d-flex align-items-start mb-3" style="background: rgba(79, 70, 229, 0.06);">
+                            <i class="fas fa-info-circle text-primary mt-1 me-2"></i>
+                            <small class="text-muted">Your requisition will be sent to the Store Keeper for review. You'll see the status update here once it's approved or actioned.</small>
+                        </div>
+
+                        <div class="text-end mt-4">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold w-100 py-2">
+                                <i class="fas fa-paper-plane me-2"></i>Send Requisition
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="row g-3 mt-2">
+                <div class="col-6">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center stat-card">
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Total Sent</small>
+                        <h3 class="fw-bold text-primary mb-0 mt-1">{{ my_requisitions.count }}</h3>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center stat-card">
+                        {% with pending_count=0 %}
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Pending</small>
+                        <h3 class="fw-bold text-warning mb-0 mt-1" id="pending-count">0</h3>
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Requisition History -->
+        <div class="col-lg-7 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-history me-2 text-primary"></i>My Sent Requisitions</h5>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="location.reload();">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Req No</th>
+                                    <th>Item</th>
+                                    <th>Qty</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in my_requisitions %}
+                                <tr>
+                                    <td class="ps-4"><strong class="text-primary">{{ req.req_number }}</strong></td>
+                                    <td>{{ req.item.name }}</td>
+                                    <td><span class="fw-bold">{{ req.quantity }}</span></td>
+                                    <td><span class="badge bg-secondary-subtle text-secondary rounded-pill px-2">{{ req.department }}</span></td>
+                                    <td>
+                                        {% if req.status == 'Pending' %}
+                                            <span class="badge bg-warning-subtle text-warning rounded-pill px-2"><i class="fas fa-clock me-1"></i>Pending</span>
+                                        {% elif req.status == 'Approved' %}
+                                            <span class="badge bg-success-subtle text-success rounded-pill px-2"><i class="fas fa-check me-1"></i>Approved</span>
+                                        {% elif req.status == 'Ordered' %}
+                                            <span class="badge bg-info-subtle text-info rounded-pill px-2"><i class="fas fa-truck me-1"></i>Ordered</span>
+                                        {% elif req.status == 'Rejected' %}
+                                            <span class="badge bg-danger-subtle text-danger rounded-pill px-2"><i class="fas fa-times me-1"></i>Rejected</span>
+                                        {% else %}
+                                            <span class="badge bg-primary-subtle text-primary rounded-pill px-2">{{ req.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><small class="text-muted">{{ req.created_at|date:"M d, Y" }}</small></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="fas fa-inbox fa-3x mb-3 d-block" style="opacity: 0.2;"></i>
+                                            <p class="mb-0 fw-bold">No requisitions submitted yet</p>
+                                            <small>Use the form on the left to send your first inventory request.</small>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-gradient-req {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+}
+.stat-card {
+    transition: all 0.3s ease;
+}
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.08) !important;
+}
+.card {
+    transition: all 0.2s ease;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Count pending requisitions
+    var rows = document.querySelectorAll('tbody tr');
+    var pendingCount = 0;
+    rows.forEach(function(row) {
+        var badge = row.querySelector('.bg-warning-subtle');
+        if (badge) pendingCount++;
+    });
+    var el = document.getElementById('pending-count');
+    if (el) el.textContent = pendingCount;
+});
+</script>
+{% endblock %}

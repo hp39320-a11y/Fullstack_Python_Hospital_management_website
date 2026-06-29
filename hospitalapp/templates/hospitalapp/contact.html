@@ -1,0 +1,112 @@
+{% extends 'hospitalapp/base.html' %}
+{% load static %}
+
+{% block title %}Contact Us - Asha Hospital{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <span class="text-success fw-bold text-uppercase tracking-wider small">Get In Touch</span>
+        <h1 class="display-5 fw-bold text-dark mt-2">Contact Asha Hospital</h1>
+        <p class="lead text-muted mx-auto" style="max-width: 600px;">We are here to assist you 24/7. Reach out to our customer service or medical team.</p>
+    </div>
+
+    <div class="row g-5">
+        <!-- Info Panel (Left) -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-lg rounded-4 p-4 h-100 bg-white border-start border-success border-4">
+                <h4 class="fw-bold mb-4 text-dark">Contact Information</h4>
+                
+                <div class="d-flex align-items-start mb-4">
+                    <div class="bg-primary-subtle text-primary p-3 rounded-3 me-3">
+                        <i class="fas fa-map-marker-alt fa-lg"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-muted mb-1 small text-uppercase">Hospital Address</h6>
+                        <p class="text-dark mb-0">Thodupuzha P.O, Idukki District,<br>Kerala, Pin: 685584</p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-start mb-4">
+                    <div class="bg-success-subtle text-success p-3 rounded-3 me-3">
+                        <i class="fas fa-phone-alt fa-lg"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-muted mb-1 small text-uppercase">Emergency Helpdesk</h6>
+                        <p class="text-dark mb-0 fw-bold">+91 9876543210</p>
+                        <p class="text-muted mb-0 small">O.P.D Reception: +91 4862 252525</p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-start mb-4">
+                    <div class="bg-warning-subtle text-warning p-3 rounded-3 me-3">
+                        <i class="fas fa-envelope fa-lg"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-muted mb-1 small text-uppercase">Email Support</h6>
+                        <p class="text-dark mb-0">info@ashahospital.com</p>
+                        <p class="text-muted mb-0 small">support@ashahospital.com</p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-start">
+                    <div class="bg-info-subtle text-info p-3 rounded-3 me-3">
+                        <i class="fas fa-clock fa-lg"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-muted mb-1 small text-uppercase">Operational Hours</h6>
+                        <p class="text-dark mb-0">Casualty & Emergency: 24/7</p>
+                        <p class="text-muted mb-0 small">OPD Services: Mon-Sat, 9:00 AM - 5:00 PM</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Panel (Right) -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-lg rounded-4 p-5 bg-white">
+                <h4 class="fw-bold mb-4 text-dark">Send us a Message</h4>
+                
+                <form>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold text-muted small">Your Name</label>
+                            <div class="input-group border rounded-3 p-1">
+                                <span class="input-group-text bg-white border-0 text-muted"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control border-0 bg-white" placeholder="Enter your name" required style="box-shadow: none;">
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold text-muted small">Your Email</label>
+                            <div class="input-group border rounded-3 p-1">
+                                <span class="input-group-text bg-white border-0 text-muted"><i class="fas fa-envelope"></i></span>
+                                <input type="email" class="form-control border-0 bg-white" placeholder="Enter your email" required style="box-shadow: none;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted small">Subject</label>
+                        <div class="input-group border rounded-3 p-1">
+                            <span class="input-group-text bg-white border-0 text-muted"><i class="fas fa-info-circle"></i></span>
+                            <input type="text" class="form-control border-0 bg-white" placeholder="How can we help?" required style="box-shadow: none;">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-muted small">Message</label>
+                        <div class="input-group border rounded-3 p-1 align-items-start">
+                            <span class="input-group-text bg-white border-0 text-muted pt-2"><i class="fas fa-pen"></i></span>
+                            <textarea class="form-control border-0 bg-white" rows="5" placeholder="Write your message here..." required style="box-shadow: none; resize: none;"></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 text-uppercase tracking-wider fw-bold">
+                        <i class="fas fa-paper-plane me-2"></i>Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
