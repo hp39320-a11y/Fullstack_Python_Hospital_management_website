@@ -327,3 +327,69 @@ class PharmacyTokenForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-select'}),
             'counter': forms.Select(attrs={'class': 'form-select'}),
         }
+
+
+from django.conf import settings
+
+class AdminRegistrationForm(forms.Form):
+    username = forms.CharField(
+        max_length=100, 
+        label="Admin Username",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter admin username'})
+    )
+    email = forms.EmailField(
+        label="Admin Email", 
+        required=True,
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter email address'})
+    )
+    full_name = forms.CharField(
+        max_length=100, 
+        label="Full Name", 
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter administrator full name'})
+    )
+    security_key = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Enter admin security key (e.g. ashaadmin2026)'}),
+        label="Admin Setup Security Key",
+        help_text="Required security secret key for registering an admin account when hosted.",
+        required=False
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Choose password'}),
+        label="Password"
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm password'}),
+        label="Confirm Password"
+    )
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError("Username already exists. Please choose a different username.")
+        return username
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        confirm_password = cleaned_data.get("confirm_password")
+        security_key = cleaned_data.get("security_key")
+
+        if password and confirm_password and password != confirm_password:
+            raise forms.ValidationError("Passwords do not match.")
+
+        expected_secret = getattr(settings, 'ADMIN_SETUP_SECRET', 'ashaadmin2026')
+        admin_count = User.objects.filter(role='admin').count()
+
+        # Security check: If admins already exist, key is mandatory.
+        if admin_count > 0:
+            if not security_key:
+                raise forms.ValidationError("Admin Setup Security Key is required to create an additional Admin account.")
+            elif security_key != expected_secret:
+                raise forms.ValidationError("Invalid Admin Setup Security Key. Please verify your secret key.")
+        else:
+            # Initial setup mode
+            if security_key and security_key != expected_secret:
+                raise forms.ValidationError("Invalid Admin Setup Security Key.")
+
+        return cleaned_data

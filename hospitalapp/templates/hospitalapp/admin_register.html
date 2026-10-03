@@ -1,0 +1,224 @@
+{% extends 'hospitalapp/base.html' %}
+{% load static %}
+
+{% block title %}Admin Registration & Hosting Setup - Asha Hospital{% endblock %}
+
+{% block content %}
+<style>
+    .admin-setup-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(79, 70, 229, 0.15);
+        border-radius: 24px;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.1);
+        transition: all 0.3s ease;
+    }
+    .admin-header-gradient {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+        border-radius: 20px 20px 0 0;
+    }
+    .form-control-icon-wrapper {
+        position: relative;
+    }
+    .form-control-icon-wrapper i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6366f1;
+        z-index: 5;
+    }
+    .form-control-styled {
+        padding-left: 48px !important;
+        height: 52px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+        font-weight: 500;
+        transition: all 0.25s ease;
+    }
+    .form-control-styled:focus {
+        background-color: #ffffff;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    }
+    .btn-admin-submit {
+        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+        border: none;
+        height: 54px;
+        border-radius: 14px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        transition: all 0.3s ease;
+    }
+    .btn-admin-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px rgba(79, 70, 229, 0.4);
+        background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+    }
+    .security-badge-box {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 14px;
+        padding: 14px 18px;
+    }
+</style>
+
+<div class="row justify-content-center align-items-center py-4" style="min-height: 85vh;">
+    <div class="col-lg-7 col-md-9">
+        <!-- Logo and Portal Brand -->
+        <div class="text-center mb-4">
+            <img src="{% static 'hospitalapp/images/logo.png' %}" alt="Asha Hospital Logo" class="mb-3" style="height: 85px; width: auto; background: white; padding: 10px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.06);">
+            <h3 class="fw-bold text-dark mb-1">Administrator Registration</h3>
+            <p class="text-muted">Hosting Initial Setup & Administrative Account Provisioning</p>
+        </div>
+
+        <!-- Card Container -->
+        <div class="card admin-setup-card overflow-hidden">
+            <!-- Card Header -->
+            <div class="admin-header-gradient p-4 text-white text-center">
+                <span class="badge bg-white bg-opacity-20 text-white px-3 py-2 rounded-pill font-size-xs text-uppercase tracking-wider mb-2">
+                    <i class="fas fa-server me-1"></i> Hosted Site Administrator Setup
+                </span>
+                <h4 class="mb-1 fw-bold"><i class="fas fa-user-shield me-2"></i>Create Superuser Admin Account</h4>
+                <p class="small text-white-50 mb-0">Register system administrators to manage doctors, staff, patients, and hospital services.</p>
+            </div>
+
+            <div class="card-body p-4 p-md-5">
+                <!-- Hosted Info Banner -->
+                {% if not admin_exists %}
+                <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center">
+                    <i class="fas fa-check-circle fa-2x text-success me-3"></i>
+                    <div>
+                        <strong class="d-block text-dark">Initial Host Setup Mode Active</strong>
+                        <span class="small text-muted">No Administrator exists in database. The first registered user will become the Master Superuser.</span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="security-badge-box mb-4 d-flex align-items-center">
+                    <i class="fas fa-shield-alt fa-2x text-success me-3"></i>
+                    <div>
+                        <strong class="d-block text-dark">Admin Security Guard Active</strong>
+                        <span class="small text-muted">System already has active administrators. Please enter the valid <strong>Admin Setup Security Key</strong> (Default: <code>ashaadmin2026</code> or configured in <code>.env</code>).</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger border-0 rounded-3 shadow-sm mb-4">
+                        {% for error in form.non_field_errors %}
+                            <div class="small fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <!-- Username -->
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label fw-semibold text-dark small">Admin Username <span class="text-danger">*</span></label>
+                            <div class="form-control-icon-wrapper">
+                                <i class="fas fa-user"></i>
+                                {{ form.username }}
+                            </div>
+                            {% if form.username.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-circle-exclamation me-1"></i>{{ form.username.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Email -->
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label fw-semibold text-dark small">Admin Email <span class="text-danger">*</span></label>
+                            <div class="form-control-icon-wrapper">
+                                <i class="fas fa-envelope"></i>
+                                {{ form.email }}
+                            </div>
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-circle-exclamation me-1"></i>{{ form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Full Name -->
+                        <div class="col-12 mb-2">
+                            <label class="form-label fw-semibold text-dark small">Full Name (Optional)</label>
+                            <div class="form-control-icon-wrapper">
+                                <i class="fas fa-id-card"></i>
+                                {{ form.full_name }}
+                            </div>
+                        </div>
+
+                        <!-- Security Secret Key -->
+                        <div class="col-12 mb-2">
+                            <label class="form-label fw-semibold text-dark small">
+                                Admin Setup Security Key 
+                                {% if admin_exists %}<span class="text-danger">*</span>{% else %}<span class="text-muted">(Optional for first admin)</span>{% endif %}
+                            </label>
+                            <div class="form-control-icon-wrapper">
+                                <i class="fas fa-key text-warning"></i>
+                                {{ form.security_key }}
+                            </div>
+                            <small class="text-muted d-block mt-1">Default Key: <code>ashaadmin2026</code> (Set via <code>ADMIN_SETUP_SECRET</code> environment variable when hosting)</small>
+                            {% if form.security_key.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-circle-exclamation me-1"></i>{{ form.security_key.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Password -->
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label fw-semibold text-dark small">Password <span class="text-danger">*</span></label>
+                            <div class="form-control-icon-wrapper">
+                                <i class="fas fa-lock"></i>
+                                {{ form.password }}
+                            </div>
+                            {% if form.password.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-circle-exclamation me-1"></i>{{ form.password.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label fw-semibold text-dark small">Confirm Password <span class="text-danger">*</span></label>
+                            <div class="form-control-icon-wrapper">
+                                <i class="fas fa-lock-open"></i>
+                                {{ form.confirm_password }}
+                            </div>
+                            {% if form.confirm_password.errors %}
+                                <div class="text-danger small mt-1"><i class="fas fa-circle-exclamation me-1"></i>{{ form.confirm_password.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary btn-admin-submit w-100 text-white text-uppercase mt-4">
+                        <i class="fas fa-user-shield me-2"></i>Register Administrator Account
+                    </button>
+                </form>
+
+                <div class="mt-4 text-center border-top pt-4">
+                    <p class="mb-0 text-muted small">
+                        Already have an admin account? 
+                        <a href="{% url 'login' %}" class="text-decoration-none text-primary fw-bold ms-1">
+                            <i class="fas fa-sign-in-alt me-1"></i>Sign In Here
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Add styled classes to form inputs rendered by Django
+    const inputs = document.querySelectorAll('.admin-setup-card input');
+    inputs.forEach(input => {
+        if (!input.classList.contains('form-control-styled')) {
+            input.classList.add('form-control-styled');
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -199,3 +199,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 LOGIN_URL = 'login'
 
+# Security key required for hosted public admin registration
+ADMIN_SETUP_SECRET = os.environ.get('ADMIN_SETUP_SECRET', 'ashaadmin2026')
+

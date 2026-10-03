@@ -67,7 +67,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from hospitalapp.models import *
-from hospitalapp.forms import UserRegistrationForm, LoginForm, AppointmentForm, PrescriptionForm, MedicineForm, PatientRegistrationForm, DoctorForm, ForgotPasswordForm, StaffEditForm
+from hospitalapp.forms import UserRegistrationForm, LoginForm, AppointmentForm, PrescriptionForm, MedicineForm, PatientRegistrationForm, DoctorForm, ForgotPasswordForm, StaffEditForm, AdminRegistrationForm
 from django.http import HttpResponseForbidden
 import razorpay
 from django.conf import settings
@@ -124,7 +124,38 @@ def contact(request):
     return render(request, 'hospitalapp/contact.html')
 
 # Authentication
+def admin_register_view(request):
+    admin_exists = User.objects.filter(role='admin').exists()
+    
+    if request.method == 'POST':
+        form = AdminRegistrationForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+            
+            user = User.objects.create_superuser(
+                username=username,
+                password=password,
+                email=email,
+                role='admin'
+            )
+            
+            login(request, user)
+            messages.success(request, f"Admin account '{username}' registered successfully! Welcome to Asha Hospital Admin Portal.")
+            return redirect('admin_dashboard')
+        else:
+            messages.error(request, "Please correct the errors in the form.")
+    else:
+        form = AdminRegistrationForm()
+        
+    return render(request, 'hospitalapp/admin_register.html', {
+        'form': form,
+        'admin_exists': admin_exists
+    })
+
 def register_view(request):
+
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
